@@ -1,7 +1,11 @@
 #ifndef JOB_H
 #define JOB_H
 
+#include<stdio.h>
+#include<stdlib.h>
 #include<jobstatus.h>
+
+// you, the client is suppossed to free the input_p and output_p pointers
 
 typedef struct job job;
 struct job
@@ -23,8 +27,14 @@ struct job
 	void* output_p;
 };
 
+// creates a new job
+job* get_job(void* (*function_p)(void* input_p), void* input_p);
+
 // executes the given job 
 // returns 0 if the job was executed, else returns 1
 int execute(job* job);
+
+// deletes job object
+void delete_job(job* job_p);
 
 #endif 

@@ -1,5 +1,14 @@
 #include<job.h>
 
+job* get_job(void* (*function_p)(void* input_p), void* input_p)
+{
+	job* job_p = ((job*)(malloc(sizeof(job))));
+	job_p->status = CREATED;
+	job_p->input_p = input_p;
+	job_p->function_p = function_p;
+	job_p->output_p = NULL;
+}
+
 int execute(job* job_p)
 {
 	// execute only if it is queued for execution
@@ -19,4 +28,9 @@ int execute(job* job_p)
 	{
 		return 1;
 	}
+}
+
+void delete_job(job* job_p)
+{
+	free(job_p);
 }
