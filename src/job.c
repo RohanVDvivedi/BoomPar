@@ -7,6 +7,7 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p)
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
 	job_p->output_p = NULL;
+	return job_p;
 }
 
 int execute(job* job_p)
