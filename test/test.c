@@ -12,7 +12,7 @@ void* my_job_function(void* my_int)
 
 int main()
 {
-	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, 2);
+	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, 8);
 
 	for(int i=0; i<10; i++)
 	{
