@@ -40,16 +40,20 @@ struct executor
 	// job_queue_mutex for protection of job_queue data structure
 	pthread_mutex_t job_queue_mutex;
 	
-	// job_queue_wait for synchronization, when there are threads waiting for empty job_queue
+	// job_queue_empty_wait for synchronization, when there are threads waiting for empty job_queue
+	pthread_cond_t job_queue_empty_wait;
 
 	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
 	// then the corresponding thread gets stored in a hashmap while it is running
 
 	// keeps the current count of threads created by executor
-	unsigned long long int threads_count;
+	unsigned long long int thread_count;
 
 	// this is the array to store created thread ids 
 	array* threads;
+
+	// threads_array_mutex is for protection of threads data structure
+	pthread_mutex_t threads_array_mutex;
 
 	// some data structure that stores completed jobs, or their results, along with their job id and thread id
 	// not thought off yet :p
