@@ -25,6 +25,7 @@ int execute(job* job_p)
 		set_to_next_status(&(job_p->status));
 
 		// notify all the threads that are waiting for my result
+		// job_wait.notifyAll();
 
 		return 0;
 	}
@@ -46,6 +47,7 @@ void* get_result_or_wait_for_result(job* job_p)
 			case RUNNING :
 			{
 				// go to wait state
+				// job_wait.wait();
 
 				// we wake up here if someone calls nofify, 
 				// but we can not exit wit result unless sure of completion, 

@@ -25,6 +25,8 @@ struct job
 	// output pointed to by pointer output_p 
 	// produced when the function is called with input parameters input
 	void* output_p;
+
+	// a job_wait, on which other threads will wait, for the current job to complete and receive result output_p
 };
 
 // creates a new job
