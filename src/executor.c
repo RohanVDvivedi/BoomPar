@@ -104,12 +104,23 @@ void submit(executor* executor_p, job* job_p)
 	// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
 	pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
+	// update job status, from CREATED to QUEUED
+	set_to_next_status(&(job_p->status));
+
 	// unlock job_queue_mutex
 	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 }
 
 void delete_executor(executor* executor_p)
 {
+	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
+	while(executor_p->thread_count > 0)
+	{
+		pthread_join((*((pthread_t*)get_element(executor_p->threads, executor_p->thread_count - 1))), NULL);
+		executor_p->thread_count--;
+	}
+	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
+
 	pthread_mutex_destroy(&(executor_p->job_queue_mutex));
 	pthread_cond_destroy(&(executor_p->job_queue_empty_wait));
 
