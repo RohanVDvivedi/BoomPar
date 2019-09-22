@@ -12,7 +12,7 @@ struct range
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
-	printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self(), i);
+	//printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
 }
@@ -23,7 +23,7 @@ int main()
 	int jobs_count = 10000;
 
 	// the number of threads for executor
-	int threads_count = 10;
+	int threads_count = 4;
 
 	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count);
 
@@ -56,7 +56,7 @@ int main()
 		void* output_p = get_result_or_wait_for_result((job*)get_element(my_jobs, i));
 
 		// and print their results
-		printf("thread %d waited for result, and received => [%d]\n", (int)pthread_self(), *((int*)output_p));
+		// printf("thread %d waited for result, and received => [%d]\n", (int)pthread_self(), *((int*)output_p));
 	}
 
 	for(int i=0; i<jobs_count;i++)
