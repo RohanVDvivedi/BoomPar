@@ -57,6 +57,12 @@ struct executor
 
 	// some data structure that stores completed jobs, or their results, along with their job id and thread id
 	// not thought off yet :p
+
+	// self explanatory variable, is set only by shutdown executor method
+	int requested_to_stop_after_queue_is_empty;
+
+	// self explanatory variable, is set only by shutdown executor method
+	int requested_to_stop_after_current_job;
 };
 
 // creates a new executor, for the client
@@ -64,6 +70,15 @@ executor* get_executor(executor_type type, int maximum_threads);
 
 // called by client, this function enqueues a job in the job_queue of the executor
 void submit(executor* executor_p, job* job_p);
+
+// the executor is asked to shutdown using this function,
+// if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
+// else executor will exit after completing all jobs in the queue
+void shutdown_executor(executor* executor_p, int shutdown_immediately);
+
+// this function, makes the calling thread to go in to wait state, untill all the threads are completed and destroyed
+// after calling this function, in the current thread we are sure that, before the execution of the new line, all the threads of executor have been completed
+void wait_for_all_threads_to_complete(executor* executor_p);
 
 // deletes the executor
 void delete_executor(executor* executor_p);

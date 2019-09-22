@@ -90,6 +90,10 @@ executor* get_executor(executor_type type, int maximum_threads)
 		create_thread(executor_p);
 	}
 
+	// unset the stop variables, just to be sure :p
+	executor_p->requested_to_stop_after_current_job = 0;
+	executor_p->requested_to_stop_after_queue_is_empty = 0;
+
 	return executor_p;
 }
 
@@ -111,32 +115,61 @@ void submit(executor* executor_p, job* job_p)
 	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 }
 
-void delete_executor(executor* executor_p)
+
+// incomplete functionality, yet
+void shutdown_executor(executor* executor_p, int shutdown_immediately)
 {
-	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
+	if(shutdown_immediately == 1)
+	{
+		executor_p->requested_to_stop_after_current_job = 1;
+	}
+	else
+	{
+		executor_p->requested_to_stop_after_queue_is_empty = 1;
+	}
+}
+
+// incomplete functionality, yet
+void wait_for_all_threads_to_complete(executor* executor_p)
+{
+	pthread_mutex_lock(&(executor_p->threads_array_mutex));
 	while(executor_p->thread_count > 0)
 	{
 		pthread_join((*((pthread_t*)get_element(executor_p->threads, executor_p->thread_count - 1))), NULL);
 		executor_p->thread_count--;
 	}
-	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
+	pthread_mutex_unlock(&(executor_p->threads_array_mutex));
+}
 
-	pthread_mutex_destroy(&(executor_p->job_queue_mutex));
-	pthread_cond_destroy(&(executor_p->job_queue_empty_wait));
-
+void delete_executor(executor* executor_p)
+{
+	// lock the job_queue, before deleting it
+	// we the executor did not create the job, so it is not our responsibility to free the job_memory
+	// you will delete the jobs, by calling delete_job on each of them
+	pthread_mutex_lock(&(executor_p->job_queue_mutex));
 	if(executor_p->job_queue != NULL)
 	{
 		delete_queue(executor_p->job_queue);
 		executor_p->job_queue = NULL;
 	}
+	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 
-	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
+	// destory the job_queue mutexes
+	pthread_mutex_destroy(&(executor_p->job_queue_mutex));
+	// destory the job_queue conditional wait variables
+	pthread_cond_destroy(&(executor_p->job_queue_empty_wait));
 
+	// lock array before deleting the array
+	pthread_mutex_lock(&(executor_p->threads_array_mutex));
 	if(executor_p->threads != NULL)
 	{
 		delete_array(executor_p->threads);
 		executor_p->threads = NULL;
 	}
+	executor_p->threads = NULL;
+	pthread_mutex_unlock(&(executor_p->threads_array_mutex));
+
+	pthread_mutex_destroy(&(executor_p->threads_array_mutex));
 
 	free(executor_p);
 }
