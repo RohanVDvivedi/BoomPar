@@ -3,6 +3,9 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+
+#include<pthread.h>
+
 #include<jobstatus.h>
 
 // you, the client is suppossed to free the input_p and output_p pointers
@@ -26,7 +29,11 @@ struct job
 	// produced when the function is called with input parameters input
 	void* output_p;
 
-	// a job_wait, on which other threads will wait, for the current job to complete and receive result output_p
+	// a job_output_mutex, to protect
+	pthread_mutex_t job_output_mutex;
+
+	// a job_completion_wait, on which other threads will wait, for the current job to complete and receive result output_p
+	pthread_cond_t job_completion_wait;
 };
 
 // creates a new job

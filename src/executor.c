@@ -105,7 +105,9 @@ void submit(executor* executor_p, job* job_p)
 	pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
 	// update job status, from CREATED to QUEUED
+	pthread_mutex_lock(&(job_p->job_output_mutex));
 	set_to_next_status(&(job_p->status));
+	pthread_mutex_unlock(&(job_p->job_output_mutex));
 
 	// unlock job_queue_mutex
 	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
