@@ -29,11 +29,14 @@ struct job
 	// produced when the function is called with input parameters input
 	void* output_p;
 
-	// a job_output_mutex, to protect
-	pthread_mutex_t job_output_mutex;
+	// signified if the result of the job is set and ready to be ready by anyother thread
+	int result_ready_to_read;
 
-	// a job_completion_wait, on which other threads will wait, for the current job to complete and receive result output_p
-	pthread_cond_t job_completion_wait;
+	// a result_ready_mutex, to protect
+	pthread_mutex_t result_ready_mutex;
+
+	// a result_ready_wait, on which other threads will wait, for the current job to complete and receive result output_p
+	pthread_cond_t result_ready_wait;
 };
 
 // creates a new job
