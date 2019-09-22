@@ -11,8 +11,8 @@ struct range
 void* my_job_function(void* my_int)
 {
 	printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self(), *((int*)my_int));
-	free(my_int);
-	return NULL;
+	(*(my_int)) += 100;
+	return my_int;
 }
 
 int main()
@@ -25,6 +25,10 @@ int main()
 		(*input_p) = i;
 		job* job_p = get_job(my_job_function, input_p);
 		submit(executor_p, job_p);
+		void* output_p = get_result_or_wait_for_result(job_p);
+		printf("thread id => %d, waited for result => [%d]\n", (int)pthread_self(), *((int*)output_p));
+		free(output_p);
+		free(job_p);
 	}
 
 	usleep(20 * 1000 * 1000);
