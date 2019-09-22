@@ -19,10 +19,13 @@ void* my_job_function(void* my_int)
 
 int main()
 {
-	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, 8);
-
 	// the number of jobs to submit
-	int jobs_count = 100;
+	int jobs_count = 10000;
+
+	// the number of threads for executor
+	int threads_count = 10;
+
+	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count);
 
 	// to store the references to all the jobs that we create
 	array* my_jobs = get_array(jobs_count);
