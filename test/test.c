@@ -12,7 +12,7 @@ struct range
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
-	printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self());
+	printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
 }
