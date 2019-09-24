@@ -23,8 +23,8 @@ void* executors_pthread_runnable_function(void* args)
 		}
 
 		// get top job_p, and then pop
-		job_p = ((job*)(get_top(executor_p->job_queue)));
-		pop(executor_p->job_queue);
+		job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		pop_queue(executor_p->job_queue);
 
 		// unlock job_queue_mutex
 		pthread_mutex_unlock(&(executor_p->job_queue_mutex));
@@ -103,7 +103,7 @@ void submit(executor* executor_p, job* job_p)
 	pthread_mutex_lock(&(executor_p->job_queue_mutex));
 
 	// push job_p to job_queue
-	push(executor_p->job_queue, job_p);
+	push_queue(executor_p->job_queue, job_p);
 
 	// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
 	pthread_cond_signal(&(executor_p->job_queue_empty_wait));
