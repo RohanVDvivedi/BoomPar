@@ -28,19 +28,8 @@ int execute(job* job_p)
 		// so uptill here the job is completed, but the result is not yet set
 		set_to_next_status(&(job_p->status));
 
-		// lock the mutex, while we set the output_p of job, and update its status
-		pthread_mutex_lock(&(job_p->result_ready_mutex));
-
-		// set the result pointed to by output_p, and set the flag denoting the result can be read
-		// this that to be atomicly executed by only one thread
-		job_p->output_p = output_pointer;
-		job_p->result_ready_to_read = 1;
-
-		// notify all the threads that are waiting for the result of the job
-		pthread_cond_broadcast(&(job_p->result_ready_wait));
-
-		// unlock the mutex that was held for making the result ready
-		pthread_mutex_unlock(&(job_p->result_ready_mutex));
+		// sets the output_p pointer of job_p, to point data pointed to by output_pointer
+		set_result(job_p, output_pointer);
 
 		return 0;
 	}
@@ -50,17 +39,36 @@ int execute(job* job_p)
 	}
 }
 
-void* get_result_or_wait_for_result(job* job_p)
+void set_result(job* job_p, void* output_pointer)
 {
+	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
+	pthread_mutex_lock(&(job_p->result_ready_mutex));
+
+	// set the result pointed to by output_p, and set the flag denoting the result can be read
+	// this that to be atomicly executed by only one thread
+	job_p->output_p = output_pointer;
+	job_p->result_ready_to_read = 1;
+
+	// notify all the threads that are waiting for the result of the job
+	pthread_cond_broadcast(&(job_p->result_ready_wait));
+
+	// unlock the mutex that was held for making the result ready
+	pthread_mutex_unlock(&(job_p->result_ready_mutex));
+}
+
+void* get_result(job* job_p)
+{
+	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
 	pthread_mutex_lock(&(job_p->result_ready_mutex));
 
 	// check of the result of the job is ready to be read, if not go to wait
 	while(job_p->result_ready_to_read == 0)
 	{
-		// go to wait state, while releasing the lock
+		// go to wait state, while releasing the lock, so that the job running thread will come and wake it up when result is ready
 		pthread_cond_wait(&(job_p->result_ready_wait), &(job_p->result_ready_mutex));
 	}
 
+	// unlock the mutex that was held for making the result ready
 	pthread_mutex_unlock(&(job_p->result_ready_mutex));
 
 	return job_p->output_p;

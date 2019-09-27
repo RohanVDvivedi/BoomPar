@@ -46,9 +46,13 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p);
 // returns 0 if the job was executed, else returns 1
 int execute(job* job);
 
+// sets the output of the job_p pointing to the data pointed by output_p
+// it is thread safe, and complimentry function to get_result
+void set_result(job* job_p, void* output_p);
+
 // get the result of the job, as and when available
-// but the calling thread goes to wait state, until the result is available
-void* get_result_or_wait_for_result(job* job_p);
+// but the calling thread goes to wait state, until the result is available, it is thread safe 
+void* get_result(job* job_p);
 
 // deletes job object
 void delete_job(job* job_p);
