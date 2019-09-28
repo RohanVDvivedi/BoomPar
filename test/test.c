@@ -2,17 +2,10 @@
 #include<array.h>
 #include<unistd.h>
 
-typedef struct range range;
-struct range
-{
-	unsigned long long int start;
-	unsigned long long int end;
-};
-
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
-	printf("thread id => %d, this is a job printing => [%d]\n", (int)pthread_self(), i);
+	printf("c %d => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
 }
@@ -20,10 +13,15 @@ void* my_job_function(void* my_int)
 int main()
 {
 	// the number of jobs to submit
-	int jobs_count = 10000;
+	int jobs_count = 25;
 
 	// the number of threads for executor
 	int threads_count = 4;
+
+	// how do you want to control
+	int wait_for_all_jobs_to_complete = 0;
+	int wait_for_executors_threads_to_shutdown = 1;
+	int shutdown_immediately = 1;
 
 	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count);
 
@@ -33,11 +31,17 @@ int main()
 	// create jobs
 	for(int i=0; i<jobs_count;i++)
 	{
-		// create a new job
-		job* job_p = get_job(my_job_function, ((int*)(malloc(sizeof(int)))) );
+		void* (*funt)() = NULL;
+		void* input_p = NULL;
 
-		// set its input
-		(*((int*)(job_p->input_p))) = i;
+		{
+			funt = my_job_function;
+			input_p = ((int*)(malloc(sizeof(int))));
+			(*((int*)input_p)) = i;
+		}
+
+		// create a new job
+		job* job_p = get_job(funt, input_p);
 
 		// store it in out array
 		set_element(my_jobs, job_p, i);
@@ -46,17 +50,64 @@ int main()
 	// submit jobs, one by one
 	for(int i=0; i<jobs_count;i++)
 	{
-		submit(executor_p, (job*)get_element(my_jobs, i));
+		if(submit(executor_p, (job*)get_element(my_jobs, i)))
+		{
+			//printf("Successfully submitted job with input %d\n", i);
+		}
+		else
+		{
+			printf("Job submission failed with input %d\n", i);
+		}
 	}
 
-	// wait for all the jobs, that we know off to finish
-	for(int i=0; i<jobs_count;i++)
-	{
-		// get output_p of the i-th job even if we have to wait
-		void* output_p = get_result((job*)get_element(my_jobs, i));
+	//usleep(10 * 1000 * 1000);
 
-		// and print their results
-		printf("thread %d waited for result, and received => [%d]\n", (int)pthread_self(), *((int*)output_p));
+	if(wait_for_all_jobs_to_complete)
+	{
+		printf("waiting for the jobs to finish\n");
+
+		// wait for all the jobs, that we know off to finish
+		for(int i=0; i<jobs_count;i++)
+		{
+			// get output_p of the i-th job even if we have to wait
+			void* output_p = get_result((job*)get_element(my_jobs, i));
+
+			// and print their results
+			printf("p %d => [%d]\n", (int)pthread_self(), *((int*)output_p));
+		}
+	}
+
+	if(wait_for_executors_threads_to_shutdown)
+	{
+		printf("Calling shutdown with shutdown_immediately = %d\n", shutdown_immediately);
+
+		shutdown_executor(executor_p, shutdown_immediately);
+
+		printf("Shutdown called\n");
+
+		printf("Going for waiting on the executor threads to finish\n");
+
+		int wait_error = wait_for_all_threads_to_complete(executor_p);
+		if(wait_error)
+		{
+			printf("Looks like the executor threads finished\n");
+		}
+		else
+		{
+			printf("Looks like wait function threw error %d\n", wait_error);
+		}
+	}
+
+	printf("thread count %llu\n", executor_p->thread_count);
+	printf("unexecuted job count %llu\n", executor_p->job_queue->queue_size);
+
+	if(delete_executor(executor_p))
+	{
+		printf("Deletion of executor succedded\n");
+	}
+	else
+	{
+		printf("Deletion of executor failed\n");
 	}
 
 	for(int i=0; i<jobs_count;i++)
@@ -67,8 +118,6 @@ int main()
 	}
 
 	delete_array(my_jobs);
-
-	delete_executor(executor_p);
 
 	return 0;
 }

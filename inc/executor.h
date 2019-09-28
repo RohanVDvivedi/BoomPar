@@ -44,19 +44,15 @@ struct executor
 	pthread_cond_t job_queue_empty_wait;
 
 	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
-	// then the corresponding thread gets stored in a hashmap while it is running
 
 	// keeps the current count of threads created by executor
 	unsigned long long int thread_count;
 
-	// this is the array to store created thread ids 
-	array* threads;
+	// thread_count_mutex is for protection of thread count variable
+	pthread_mutex_t thread_count_mutex;
 
-	// threads_array_mutex is for protection of threads data structure
-	pthread_mutex_t threads_array_mutex;
-
-	// some data structure that stores completed jobs, or their results, along with their job id and thread id
-	// not thought off yet :p
+	// thread_count_wait is for waiting on thread count variable
+	pthread_cond_t thread_count_wait;
 
 	// self explanatory variable, is set only by shutdown executor method
 	int requested_to_stop_after_queue_is_empty;
@@ -69,7 +65,9 @@ struct executor
 executor* get_executor(executor_type type, int maximum_threads);
 
 // called by client, this function enqueues a job in the job_queue of the executor
-void submit(executor* executor_p, job* job_p);
+// it returns 0, if the job was not submitted, and 1 if the job submission succeeded
+// job submission fails if any of the thread has called, shutdown_executor() on this executor
+int submit(executor* executor_p, job* job_p);
 
 // the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
@@ -78,9 +76,12 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately);
 
 // this function, makes the calling thread to go in to wait state, untill all the threads are completed and destroyed
 // after calling this function, in the current thread we are sure that, before the execution of the new line, all the threads of executor have been completed
-void wait_for_all_threads_to_complete(executor* executor_p);
+// and that is basically means,that no new job will now be dequeued, retuns 1 if the thread_count of the gioven executor is 0 now
+int wait_for_all_threads_to_complete(executor* executor_p);
 
-// deletes the executor
-void delete_executor(executor* executor_p);
+// deletes the executor,
+// can not and must not be called without, calling shutdown
+// returns 1 if the executor was deleted
+int delete_executor(executor* executor_p);
 
 #endif
