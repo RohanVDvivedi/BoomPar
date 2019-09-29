@@ -16,6 +16,9 @@ enum executor_type
 	// there are fixed number of threads, that execute all your jobs
 	FIXED_THREAD_COUNT_EXECUTOR,
 
+	// the executor starts a new, thread for every job that is submitted
+	NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR,
+
 	// the thread count is maintained by the executor itself, more tasks are submitted, more threads you see
 	CACHED_THREAD_POOL_EXECUTOR
 };

@@ -25,9 +25,11 @@ void* executors_pthread_runnable_function(void* args)
 	// this is the executor, that is responsible for creation and execution of the thread
 	executor* executor_p = ((executor*)(args));
 
-	int keep_looping = 1; 
+	// we can not keep looping if the executor type = NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
+	// because we would have to kill the thread after execution
+	int keep_looping = executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR ? 0 : 1; 
 
-	while(keep_looping)
+	do
 	{
 		// lock job_queue_mutex
 		pthread_mutex_lock(&(executor_p->job_queue_mutex));
@@ -61,6 +63,7 @@ void* executors_pthread_runnable_function(void* args)
 			execute(job_p);
 		}
 	}
+	while(keep_looping);
 
 	// lock threads, while we add add a thread to the data structure
 	pthread_mutex_lock(&(executor_p->thread_count_mutex));
@@ -112,10 +115,12 @@ executor* get_executor(executor_type type, int maximum_threads)
 			executor_p->minimum_threads = executor_p->maximum_threads;
 			break;
 		}
-		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 1 thread, initially, and keeps on increasing with load
+		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 0 thread, initially, and keeps on increasing with load
+		// a NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR, creates a new thread for every new job submitted, hence minimum and maximum threads are undefined
+		case NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR :
 		case CACHED_THREAD_POOL_EXECUTOR :
 		{
-			executor_p->minimum_threads = 1;
+			executor_p->minimum_threads = 0;
 			break;
 		}
 	}
@@ -161,6 +166,11 @@ int submit(executor* executor_p, job* job_p)
 			pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
 			was_job_queued = 1;
+		}
+
+		if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR)
+		{
+			create_thread(executor_p);
 		}
 	}
 
