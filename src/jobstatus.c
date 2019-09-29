@@ -5,6 +5,11 @@ void set_to_next_status(job_status* status_p)
 	(*status_p) = get_next_status(*status_p);
 }
 
+job_status get_initial_state_status()
+{
+	return CREATED;
+}
+
 job_status get_next_status(job_status status)
 {
 	job_status next_status;
@@ -32,4 +37,27 @@ job_status get_next_status(job_status status)
 		}
 	}
 	return next_status;
+}
+
+char* get_status_string(job_status status)
+{
+	switch(status)
+	{
+		case CREATED :
+		{
+			return "CREATED";
+		}
+		case QUEUED :
+		{
+			return "QUEUED";
+		}
+		case RUNNING :
+		{
+			return "RUNNING";
+		}
+		case COMPLETED :
+		{
+			return "COMPLETED";
+		}
+	}
 }

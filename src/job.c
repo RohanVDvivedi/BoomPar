@@ -3,7 +3,7 @@
 job* get_job(void* (*function_p)(void* input_p), void* input_p)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
-	job_p->status = CREATED;
+	job_p->status = get_initial_state_status();
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
 	job_p->output_p = NULL;
@@ -13,30 +13,43 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p)
 	return job_p;
 }
 
+int job_status_change(job* job_p, job_status job_new_status)
+{
+	int has_job_status_changed = 0;
+	job_status next_allowed_status = get_next_status(job_p->status);
+	if(next_allowed_status == job_new_status)
+	{
+		set_to_next_status(&(job_p->status));
+		has_job_status_changed = 1;
+	}
+	return has_job_status_changed;
+}
+
 int execute(job* job_p)
 {
-	// execute only if it is queued for execution
-	if(job_p->status == QUEUED)
+	// suppossed to update the status of the job to RUNNING
+	if(!job_status_change(job_p, RUNNING))
 	{
-		// suppossed to update the status of the job to RUNNING
-		set_to_next_status(&(job_p->status));
-
-		// execute the job with its input, and result is stored at output
-		void* output_pointer = job_p->function_p(job_p->input_p);
-
-		// suppossed to update the status of the job to COMPLTED, 
-		// so uptill here the job is completed, but the result is not yet set
-		set_to_next_status(&(job_p->status));
-
-		// sets the output_p pointer of job_p, to point data pointed to by output_pointer
-		set_result(job_p, output_pointer);
-
-		return 0;
+		goto ERROR;
 	}
-	else
+
+	// execute the job with its input, and result is stored at output
+	void* output_pointer = job_p->function_p(job_p->input_p);
+
+	// suppossed to update the status of the job to COMPLTED, 
+	// so uptill here the job is completed, but the result is not yet set
+	if(!job_status_change(job_p, COMPLETED))
 	{
-		return 1;
+		goto ERROR;
 	}
+
+	// sets the output_p pointer of job_p, to point data pointed to by output_pointer
+	set_result(job_p, output_pointer);
+
+	return 0;
+
+	ERROR :;
+	return 1;
 }
 
 void set_result(job* job_p, void* output_pointer)

@@ -150,16 +150,18 @@ int submit(executor* executor_p, job* job_p)
 	// queue the job shutwdown was never called, on this executor
 	if( !is_shutdown_called(executor_p))
 	{
-		// push job_p to job_queue
-		push_queue(executor_p->job_queue, job_p);
-
 		// update job status, from CREATED to QUEUED
-		set_to_next_status(&(job_p->status));
+		// if this update of job status is successfull, then only we go forward and queue the job
+		if(job_status_change(job_p, QUEUED))
+		{
+			// push job_p to job_queue
+			push_queue(executor_p->job_queue, job_p);
 
-		// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
-		pthread_cond_signal(&(executor_p->job_queue_empty_wait));
+			// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
+			pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
-		was_job_queued = 1;
+			was_job_queued = 1;
+		}
 	}
 
 	// unlock job_queue_mutex
