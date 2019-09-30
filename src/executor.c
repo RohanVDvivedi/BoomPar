@@ -120,29 +120,42 @@ void* executors_pthread_runnable_function(void* args)
 	return NULL;
 }
 
-void create_thread(executor* executor_p)
+// returns 1 if a new thread is created and added to the executor
+int create_thread(executor* executor_p)
 {
+	int is_thread_added = 0;
+
 	// lock threads, while we add add a thread to the data structure
 	pthread_mutex_lock(&(executor_p->thread_count_mutex));
 
-	// the id to the new thread
-	pthread_t thread_id_p;
+	// create a new thread for the executor, if the executor type is NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
+	// or if we are not exceeding the maximum thread count for the executor
+	if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || executor_p->thread_count < executor_p->maximum_threads)
+	{
+		// the id to the new thread
+		pthread_t thread_id_p;
 
-	// create a new thread that runs, with an executor, executor_p
-	pthread_create(&thread_id_p, NULL, executors_pthread_runnable_function, executor_p);
+		// create a new thread that runs, with an executor, executor_p
+		pthread_create(&thread_id_p, NULL, executors_pthread_runnable_function, executor_p);
 
-	// increment the count of the threads the executor manages
-	executor_p->thread_count++;
+		// increment the count of the threads the executor manages
+		executor_p->thread_count++;
+
+		// we created a new thread so, set is_thread_added to 1
+		is_thread_added = 1;
+	}
 
 	// unlock threads
 	pthread_mutex_unlock(&(executor_p->thread_count_mutex));
+
+	return is_thread_added;
 }
 
-executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
+executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
-	executor_p->maximum_threads = maximum_threads > 0 ? maximum_threads : 1;
+	executor_p->maximum_threads = maximum_threads;
 	executor_p->empty_job_queue_wait_time_out_in_micro_seconds = empty_job_queue_wait_time_out_in_micro_seconds;
 
 	switch(executor_p->type)

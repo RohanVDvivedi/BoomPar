@@ -21,7 +21,7 @@ int main()
 	// how do you want to control
 	int wait_for_all_jobs_to_complete = 0;
 	int wait_for_executors_threads_to_shutdown = 1;
-	int shutdown_immediately = 1;
+	int shutdown_immediately = 0;
 
 	// wait time out on empty job = 3 secs, 50 milli seconds
 	unsigned long long int seconds = 3;
@@ -29,7 +29,7 @@ int main()
 	unsigned long long int microseconds = 0;
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds = (seconds * 1000000) + (milliseconds * 1000) + (microseconds);
 
-	executor* executor_p = get_executor(/*FIXED_THREAD_COUNT_EXECUTOR*/ /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ CACHED_THREAD_POOL_EXECUTOR, threads_count, empty_job_queue_wait_time_out_in_micro_seconds);
+	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count, empty_job_queue_wait_time_out_in_micro_seconds);
 
 	// to store the references to all the jobs that we create
 	array* my_jobs = get_array(jobs_count);

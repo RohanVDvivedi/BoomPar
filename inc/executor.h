@@ -34,8 +34,8 @@ struct executor
 	// and we want an upper bound on the count of threads
 	// if this is -1, the maximum number of threads is infinite
 	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
-	int maximum_threads;
-	int minimum_threads;
+	unsigned long long int maximum_threads;
+	unsigned long long int minimum_threads;
 
 	// this is queue for the jobs, that gets submitted by the client
 	queue* job_queue;
@@ -72,7 +72,7 @@ struct executor
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
+executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
 
 // called by client, this function enqueues a job in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
