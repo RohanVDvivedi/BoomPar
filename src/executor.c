@@ -98,6 +98,9 @@ void* executors_pthread_runnable_function(void* args)
 
 			// the thread will now execute the job that it popped
 			execute(job_p);
+
+			// once the job is executed we delete the job
+			delete_job(job_p);
 		}
 	}
 	while(keep_looping);
@@ -196,16 +199,19 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 	return executor_p;
 }
 
-int submit(executor* executor_p, job* job_p)
+int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input_p)
 {
 	int was_job_queued = 0;
 
 	// lock job_queue_mutex
 	pthread_mutex_lock(&(executor_p->job_queue_mutex));
 
-	// queue the job shutwdown was never called, on this executor
+	// we can go ahead and create and queue the job, if shutwdown was never called, on this executor
 	if( !is_shutdown_called(executor_p))
 	{
+		// create a new job with the given parameters
+		job* job_p = get_job(function_p, input_p);
+
 		// update job status, from CREATED to QUEUED
 		// if this update of job status is successfull, then only we go forward and queue the job
 		if(job_status_change(job_p, QUEUED))

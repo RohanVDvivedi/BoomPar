@@ -19,7 +19,6 @@ int main()
 	int threads_count = 4;
 
 	// how do you want to control
-	int wait_for_all_jobs_to_complete = 0;
 	int wait_for_executors_threads_to_shutdown = 1;
 	int shutdown_immediately = 0;
 
@@ -31,32 +30,24 @@ int main()
 
 	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count, empty_job_queue_wait_time_out_in_micro_seconds);
 
-	// to store the references to all the jobs that we create
-	array* my_jobs = get_array(jobs_count);
+	// to store the references to all the input integers that we create, for each and every job
+	array* my_ints = get_array(jobs_count);
 
 	// create jobs
 	for(int i=0; i<jobs_count;i++)
 	{
-		void* (*funt)() = NULL;
-		void* input_p = NULL;
+		int* input_p = ((int*)(malloc(sizeof(int))));
 
-		{
-			funt = my_job_function;
-			input_p = ((int*)(malloc(sizeof(int))));
-			(*((int*)input_p)) = i;
-		}
+		(*input_p) = i;
 
-		// create a new job
-		job* job_p = get_job(funt, input_p);
-
-		// store it in out array
-		set_element(my_jobs, job_p, i);
+		// store it in our array
+		set_element(my_ints, input_p, i);
 	}
 
 	// submit jobs, one by one
 	for(int i=0; i<jobs_count;i++)
 	{
-		if(submit(executor_p, (job*)get_element(my_jobs, i)))
+		if(submit(executor_p, my_job_function, (void*)get_element(my_ints, i)))
 		{
 			//printf("Successfully submitted job with input %d\n", i);
 		}
@@ -67,21 +58,6 @@ int main()
 	}
 
 	//usleep(10 * 1000 * 1000);
-
-	if(wait_for_all_jobs_to_complete)
-	{
-		printf("waiting for the jobs to finish\n");
-
-		// wait for all the jobs, that we know off to finish
-		for(int i=0; i<jobs_count;i++)
-		{
-			// get output_p of the i-th job even if we have to wait
-			void* output_p = get_result((job*)get_element(my_jobs, i));
-
-			// and print their results
-			printf("p %d => [%d]\n", (int)pthread_self(), *((int*)output_p));
-		}
-	}
 
 	if(wait_for_executors_threads_to_shutdown)
 	{
@@ -118,12 +94,11 @@ int main()
 
 	for(int i=0; i<jobs_count;i++)
 	{
-		job* job_p = (job*)get_element(my_jobs, i);
-		free(job_p->output_p);
-		delete_job(job_p);
+		int* input_p = (int*)get_element(my_ints, i);
+		free(input_p);
 	}
 
-	delete_array(my_jobs);
+	delete_array(my_ints);
 
 	return 0;
 }

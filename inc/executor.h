@@ -11,6 +11,10 @@
 
 #include<job.h>
 
+// the executor handles its own job structures
+// user does not submit jobs but functions and their input data pointers
+// executor will create a job from it, and queue it for executing it on its threads
+
 typedef enum executor_type executor_type;
 enum executor_type
 {
@@ -74,10 +78,10 @@ struct executor
 // creates a new executor, for the client
 executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
 
-// called by client, this function enqueues a job in the job_queue of the executor
+// called by client, this function enqueues a job (with function function_p that will execute with input params input_p) in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // job submission fails if any of the thread has called, shutdown_executor() on this executor
-int submit(executor* executor_p, job* job_p);
+int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input_p);
 
 // the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
