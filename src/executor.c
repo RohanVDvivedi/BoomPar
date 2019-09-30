@@ -207,7 +207,9 @@ int submit(executor* executor_p, job* job_p)
 			was_job_queued = 1;
 		}
 
-		if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR)
+		// we have to create a new thread for every new job if the executor is a NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
+		// for a CACHED_THREAD_POOL_EXECUTOR, we create a new thread if there are no thread that are waiting for any empty job
+		if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || (executor_p->type == CACHED_THREAD_POOL_EXECUTOR && executor_p->threads_waiting_on_empty_job_queue == 0) )
 		{
 			create_thread(executor_p);
 		}
