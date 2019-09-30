@@ -7,10 +7,19 @@ int is_threads_shutdown_condition_reached(executor* executor_p)
 {
 	// if the threads have to stop after current job or 
 	// if the threads have to stop after all the jobs in queue are completed
-	// for a cached thread pool, we wait timed and hence if the job queue is empty, we must exit
 	return executor_p->requested_to_stop_after_current_job || 
-	( isQueueEmpty(executor_p->job_queue) && executor_p->requested_to_stop_after_queue_is_empty ) ||
-	( executor_p->type == CACHED_THREAD_POOL_EXECUTOR && executor_p->threads_waiting_on_empty_job_queue > 0 );
+	( isQueueEmpty(executor_p->job_queue) && executor_p->requested_to_stop_after_queue_is_empty );
+}
+
+// checks if the condition to stop the currently calling thread has been reached for the given executor
+// returns 1 if the condition has been reached
+// call this function only after protecting it with executor_p->job_queue_mutex
+int is_calling_thread_shutdown_condition_reached(executor* executor_p, int is_first_iter)
+{
+	// shutdown the current thread if, there are threads waiting on the job_queue
+	// for a cached thread pool, we wait timed and hence if the job queue is empty, we must exit
+	// and we have to take into ac count that it is not the first iteration of the current thread
+	return ( executor_p->type == CACHED_THREAD_POOL_EXECUTOR && !is_first_iter &&  executor_p->threads_waiting_on_empty_job_queue > 0 );
 }
 
 // checks if the condition to stop submission of jobs have been reached for the given executor
@@ -31,15 +40,18 @@ void* executors_pthread_runnable_function(void* args)
 
 	// we can not keep looping if the executor type = NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
 	// because we would have to kill the thread after execution
-	int keep_looping = executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR ? 0 : 1; 
+	int keep_looping = executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR ? 0 : 1;
+
+	// to check if it is the first iter of the current thread
+	int is_first_iter = 1;
 
 	do
 	{
 		// lock job_queue_mutex
 		pthread_mutex_lock(&(executor_p->job_queue_mutex));
 
-		// we wait only if the queue is empty and thread shutdown conditions are not met
-		while(isQueueEmpty(executor_p->job_queue) && (!is_threads_shutdown_condition_reached(executor_p)) )
+		// we wait only if the queue is empty and thread's shutdown conditions are not met (neither all threads shudown condition or current threads shutdown condition)
+		while(isQueueEmpty(executor_p->job_queue) && (!is_calling_thread_shutdown_condition_reached(executor_p, is_first_iter)) && (!is_threads_shutdown_condition_reached(executor_p)) )
 		{
 			// increment the thread count that are waiting on the empty job queue
 			// since the current thread is goinf into wait state now
@@ -48,8 +60,11 @@ void* executors_pthread_runnable_function(void* args)
 			// CACHED_THREAD_POOL_EXECUTOR, we definetly go to wait, but we timedwait
 			if( executor_p->type == CACHED_THREAD_POOL_EXECUTOR )
 			{
+				struct timespec current_time;
+				clock_gettime(CLOCK_REALTIME, &current_time);;
+				struct timespec wait_till;
 				// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
-				pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));
+				pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex), &wait_till);
 			}
 			else
 			{
@@ -83,6 +98,9 @@ void* executors_pthread_runnable_function(void* args)
 			// the thread will now execute the job that it popped
 			execute(job_p);
 		}
+
+		// first iteration completed
+		is_first_iter = 0;
 	}
 	while(keep_looping);
 
