@@ -62,8 +62,8 @@ void* executors_pthread_runnable_function(void* args)
 			{
 				struct timespec current_time;
 				clock_gettime(CLOCK_REALTIME, &current_time);
-				unsigned long long int secs = executor_p->empty_job_queue_wait_time_out_in_ns / 1000000000;
-				unsigned long long int nano_secs_extra = executor_p->empty_job_queue_wait_time_out_in_ns % 1000000000;
+				unsigned long long int secs = executor_p->empty_job_queue_wait_time_out_in_micro_seconds / 1000000;
+				unsigned long long int nano_secs_extra = (executor_p->empty_job_queue_wait_time_out_in_micro_seconds % 1000000) * 1000;
 				struct timespec wait_till = {.tv_sec = (current_time.tv_sec + secs), .tv_nsec = (current_time.tv_nsec + nano_secs_extra)};
 				// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
 				pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex), &wait_till);
@@ -142,12 +142,12 @@ void create_thread(executor* executor_p)
 	pthread_mutex_unlock(&(executor_p->thread_count_mutex));
 }
 
-executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_ns)
+executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
 	executor_p->maximum_threads = maximum_threads > 0 ? maximum_threads : 1;
-	executor_p->empty_job_queue_wait_time_out_in_ns = empty_job_queue_wait_time_out_in_ns;
+	executor_p->empty_job_queue_wait_time_out_in_micro_seconds = empty_job_queue_wait_time_out_in_micro_seconds;
 
 	switch(executor_p->type)
 	{

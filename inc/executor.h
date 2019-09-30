@@ -44,7 +44,7 @@ struct executor
 	// as the thread go to wait, or wakes up on  job_queue_empty_wait
 	int threads_waiting_on_empty_job_queue;
 
-	unsigned long long int empty_job_queue_wait_time_out_in_ns;
+	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
 	// job_queue_mutex for protection of job_queue data structure
 	pthread_mutex_t job_queue_mutex;
@@ -71,7 +71,7 @@ struct executor
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_ns);
+executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
 
 // called by client, this function enqueues a job in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
