@@ -45,8 +45,17 @@ void* executors_pthread_runnable_function(void* args)
 			// since the current thread is goinf into wait state now
 			executor_p->threads_waiting_on_empty_job_queue++;
 
-			// wait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
-			pthread_cond_wait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));	
+			// CACHED_THREAD_POOL_EXECUTOR, we definetly go to wait, but we timedwait
+			if( executor_p->type == CACHED_THREAD_POOL_EXECUTOR )
+			{
+				// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
+				pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));
+			}
+			else
+			{
+				// wait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
+				pthread_cond_wait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));
+			}
 
 			// decrement the thread count that are waiting on the empty job queue
 			// since the current thread has woken up from wait state now
