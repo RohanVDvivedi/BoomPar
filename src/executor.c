@@ -5,8 +5,12 @@
 // call this function only after protecting it with executor_p->job_queue_mutex
 int is_threads_shutdown_condition_reached(executor* executor_p)
 {
-	// if the threads have to stop after current job or if the threads have to stop after all the jobs in queue are completed
-	return executor_p->requested_to_stop_after_current_job || ( isQueueEmpty(executor_p->job_queue) && executor_p->requested_to_stop_after_queue_is_empty);
+	// if the threads have to stop after current job or 
+	// if the threads have to stop after all the jobs in queue are completed
+	// for a cached thread pool, we wait timed and hence if the job queue is empty, we must exit
+	return executor_p->requested_to_stop_after_current_job || 
+	( isQueueEmpty(executor_p->job_queue) && executor_p->requested_to_stop_after_queue_is_empty ) ||
+	( executor_p->type == CACHED_THREAD_POOL_EXECUTOR && executor_p->threads_waiting_on_empty_job_queue > 0 );
 }
 
 // checks if the condition to stop submission of jobs have been reached for the given executor
