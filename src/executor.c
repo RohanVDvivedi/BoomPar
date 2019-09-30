@@ -204,14 +204,39 @@ int submit(executor* executor_p, job* job_p)
 			// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
 			pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
-			was_job_queued = 1;
-		}
+			switch(executor_p->type)
+			{
+				case FIXED_THREAD_COUNT_EXECUTOR :
+				{
+					// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
+					// we do not care if no one wakes up now, somneone will will eventually complete their current job and pick this one up
+					// do not create any new thread beacuse it is a FIXED_THREAD_COUNT_EXECUTOR
+					pthread_cond_signal(&(executor_p->job_queue_empty_wait));
+					break;
+				}
+				case NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR :
+				{
+					// we do not care, and so if a new job is creted and submitted, we must create a new thread for it
+					create_thread(executor_p);
+					break;
+				}
+				case CACHED_THREAD_POOL_EXECUTOR :
+				{
+					// if there are threads waiting for new job, we just wake some one up
+					if(executor_p->threads_waiting_on_empty_job_queue > 0)
+					{
+						pthread_cond_signal(&(executor_p->job_queue_empty_wait));
+					}
+					// else since there are no threads, waiting for the job, we have to create one for this job now
+					else
+					{
+						create_thread(executor_p);
+					}
+					break;
+				}
+			}
 
-		// we have to create a new thread for every new job if the executor is a NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
-		// for a CACHED_THREAD_POOL_EXECUTOR, we create a new thread if there are no thread that are waiting for any empty job
-		if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || (executor_p->type == CACHED_THREAD_POOL_EXECUTOR && executor_p->threads_waiting_on_empty_job_queue == 0) )
-		{
-			create_thread(executor_p);
+			was_job_queued = 1;
 		}
 	}
 
