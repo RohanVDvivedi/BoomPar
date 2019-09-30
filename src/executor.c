@@ -80,7 +80,7 @@ void* executors_pthread_runnable_function(void* args)
 		}
 
 		// exit the loop if the thread shutdown condition has been reached
-		if( is_threads_shutdown_condition_reached(executor_p) )
+		if( is_calling_thread_shutdown_condition_reached(executor_p, is_first_iter) || is_threads_shutdown_condition_reached(executor_p) )
 		{
 			// then we can not keep looping
 			keep_looping = 0;
