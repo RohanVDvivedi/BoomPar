@@ -34,7 +34,6 @@ struct executor
 	// if this is -1, the maximum number of threads is infinite
 	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
 	int maximum_threads;
-
 	int minimum_threads;
 
 	// this is queue for the jobs, that gets submitted by the client
@@ -44,6 +43,8 @@ struct executor
 	// this int is also protected using the job_queue_mutex, and is incremented and decremented, by the thread itself
 	// as the thread go to wait, or wakes up on  job_queue_empty_wait
 	int threads_waiting_on_empty_job_queue;
+
+	unsigned long long int empty_job_queue_wait_time_out_in_ns;
 
 	// job_queue_mutex for protection of job_queue data structure
 	pthread_mutex_t job_queue_mutex;
@@ -70,7 +71,7 @@ struct executor
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, int maximum_threads);
+executor* get_executor(executor_type type, int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_ns);
 
 // called by client, this function enqueues a job in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
