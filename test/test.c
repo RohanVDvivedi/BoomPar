@@ -23,7 +23,14 @@ int main()
 	int wait_for_executors_threads_to_shutdown = 1;
 	int shutdown_immediately = 0;
 
-	executor* executor_p = get_executor(/*FIXED_THREAD_COUNT_EXECUTOR*/ /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ CACHED_THREAD_POOL_EXECUTOR, threads_count);
+	// wait time out on empty job = 3 secs, 50 milli seconds
+	unsigned long long int seconds = 3;
+	unsigned long long int milliseconds = 50;
+	unsigned long long int microseconds = 0;
+	unsigned long long int nanoseconds = 0;
+	unsigned long long int empty_job_queue_wait_time_out_in_ns = (seconds * 1000000000) + (milliseconds * 1000000) + (microseconds * 1000) + (nanoseconds);
+
+	executor* executor_p = get_executor(/*FIXED_THREAD_COUNT_EXECUTOR*/ /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ CACHED_THREAD_POOL_EXECUTOR, threads_count, empty_job_queue_wait_time_out_in_ns);
 
 	// to store the references to all the jobs that we create
 	array* my_jobs = get_array(jobs_count);
@@ -98,7 +105,7 @@ int main()
 		}
 	}
 
-	printf("thread count %llu\n", executor_p->thread_count);
+	printf("thread count %d\n", executor_p->thread_count);
 	printf("unexecuted job count %llu\n", executor_p->job_queue->queue_size);
 
 	if(delete_executor(executor_p))
