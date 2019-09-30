@@ -50,6 +50,8 @@ void* executors_pthread_runnable_function(void* args)
 		// lock job_queue_mutex
 		pthread_mutex_lock(&(executor_p->job_queue_mutex));
 
+		int wait_error = 0;
+
 		// we wait only if the queue is empty and thread's shutdown conditions are not met (neither all threads shudown condition or current threads shutdown condition)
 		while(isQueueEmpty(executor_p->job_queue) && (!is_calling_thread_shutdown_condition_reached(executor_p, is_first_iter)) && (!is_threads_shutdown_condition_reached(executor_p)) )
 		{
@@ -66,12 +68,12 @@ void* executors_pthread_runnable_function(void* args)
 				unsigned long long int nano_secs_extra = (executor_p->empty_job_queue_wait_time_out_in_micro_seconds % 1000000) * 1000;
 				struct timespec wait_till = {.tv_sec = (current_time.tv_sec + secs), .tv_nsec = (current_time.tv_nsec + nano_secs_extra)};
 				// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
-				pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex), &wait_till);
+				wait_error = pthread_cond_timedwait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex), &wait_till);printf("wait_error : %d\n", wait_error);
 			}
 			else
 			{
 				// wait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
-				pthread_cond_wait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));
+				wait_error = pthread_cond_wait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));
 			}
 
 			// decrement the thread count that are waiting on the empty job queue
@@ -79,8 +81,8 @@ void* executors_pthread_runnable_function(void* args)
 			executor_p->threads_waiting_on_empty_job_queue--;
 		}
 
-		// exit the loop if the thread shutdown condition has been reached
-		if( is_calling_thread_shutdown_condition_reached(executor_p, is_first_iter) || is_threads_shutdown_condition_reached(executor_p) )
+		// exit the loop if all the threads shutdown condition has been reached, or the condition variable waited till timeout
+		if( wait_error == ETIMEDOUT || is_threads_shutdown_condition_reached(executor_p) )
 		{
 			// then we can not keep looping
 			keep_looping = 0;
@@ -98,7 +100,14 @@ void* executors_pthread_runnable_function(void* args)
 			pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 
 			// the thread will now execute the job that it popped
-			execute(job_p);
+			if(job_p == NULL)
+			{
+				printf("job is NULL\n");
+			}
+			else
+			{
+				execute(job_p);
+			}
 		}
 
 		// first iteration completed
@@ -120,6 +129,8 @@ void* executors_pthread_runnable_function(void* args)
 
 	// unlock threads
 	pthread_mutex_unlock(&(executor_p->thread_count_mutex));
+
+	printf("Killed %d\n", (int)pthread_self());
 
 	return NULL;
 }
@@ -203,9 +214,6 @@ int submit(executor* executor_p, job* job_p)
 		{
 			// push job_p to job_queue
 			push_queue(executor_p->job_queue, job_p);
-
-			// notify any one thread that is waiting for job_queue to have a job, on job_queue_empty_wait
-			pthread_cond_signal(&(executor_p->job_queue_empty_wait));
 
 			switch(executor_p->type)
 			{

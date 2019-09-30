@@ -13,7 +13,7 @@ void* my_job_function(void* my_int)
 int main()
 {
 	// the number of jobs to submit
-	int jobs_count = 20;
+	int jobs_count = 120;
 
 	// the number of threads for executor
 	int threads_count = 4;
@@ -21,7 +21,7 @@ int main()
 	// how do you want to control
 	int wait_for_all_jobs_to_complete = 0;
 	int wait_for_executors_threads_to_shutdown = 1;
-	int shutdown_immediately = 1;
+	int shutdown_immediately = 0;
 
 	// wait time out on empty job = 3 secs, 50 milli seconds
 	unsigned long long int seconds = 3;
