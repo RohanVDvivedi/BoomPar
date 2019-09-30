@@ -23,7 +23,7 @@ int main()
 	int wait_for_executors_threads_to_shutdown = 1;
 	int shutdown_immediately = 0;
 
-	executor* executor_p = get_executor(FIXED_THREAD_COUNT_EXECUTOR /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ /*CACHED_THREAD_POOL_EXECUTOR*/, threads_count);
+	executor* executor_p = get_executor(/*FIXED_THREAD_COUNT_EXECUTOR*/ /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ CACHED_THREAD_POOL_EXECUTOR, threads_count);
 
 	// to store the references to all the jobs that we create
 	array* my_jobs = get_array(jobs_count);

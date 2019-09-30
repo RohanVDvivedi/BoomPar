@@ -37,8 +37,16 @@ void* executors_pthread_runnable_function(void* args)
 		// we wait only if the queue is empty and thread shutdown conditions are not met
 		while(isQueueEmpty(executor_p->job_queue) && (!is_threads_shutdown_condition_reached(executor_p)) )
 		{
+			// increment the thread count that are waiting on the empty job queue
+			// since the current thread is goinf into wait state now
+			executor_p->threads_waiting_on_empty_job_queue++;
+
 			// wait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
 			pthread_cond_wait(&(executor_p->job_queue_empty_wait), &(executor_p->job_queue_mutex));	
+
+			// decrement the thread count that are waiting on the empty job queue
+			// since the current thread has woken up from wait state now
+			executor_p->threads_waiting_on_empty_job_queue--;
 		}
 
 		// exit the loop if the thread shutdown condition has been reached
