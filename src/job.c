@@ -25,6 +25,12 @@ int job_status_change(job* job_p, job_status job_new_status)
 	return has_job_status_changed;
 }
 
+void execute_async(job* job_p)
+{
+	// todo
+	execute(job_p);
+}
+
 int execute(job* job_p)
 {
 	// suppossed to update the status of the job to RUNNING
