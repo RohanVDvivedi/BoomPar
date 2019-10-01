@@ -25,10 +25,31 @@ int job_status_change(job* job_p, job_status job_new_status)
 	return has_job_status_changed;
 }
 
-void execute_async(job* job_p)
+void* execute_wrapper(void* job_v_p)
 {
-	// todo
+	job* job_p = ((job*)job_v_p);
 	execute(job_p);
+	return NULL;
+}
+
+pthread_t execute_async(job* job_p)
+{
+	// suppossed to update the status of the job to RUNNING
+	if(!job_status_change(job_p, QUEUED))
+	{
+		goto ERROR;
+	}
+
+	// the id to the new thread
+	pthread_t thread_id_p;
+
+	// create a new thread that runs, with an executor, executor_p
+	pthread_create(&thread_id_p, NULL, execute_wrapper, job_p);
+
+	return thread_id_p;
+
+	ERROR :;
+	return 0;
 }
 
 int execute(job* job_p)

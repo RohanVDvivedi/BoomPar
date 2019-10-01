@@ -45,7 +45,9 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p);
 // it updates the job status and returns 1 else returns 0, for an error
 int job_status_change(job* job_p, job_status job_new_status);
 
-void execute_async(job* job_p);
+// executes the given job, in async, on a new thread
+// returns pthread_t, the thread on which the job will be executed, on error returns 0
+pthread_t execute_async(job* job_p);
 
 // executes the given job 
 // returns 0 if the job was executed, else returns 1
