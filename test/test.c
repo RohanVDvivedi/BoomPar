@@ -10,6 +10,15 @@ void* my_job_function(void* my_int)
 	return my_int;
 }
 
+void* my_job_function_simple(void* my_int)
+{
+	int i = (*((int*)my_int));
+	printf("%d ided Job simple prints => [%d]\n", (int)pthread_self(), i);
+	usleep(3 * 1000 * 1000);
+	(*((int*)my_int)) += 1000;
+	return my_int;
+}
+
 int main()
 {
 	// the number of jobs to submit
@@ -99,6 +108,15 @@ int main()
 	}
 
 	delete_array(my_ints);
+
+	printf("----Testing---- Job async from thread %d\n", (int)pthread_self());
+
+	int input = 5054;
+	job* simple_job_p = get_job(my_job_function_simple, &input);
+	execute_async(simple_job_p);
+	int* result = get_result(simple_job_p);
+	printf("%d parent thread prints => [%d]\n", (int)pthread_self(), (*result));
+	delete_job(simple_job_p);
 
 	return 0;
 }
