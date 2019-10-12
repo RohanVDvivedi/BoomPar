@@ -4,8 +4,6 @@ LIB_DIR=./lib
 SRC_DIR=./src
 BIN_DIR=./bin
 
-CUTLERY_PATH=../cutlery
-
 CC=gcc
 RM=rm -f
 
@@ -18,6 +16,9 @@ ${OBJ_DIR}/%.o : ${SRC_DIR}/%.c ${INC_DIR}/%.h ${CUTLERY_PATH}/inc
 
 ${BIN_DIR}/$(TARGET) : ${OBJ_DIR}/job.o ${OBJ_DIR}/jobstatus.o ${OBJ_DIR}/executor.o
 	ar rcs $@ ${OBJ_DIR}/*.o 
+
+path : 
+	@echo "BOOMPAR_PATH=\`pwd\`"
 
 all: ${BIN_DIR}/$(TARGET)
 
