@@ -18,7 +18,7 @@ ${BIN_DIR}/$(TARGET) : ${OBJ_DIR}/job.o ${OBJ_DIR}/jobstatus.o ${OBJ_DIR}/execut
 	ar rcs $@ ${OBJ_DIR}/*.o 
 
 path : 
-	@echo "BOOMPAR_PATH=\`pwd\`"
+	@echo "export BOOMPAR_PATH=\`pwd\`"
 
 all: ${BIN_DIR}/$(TARGET)
 
