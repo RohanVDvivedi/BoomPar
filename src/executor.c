@@ -186,15 +186,15 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 	pthread_cond_init(&(executor_p->thread_count_wait), NULL);
 	executor_p->thread_count = 0;
 
+	// unset the stop variables, just to be sure :p
+	executor_p->requested_to_stop_after_current_job = 0;
+	executor_p->requested_to_stop_after_queue_is_empty = 0;
+
 	// create the minimum number of threads required for functioning
 	for(int i = 0; i < executor_p->minimum_threads; i++)
 	{
 		create_thread(executor_p);
 	}
-
-	// unset the stop variables, just to be sure :p
-	executor_p->requested_to_stop_after_current_job = 0;
-	executor_p->requested_to_stop_after_queue_is_empty = 0;
 
 	return executor_p;
 }
