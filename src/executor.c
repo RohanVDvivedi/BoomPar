@@ -262,7 +262,6 @@ int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input
 	return was_job_queued;
 }
 
-// incomplete functionality, yet
 void shutdown_executor(executor* executor_p, int shutdown_immediately)
 {
 	// lock job_queue_mutex
