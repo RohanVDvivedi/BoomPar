@@ -53,10 +53,13 @@ int main()
 		set_element(my_ints, input_p, i);
 	}
 
+	int l = 5001;
+	job* test_submitted_job_p = get_job(my_job_function, &l);
+
 	// submit jobs, one by one
 	for(int i=0; i<jobs_count;i++)
 	{
-		if(submit(executor_p, my_job_function, (void*)get_element(my_ints, i)))
+		if(submit_function(executor_p, my_job_function, (void*)get_element(my_ints, i)))
 		{
 			//printf("Successfully submitted job with input %d\n", i);
 		}
@@ -64,9 +67,18 @@ int main()
 		{
 			printf("Job submission failed with input %d\n", i);
 		}
-	}
 
-	//usleep(10 * 1000 * 1000);
+		// this is to test the functionality of submit_job function
+		if(i == (jobs_count/2))
+		{
+			submit_job(executor_p, test_submitted_job_p);
+		}
+	}
+	printf("finished queueing all jobs\n");
+
+	int* l_p = get_result(test_submitted_job_p);
+	printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
+	delete_job(test_submitted_job_p);
 
 	if(wait_for_executors_threads_to_shutdown)
 	{
