@@ -210,7 +210,7 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 	return executor_p;
 }
 
-int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input_p)
+int submit_job_internal(executor* executor_p, job* job_p)
 {
 	int was_job_queued = 0;
 
@@ -220,15 +220,14 @@ int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input
 	// we can go ahead and create and queue the job, if shutwdown was never called, on this executor
 	if( !is_shutdown_called(executor_p))
 	{
-		// create a new job with the given parameters
-		job* job_p = get_job(function_p, input_p);
-
 		// update job status, from CREATED to QUEUED
 		// if this update of job status is successfull, then only we go forward and queue the job
 		if(job_status_change(job_p, QUEUED))
 		{
 			// push job_p to job_queue
 			push_queue(executor_p->job_queue, job_p);
+
+			was_job_queued = 1;
 
 			switch(executor_p->type)
 			{
@@ -261,8 +260,6 @@ int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input
 					break;
 				}
 			}
-
-			was_job_queued = 1;
 		}
 	}
 
@@ -273,9 +270,31 @@ int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input
 	return was_job_queued;
 }
 
+int submit_function(executor* executor_p, void* (*function_p)(void* input_p), void* input_p)
+{
+	int was_job_queued = 0;
+
+	// create a new job with the given parameters
+	job* job_p = get_job(function_p, input_p);
+	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR;
+
+	was_job_queued = submit_job_internal(executor_p, job_p);
+
+	if(was_job_queued == 0)
+	{
+		delete_job(job_p);
+	}
+
+	// return to let the caller know that he can no longet submit on this executor
+	return was_job_queued;
+}
+
 int submit_job(executor* executor_p, job* job_p)
 {
 	int was_job_queued = 0;
+
+	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_CLIENT;
+	was_job_queued = submit_job_internal(executor_p, job_p);
 
 	// return to let the caller know that he can no longet submit on this executor
 	return was_job_queued;
