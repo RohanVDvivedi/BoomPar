@@ -1,5 +1,12 @@
 #include<executor.h>
 
+typedef enum executor_job_type executor_job_type;
+enum executor_job_type
+{
+	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
+	JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR = 1
+};
+
 // checks if the condition to stop the threads has been reached for the given executor
 // returns 1 if the condition has been reached
 // call this function only after protecting it with executor_p->job_queue_mutex
@@ -99,8 +106,12 @@ void* executors_pthread_runnable_function(void* args)
 			// the thread will now execute the job that it popped
 			execute(job_p);
 
-			// once the job is executed we delete the job
-			delete_job(job_p);
+			// once the job is executed we delete the job, if executor is memory managing the job
+			// i.e. it was a job submitted by the client as a function
+			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
+			{
+				delete_job(job_p);
+			}
 		}
 	}
 	while(keep_looping);
@@ -262,6 +273,14 @@ int submit(executor* executor_p, void* (*function_p)(void* input_p), void* input
 	return was_job_queued;
 }
 
+int submit_job(executor* executor_p, job* job_p)
+{
+	int was_job_queued = 0;
+
+	// return to let the caller know that he can no longet submit on this executor
+	return was_job_queued;
+}
+
 void shutdown_executor(executor* executor_p, int shutdown_immediately)
 {
 	// lock job_queue_mutex
@@ -337,13 +356,20 @@ int delete_executor(executor* executor_p)
 	// deleting job_queue and all the remaining jobs
 	if(executor_p->job_queue != NULL)
 	{
-		// first pop each remaining job and delete it individually
+		// first pop each remaining job and delete it individually, after checking if this is required
 		job* top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
 		while(top_job_p != NULL)
 		{
-			// if the top job is not null, remove it from queue, and delete it
+			// if the top job is not null, remove it from queue, and delete it, if necessary
 			pop_queue(executor_p->job_queue);
-			delete_job(top_job_p);
+
+			// if the job that we just popped is memory managed by the executor
+			// i.e. it was submitted by the client with submit_function, we delet the job
+			// else we only need to pop it 
+			if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
+			{
+				delete_job(top_job_p);
+			}
 
 			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
 		}

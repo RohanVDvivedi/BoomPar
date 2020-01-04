@@ -37,6 +37,12 @@ struct job
 
 	// a result_ready_wait, on which other threads will wait, for the current job to complete and receive result output_p
 	pthread_cond_t result_ready_wait;
+
+	// ****************
+	// the below variable, is something, that has to be used by other libraries
+	// if they are using the job structure, to define their task representation of quantum
+	// it is not used by job.h or job.c, but it is default to 0, when you create job by get_job function
+	int job_type;
 };
 
 // creates a new job

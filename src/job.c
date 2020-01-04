@@ -10,6 +10,7 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p)
 	job_p->result_ready_to_read = 0;
 	pthread_mutex_init(&(job_p->result_ready_mutex), NULL);
 	pthread_cond_init(&(job_p->result_ready_wait), NULL);
+	job_p->job_type = 0;
 	return job_p;
 }
 
