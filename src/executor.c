@@ -334,16 +334,23 @@ int delete_executor(executor* executor_p)
 		return 0;
 	}
 
-	// lock the job_queue, before deleting it
-	// we the executor did not create the job, so it is not our responsibility to free the job_memory
-	// you will delete the jobs, by calling delete_job on each of them
-	pthread_mutex_lock(&(executor_p->job_queue_mutex));
+	// deleting job_queue and all the remaining jobs
 	if(executor_p->job_queue != NULL)
 	{
+		// first pop each remaining job and delete it individually
+		job* top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		while(top_job_p != NULL)
+		{
+			// if the top job is not null, remove it from queue, and delete it
+			pop_queue(executor_p->job_queue);
+			delete_job(top_job_p);
+
+			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		}
+
 		delete_queue(executor_p->job_queue);
 		executor_p->job_queue = NULL;
 	}
-	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 
 	// destory the job_queue mutexes
 	pthread_mutex_destroy(&(executor_p->job_queue_mutex));
