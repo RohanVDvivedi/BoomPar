@@ -389,6 +389,12 @@ int delete_executor(executor* executor_p)
 			{
 				delete_job(top_job_p);
 			}
+			// else if the client is maintaining the memeory of the job
+			// we have to set the result to NULL, to make them stop waiting for the completion of this job
+			else if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
+			{
+				set_result(top_job_p, NULL);
+			}
 
 			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
 		}
