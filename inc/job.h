@@ -65,6 +65,7 @@ void set_result(job* job_p, void* output_p);
 
 // get the result of the job, as and when available
 // but the calling thread goes to wait state, until the result is available, it is thread safe 
+// thus job can be used as a promise, as in java or other programming languages
 void* get_result(job* job_p);
 
 // deletes job object
