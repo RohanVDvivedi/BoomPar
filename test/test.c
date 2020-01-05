@@ -5,6 +5,7 @@
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
+	//usleep(3 * 1000);
 	printf("c %d => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
@@ -14,7 +15,7 @@ void* my_job_function_simple(void* my_int)
 {
 	int i = (*((int*)my_int));
 	printf("%d ided Job simple prints => [%d]\n", (int)pthread_self(), i);
-	usleep(3 * 1000 * 1000);
+	//usleep(3 * 1000 * 1000);
 	(*((int*)my_int)) += 1000;
 	return my_int;
 }
@@ -71,29 +72,29 @@ int main()
 		}
 
 		// this is to test the functionality of submit_job function
-		if(i == ((jobs_count-1)/ 1/*2*/))
+		if(i == (jobs_count-1)/12)
 		{
 			submit_job(executor_p, test_submitted_job_p);
 		}
 	}
 	printf("finished queueing all jobs\n");
 
+	int* l_p = get_result(test_submitted_job_p);
+	if(l_p != NULL)
+	{
+		printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
+	}
+	else
+	{
+		printf("test_job_p could not be executed\n");
+	}
+	delete_job(test_submitted_job_p);
+
 	if(wait_for_executors_threads_to_shutdown)
 	{
 		printf("Calling shutdown with shutdown_immediately = %d\n", shutdown_immediately);
 
 		shutdown_executor(executor_p, shutdown_immediately);
-
-			int* l_p = get_result(test_submitted_job_p);
-			if(l_p != NULL)
-			{
-				printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
-			}
-			else
-			{
-				printf("test_job_p could not be executed\n");
-			}
-			delete_job(test_submitted_job_p);
 
 		printf("Shutdown called\n");
 
