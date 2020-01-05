@@ -104,11 +104,12 @@ void* executors_pthread_runnable_function(void* args)
 			pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 
 			// the thread will now execute the job that it popped
+			int current_job_type = job_p->job_type;
 			execute(job_p);
 
 			// once the job is executed we delete the job, if executor is memory managing the job
 			// i.e. it was a job submitted by the client as a function
-			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
+			if(current_job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
 			{
 				delete_job(job_p);
 			}
