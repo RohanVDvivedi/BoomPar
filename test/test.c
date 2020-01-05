@@ -21,6 +21,8 @@ void* my_job_function_simple(void* my_int)
 
 int main()
 {
+	printf("Main thread : %d\n", (int)pthread_self());
+
 	// the number of jobs to submit
 	int jobs_count = 120;
 
@@ -29,7 +31,7 @@ int main()
 
 	// how do you want to control
 	int wait_for_executors_threads_to_shutdown = 1;
-	int shutdown_immediately = 0;
+	int shutdown_immediately = 1;
 
 	// wait time out on empty job = 3 secs, 50 milli seconds
 	unsigned long long int seconds = 3;
@@ -69,22 +71,29 @@ int main()
 		}
 
 		// this is to test the functionality of submit_job function
-		if(i == (jobs_count/2))
+		if(i == ((jobs_count-1)/ 1/*2*/))
 		{
 			submit_job(executor_p, test_submitted_job_p);
 		}
 	}
 	printf("finished queueing all jobs\n");
 
-	int* l_p = get_result(test_submitted_job_p);
-	printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
-	delete_job(test_submitted_job_p);
-
 	if(wait_for_executors_threads_to_shutdown)
 	{
 		printf("Calling shutdown with shutdown_immediately = %d\n", shutdown_immediately);
 
 		shutdown_executor(executor_p, shutdown_immediately);
+
+			int* l_p = get_result(test_submitted_job_p);
+			if(l_p != NULL)
+			{
+				printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
+			}
+			else
+			{
+				printf("test_job_p could not be executed\n");
+			}
+			delete_job(test_submitted_job_p);
 
 		printf("Shutdown called\n");
 

@@ -308,6 +308,31 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 	if(shutdown_immediately == 1)
 	{
 		executor_p->requested_to_stop_after_current_job = 1;
+
+		// if we are asked to shutdown immediately, we have to clean up the jobs from the job_queue, here
+		// first pop each remaining job and delete it individually, after checking if this is required
+		job* top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		while(top_job_p != NULL)
+		{
+			// if the top job is not null, remove it from queue, and delete it, if necessary
+			pop_queue(executor_p->job_queue);
+
+			// if the job that we just popped is memory managed by the executor
+			// i.e. it was submitted by the client with submit_function, we delet the job
+			// else we only need to pop it 
+			if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
+			{
+				delete_job(top_job_p);
+			}
+			// else if the client is maintaining the memeory of the job
+			// we have to set the result to NULL, to make them stop waiting for the completion of this job
+			else if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
+			{
+				set_result(top_job_p, NULL);
+			}
+
+			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		}
 	}
 	else
 	{
@@ -375,30 +400,6 @@ int delete_executor(executor* executor_p)
 	// deleting job_queue and all the remaining jobs
 	if(executor_p->job_queue != NULL)
 	{
-		// first pop each remaining job and delete it individually, after checking if this is required
-		job* top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
-		while(top_job_p != NULL)
-		{
-			// if the top job is not null, remove it from queue, and delete it, if necessary
-			pop_queue(executor_p->job_queue);
-
-			// if the job that we just popped is memory managed by the executor
-			// i.e. it was submitted by the client with submit_function, we delet the job
-			// else we only need to pop it 
-			if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
-			{
-				delete_job(top_job_p);
-			}
-			// else if the client is maintaining the memeory of the job
-			// we have to set the result to NULL, to make them stop waiting for the completion of this job
-			else if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
-			{
-				set_result(top_job_p, NULL);
-			}
-
-			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
-		}
-
 		delete_queue(executor_p->job_queue);
 		executor_p->job_queue = NULL;
 	}
