@@ -29,10 +29,17 @@ struct job
 	// produced when the function is called with input parameters input
 	void* output_p;
 
+	// ***************
+	// the below job variables help to wait on result for job
+	// you have utilities to get, set result, aswellas wait for result
+	// check if result is ready, and also you can learn the number of threads that are waiting for the result
+
+	unsigned long long int threads_waiting_for_result;
+
 	// signified if the result of the job is set and ready to be ready by anyother thread
 	int result_ready_to_read;
 
-	// a result_ready_mutex, to protect
+	// a result_ready_mutex, that protect : threads_waiting_for_result, result_ready_to_read and result_ready_wait
 	pthread_mutex_t result_ready_mutex;
 
 	// a result_ready_wait, on which other threads will wait, for the current job to complete and receive result output_p
@@ -72,6 +79,9 @@ void* get_result(job* job_p);
 // it returns 1 if the get_result function is capable of returning the result, without any waiting
 // if it returns 0 and you call get_result, the thread might enter wait state, until the result is avalable
 int check_result_ready(job* job_p);
+
+// this function will return the number of threads that are waiting for a result to be available, at any instant
+unsigned long long int get_thread_count_waiting_for_result(job* job_p);
 
 // deletes job object
 void delete_job(job* job_p);

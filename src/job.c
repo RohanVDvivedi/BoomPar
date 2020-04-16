@@ -4,13 +4,18 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
 	job_p->status = get_initial_state_status();
+
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
 	job_p->output_p = NULL;
+
+	job_p->threads_waiting_for_result = 0;
 	job_p->result_ready_to_read = 0;
 	pthread_mutex_init(&(job_p->result_ready_mutex), NULL);
 	pthread_cond_init(&(job_p->result_ready_wait), NULL);
+
 	job_p->job_type = 0;
+
 	return job_p;
 }
 
@@ -82,7 +87,7 @@ int execute(job* job_p)
 
 void set_result(job* job_p, void* output_pointer)
 {
-	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
+	// lock the mutex
 	pthread_mutex_lock(&(job_p->result_ready_mutex));
 
 	// set the result pointed to by output_p, and set the flag denoting the result can be read
@@ -93,23 +98,29 @@ void set_result(job* job_p, void* output_pointer)
 	// notify all the threads that are waiting for the result of the job
 	pthread_cond_broadcast(&(job_p->result_ready_wait));
 
-	// unlock the mutex that was held for making the result ready
+	// unlock the mutex
 	pthread_mutex_unlock(&(job_p->result_ready_mutex));
 }
 
 void* get_result(job* job_p)
 {
-	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
+	// lock the mutex
 	pthread_mutex_lock(&(job_p->result_ready_mutex));
 
 	// check of the result of the job is ready to be read, if not go to wait
 	while(job_p->result_ready_to_read == 0)
 	{
+		// increment count of the waiting threads, before going to wait
+		job_p->threads_waiting_for_result++;
+
 		// go to wait state, while releasing the lock, so that the job running thread will come and wake it up when result is ready
 		pthread_cond_wait(&(job_p->result_ready_wait), &(job_p->result_ready_mutex));
+
+		// decrement count of the waiting threads, after waking up
+		job_p->threads_waiting_for_result--;
 	}
 
-	// unlock the mutex that was held for making the result ready
+	// unlock the mutex
 	pthread_mutex_unlock(&(job_p->result_ready_mutex));
 
 	return job_p->output_p;
@@ -117,16 +128,30 @@ void* get_result(job* job_p)
 
 int check_result_ready(job* job_p)
 {
-	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
+	// lock the mutex
 	pthread_mutex_lock(&(job_p->result_ready_mutex));
 
 	// set variable if the result of the job is ready to be read
 	int result_ready_to_read = job_p->result_ready_to_read;
 
-	// unlock the mutex that was held for making the result ready
+	// unlock the mutex
 	pthread_mutex_unlock(&(job_p->result_ready_mutex));
 
 	return result_ready_to_read;
+}
+
+unsigned long long int get_thread_count_waiting_for_result(job* job_p)
+{
+	// lock the mutex
+	pthread_mutex_lock(&(job_p->result_ready_mutex));
+
+	// set variable to threads_waiting_for_result
+	unsigned long long int threads_waiting_for_result = job_p->threads_waiting_for_result;
+
+	// unlock the mutex
+	pthread_mutex_unlock(&(job_p->result_ready_mutex));
+
+	return threads_waiting_for_result;
 }
 
 void delete_job(job* job_p)
