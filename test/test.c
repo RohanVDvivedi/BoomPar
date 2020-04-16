@@ -136,6 +136,18 @@ int main()
 	int input = 5054;
 	job* simple_job_p = get_job(my_job_function_simple, &input);
 	execute_async(simple_job_p);
+
+	#define RESULT_ANXIOUS_WAITING
+
+	#ifdef RESULT_ANXIOUS_WAITING
+		int result_cyles_anxiously_waiting = 0;
+		while(check_result_ready(simple_job_p) == 0)
+		{
+			result_cyles_anxiously_waiting++;
+		}
+		printf("Anxiously awaited result for %d clocks\n", result_cyles_anxiously_waiting);
+	#endif
+
 	int* result = get_result(simple_job_p);
 	printf("%d parent thread prints => [%d]\n", (int)pthread_self(), (*result));
 	delete_job(simple_job_p);

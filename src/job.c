@@ -115,6 +115,20 @@ void* get_result(job* job_p)
 	return job_p->output_p;
 }
 
+int check_result_ready(job* job_p)
+{
+	// lock the mutex, while we access job_p->output_p and job_p->result_ready_to_read
+	pthread_mutex_lock(&(job_p->result_ready_mutex));
+
+	// set variable if the result of the job is ready to be read
+	int result_ready_to_read = job_p->result_ready_to_read;
+
+	// unlock the mutex that was held for making the result ready
+	pthread_mutex_unlock(&(job_p->result_ready_mutex));
+
+	return result_ready_to_read;
+}
+
 void delete_job(job* job_p)
 {
 	pthread_mutex_destroy(&(job_p->result_ready_mutex));

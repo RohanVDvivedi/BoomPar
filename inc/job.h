@@ -68,6 +68,11 @@ void set_result(job* job_p, void* output_p);
 // thus job can be used as a promise, as in java or other programming languages
 void* get_result(job* job_p);
 
+// this function checks if the result of the job is avalable
+// it returns 1 if the get_result function is capable of returning the result, without any waiting
+// if it returns 0 and you call get_result, the thread might enter wait state, until the result is avalable
+int check_result_ready(job* job_p);
+
 // deletes job object
 void delete_job(job* job_p);
 
