@@ -40,7 +40,7 @@ int main()
 
 	// how do you want to control
 	int wait_for_executors_threads_to_shutdown = 1;
-	int shutdown_immediately = 1;
+	int shutdown_immediately = 0;
 
 	// wait time out on empty job = 3 secs, 50 milli seconds
 	unsigned long long int seconds = 3;
@@ -189,7 +189,7 @@ int main()
 		printf("Anxiously awaited result for %llu clocks\n", result_cyles_anxiously_waiting);
 	#endif
 		
-	printf("Deleting threaded async jobs to wait for the result\n");
+	printf("Deleting threaded async jobs that were asked to wait for the result\n");
 	for(int i = 0; i < WATING_JOB_COUNT; i++)
 	{
 		// wait for waiting job to finish and then delete it
