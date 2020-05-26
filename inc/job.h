@@ -55,6 +55,9 @@ struct job
 // creates a new job
 job* get_job(void* (*function_p)(void* input_p), void* input_p);
 
+// initializes a job, as if it is just created, this function can be used to create a job on stack, or inside other objects
+void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p);
+
 // it updates the job status and returns 1 else returns 0, for an error
 int job_status_change(job* job_p, job_status job_new_status);
 
@@ -82,6 +85,9 @@ int check_result_ready(job* job_p);
 
 // this function will return the number of threads that are waiting for a result to be available, at any instant
 unsigned long long int get_thread_count_waiting_for_result(job* job_p);
+
+// once deinitialized, a job variable can be reused, by using initialize_job function
+void deinitialize_job(job* job_p);
 
 // deletes job object
 void delete_job(job* job_p);

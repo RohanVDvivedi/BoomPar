@@ -3,6 +3,12 @@
 job* get_job(void* (*function_p)(void* input_p), void* input_p)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
+	initialize_job(job_p, function_p, input_p);
+	return job_p;
+}
+
+void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p)
+{
 	job_p->status = get_initial_state_status();
 
 	job_p->input_p = input_p;
@@ -15,8 +21,6 @@ job* get_job(void* (*function_p)(void* input_p), void* input_p)
 	pthread_cond_init(&(job_p->result_ready_wait), NULL);
 
 	job_p->job_type = 0;
-
-	return job_p;
 }
 
 int job_status_change(job* job_p, job_status job_new_status)
@@ -154,9 +158,14 @@ unsigned long long int get_thread_count_waiting_for_result(job* job_p)
 	return threads_waiting_for_result;
 }
 
-void delete_job(job* job_p)
+void deinitialize_job(job* job_p)
 {
 	pthread_mutex_destroy(&(job_p->result_ready_mutex));
 	pthread_cond_destroy(&(job_p->result_ready_wait));
+}
+
+void delete_job(job* job_p)
+{
+	deinitialize_job(job_p);
 	free(job_p);
 }
