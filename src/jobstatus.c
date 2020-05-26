@@ -35,6 +35,11 @@ job_status get_next_status(job_status status)
 			next_status = COMPLETED;
 			break;
 		}
+		default :
+		{
+			next_status = CREATED;
+			break;
+		}
 	}
 	return next_status;
 }
@@ -58,6 +63,10 @@ char* get_status_string(job_status status)
 		case COMPLETED :
 		{
 			return "COMPLETED";
+		}
+		default :
+		{
+			return "INVALID_JOB";
 		}
 	}
 }
