@@ -90,7 +90,7 @@ int main()
 	int* l_p = get_result(test_submitted_job_p);
 	if(l_p != NULL)
 	{
-		printf("the result from test_submitted_job_p : %d, at address %d, while the address of l was %d\n", *l_p, (int)l_p, (int)&l);
+		printf("the result from test_submitted_job_p : %d, at address %p, while the address of l was %p\n", *l_p, l_p, &l);
 	}
 	else
 	{
@@ -119,8 +119,8 @@ int main()
 		}
 	}
 
-	printf("thread count %d\n", executor_p->thread_count);
-	printf("unexecuted job count %llu\n", executor_p->job_queue->queue_size);
+	printf("thread count %llu\n", executor_p->thread_count);
+	printf("unexecuted job count %llu\n", executor_p->job_queue.queue_size);
 
 	if(delete_executor(executor_p))
 	{
