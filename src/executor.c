@@ -10,18 +10,18 @@ enum executor_job_type
 // checks if the condition to stop the threads has been reached for the given executor
 // returns 1 if the condition has been reached
 // call this function only after protecting it with executor_p->job_queue_mutex
-int is_threads_shutdown_condition_reached(executor* executor_p)
+static int is_threads_shutdown_condition_reached(executor* executor_p)
 {
 	// if the threads have to stop after current job or 
 	// if the threads have to stop after all the jobs in queue are completed
 	return executor_p->requested_to_stop_after_current_job || 
-	( isQueueEmpty(executor_p->job_queue) && executor_p->requested_to_stop_after_queue_is_empty );
+	( isQueueEmpty(&(executor_p->job_queue)) && executor_p->requested_to_stop_after_queue_is_empty );
 }
 
 // checks if the condition to stop the currently calling thread has been reached for the given executor
 // returns 1 if the condition has been reached
 // call this function only after protecting it with executor_p->job_queue_mutex
-int is_calling_thread_shutdown_condition_reached(executor* executor_p, int wait_error)
+static int is_calling_thread_shutdown_condition_reached(executor* executor_p, int wait_error)
 {
 	// shutdown the current thread if for a cached thread pool, 
 	// we waited for sometime and timedout without receiving any new job
@@ -32,7 +32,7 @@ int is_calling_thread_shutdown_condition_reached(executor* executor_p, int wait_
 // checks if the condition to stop submission of jobs have been reached for the given executor
 // returns 1 if the condition has been reached (if shutdown was called)
 // call this function only after protecting it with executor_p->job_queue_mutex
-int is_shutdown_called(executor* executor_p)
+static int is_shutdown_called(executor* executor_p)
 {
 	// if the threads have to stop after current job or if the threads have to stop after all the jobs in queue are completed
 	return executor_p->requested_to_stop_after_current_job || executor_p->requested_to_stop_after_queue_is_empty;
@@ -40,14 +40,14 @@ int is_shutdown_called(executor* executor_p)
 
 // this is the function that will be continuously executed by the threads,
 // dequeuing jobs continuously from the job_queue, to execute them
-void* executors_pthread_runnable_function(void* args)
+static void* executors_pthread_runnable_function(void* args)
 {
 	// this is the executor, that is responsible for creation and execution of the thread
 	executor* executor_p = ((executor*)(args));
 
 	// we can not keep looping if the executor type = NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
 	// because we would have to kill the thread after execution
-	int keep_looping = executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR ? 0 : 1;
+	int keep_looping = !(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR);
 
 	do
 	{
@@ -57,7 +57,7 @@ void* executors_pthread_runnable_function(void* args)
 		int wait_error = 0;
 
 		// we wait only if the queue is empty and thread's shutdown conditions are not met (neither all threads shudown condition or current threads shutdown condition)
-		while(isQueueEmpty(executor_p->job_queue) && (!is_calling_thread_shutdown_condition_reached(executor_p, wait_error)) && (!is_threads_shutdown_condition_reached(executor_p)) )
+		while(isQueueEmpty(&(executor_p->job_queue)) && (!is_calling_thread_shutdown_condition_reached(executor_p, wait_error)) && (!is_threads_shutdown_condition_reached(executor_p)) )
 		{
 			// increment the thread count that are waiting on the empty job queue
 			// since the current thread is goinf into wait state now
@@ -97,8 +97,8 @@ void* executors_pthread_runnable_function(void* args)
 		else
 		{
 			// get top job_p, and then pop this job from the queue
-			job* job_p = ((job*)(get_top_queue(executor_p->job_queue)));
-			pop_queue(executor_p->job_queue);
+			job* job_p = ((job*)(get_top_queue(&(executor_p->job_queue))));
+			pop_queue(&(executor_p->job_queue));
 
 			// unlock job_queue_mutex
 			pthread_mutex_unlock(&(executor_p->job_queue_mutex));
@@ -136,7 +136,7 @@ void* executors_pthread_runnable_function(void* args)
 }
 
 // returns 1 if a new thread is created and added to the executor
-int create_thread(executor* executor_p)
+static int create_thread(executor* executor_p)
 {
 	int is_thread_added = 0;
 
@@ -190,7 +190,7 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 			break;
 		}
 	}
-	executor_p->job_queue = get_queue(maximum_threads);
+	initialize_queue(&(executor_p->job_queue), maximum_threads);
 	pthread_mutex_init(&(executor_p->job_queue_mutex), NULL);
 	pthread_cond_init(&(executor_p->job_queue_empty_wait), NULL);
 
@@ -203,7 +203,7 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 	executor_p->requested_to_stop_after_queue_is_empty = 0;
 
 	// create the minimum number of threads required for functioning
-	for(int i = 0; i < executor_p->minimum_threads; i++)
+	for(unsigned long long int i = 0; i < executor_p->minimum_threads; i++)
 	{
 		create_thread(executor_p);
 	}
@@ -211,7 +211,7 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 	return executor_p;
 }
 
-int submit_job_internal(executor* executor_p, job* job_p)
+static int submit_job_internal(executor* executor_p, job* job_p)
 {
 	int was_job_queued = 0;
 
@@ -226,7 +226,7 @@ int submit_job_internal(executor* executor_p, job* job_p)
 		if(job_status_change(job_p, QUEUED))
 		{
 			// push job_p to job_queue
-			push_queue(executor_p->job_queue, job_p);
+			push_queue(&(executor_p->job_queue), job_p);
 
 			was_job_queued = 1;
 
@@ -312,11 +312,11 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 
 		// if we are asked to shutdown immediately, we have to clean up the jobs from the job_queue, here
 		// first pop each remaining job and delete it individually, after checking if this is required
-		job* top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+		job* top_job_p = ((job*)(get_top_queue(&(executor_p->job_queue))));
 		while(top_job_p != NULL)
 		{
 			// if the top job is not null, remove it from queue, and delete it, if necessary
-			pop_queue(executor_p->job_queue);
+			pop_queue(&(executor_p->job_queue));
 
 			// if the job that we just popped is memory managed by the executor
 			// i.e. it was submitted by the client with submit_function, we delet the job
@@ -332,7 +332,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 				set_result(top_job_p, NULL);
 			}
 
-			top_job_p = ((job*)(get_top_queue(executor_p->job_queue)));
+			top_job_p = ((job*)(get_top_queue(&(executor_p->job_queue))));
 		}
 	}
 	else
@@ -398,12 +398,8 @@ int delete_executor(executor* executor_p)
 		return 0;
 	}
 
-	// deleting job_queue and all the remaining jobs
-	if(executor_p->job_queue != NULL)
-	{
-		delete_queue(executor_p->job_queue);
-		executor_p->job_queue = NULL;
-	}
+	// deleting/deinitializing job_queue, contents
+	deinitialize_queue(&(executor_p->job_queue));
 
 	// destory the job_queue mutexes
 	pthread_mutex_destroy(&(executor_p->job_queue_mutex));

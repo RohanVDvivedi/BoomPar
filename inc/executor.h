@@ -42,12 +42,12 @@ struct executor
 	unsigned long long int minimum_threads;
 
 	// this is queue for the jobs, that gets submitted by the client
-	queue* job_queue;
+	queue job_queue;
 
 	// this is the number of threads that are waiting on the empty job_queue
 	// this int is also protected using the job_queue_mutex, and is incremented and decremented, by the thread itself
 	// as the thread go to wait, or wakes up on  job_queue_empty_wait
-	int threads_waiting_on_empty_job_queue;
+	unsigned long long int threads_waiting_on_empty_job_queue;
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
@@ -60,7 +60,7 @@ struct executor
 	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
 
 	// keeps the current count of threads created by executor
-	int thread_count;
+	unsigned long long int thread_count;
 
 	// thread_count_mutex is for protection of thread count variable
 	pthread_mutex_t thread_count_mutex;
