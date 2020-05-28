@@ -11,9 +11,9 @@ struct worker
 	sync_queue job_queue;
 };
 
-worker* get_worker(unsigned long long int size, int is_bounded_queue);
+worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds);
 
-void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue);
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds);
 
 void deinitialize_worker(worker* wrk);
 

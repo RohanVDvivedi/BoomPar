@@ -20,6 +20,10 @@ struct sync_queue
 	// conditional wait of the queue is full
 	pthread_cond_t q_full_wait;
 
+	// this is the timeout, for which a blocking push/pop operation will wait
+	// set this to -1, to to set timeout to infinite
+	long long int wait_time_out_in_microseconds;
+
 	// queue is bounded in size or not
 	int is_bounded;
 
@@ -27,9 +31,9 @@ struct sync_queue
 	queue qp;
 };
 
-sync_queue* get_sync_queue(unsigned long long int size, int is_bounded);
+sync_queue* get_sync_queue(unsigned long long int size, int is_bounded, long long int wait_time_out_in_microseconds);
 
-void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded);
+void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded, long long int wait_time_out_in_microseconds);
 
 int is_full_sync_queue(sync_queue* sq);
 

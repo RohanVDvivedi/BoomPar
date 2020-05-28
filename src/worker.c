@@ -1,16 +1,16 @@
 #include<worker.h>
 
-worker* get_worker(unsigned long long int size, int is_bounded_queue)
+worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds)
 {
 	worker* wrk = (worker*) malloc(sizeof(worker));
-	initialize_worker(wrk, size, is_bounded_queue);
+	initialize_worker(wrk, size, is_bounded_queue, job_queue_wait_timeout_in_microseconds);
 	return wrk;
 }
 
-void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue)
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds)
 {
 	wrk->thread_id = 0;
-	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue);
+	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue, job_queue_wait_timeout_in_microseconds);
 }
 
 static void* worker_function(void* args);
