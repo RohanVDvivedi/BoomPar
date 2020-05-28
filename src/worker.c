@@ -60,11 +60,18 @@ enum worker_job_type
 
 int submit_function_to_worker(worker* wrk, void* (*function_p)(void* input_p), void* input_p)
 {
+	int was_job_queued = 0;
+
 	// create a new job with the given parameters
 	job* job_p = get_job(function_p, input_p);
 	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_WORKER;
 
-	int was_job_queued = push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+	// update job status, from CREATED to QUEUED
+	// if this update of job status is successfull, then only we go forward and queue the job
+	if(job_status_change(job_p, QUEUED))
+	{
+		was_job_queued = push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+	}
 
 	if(was_job_queued == 0)
 	{
@@ -76,8 +83,18 @@ int submit_function_to_worker(worker* wrk, void* (*function_p)(void* input_p), v
 
 int submit_job_to_worker(worker* wrk, job* job_p)
 {
+	int was_job_queued = 0;
+
 	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_CLIENT;
-	return push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+
+	// update job status, from CREATED to QUEUED
+	// if this update of job status is successfull, then only we go forward and queue the job
+	if(job_status_change(job_p, QUEUED))
+	{
+		was_job_queued = push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+	}
+
+	return was_job_queued;
 }
 
 // this is the function that will be continuously executed by the worker thread,

@@ -19,25 +19,38 @@ int main()
 	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE);
 
 	int input_jobs_param[JOBs_COUNT];
-	for(int i = 0; i < JOBs_COUNT; i++)
+	int i;
+	for(i = 0; i < JOBs_COUNT; i++)
 	{
 		input_jobs_param[i] = i;
 		if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
 		{
-			printf("Submitted %d jobs to worker\n", i);
 			break;
 		}
 	}
 
+	printf("Submitted %d jobs to worker\n", i);
+
 	printf("Starting worker\n\n");
 	start_worker(wrk);
+
+	printf("Worker thread id : %d\n\n", (int)(wrk->thread_id));
 
 	usleep(3 * 1000 * 1000);
 
 	// This is where the worker starts working
 
+	printf("\n");
+
 	printf("Stopping worker\n\n");
 	stop_worker(wrk);
+
+	printf("Printing result\n");
+	for(int i = 0; i < JOBs_COUNT; i++)
+	{
+		printf("Output[%d] = %d\n", i, input_jobs_param[i]);
+	}
+	printf("\n");
 
 	printf("Deleting worker\n\n");
 	delete_worker(wrk);
