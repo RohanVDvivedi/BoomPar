@@ -12,7 +12,7 @@ void* simple_job_function(void* input)
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
 #define BOUNDED_WORKER_QUEUE 	0
-#define WORKER_QUEUE_TIMEOUT	500000//3000000
+#define WORKER_QUEUE_TIMEOUT	3000000 // 500000
 
 int main()
 {
