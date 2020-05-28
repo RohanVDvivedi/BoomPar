@@ -9,6 +9,7 @@ worker* get_worker(unsigned long long int size, int is_bounded_queue)
 
 void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue)
 {
+	wrk->thread_id = 0;
 	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue);
 }
 
@@ -16,12 +17,27 @@ static void* worker_function(void* args);
 
 int start_worker(worker* wrk)
 {
-	return pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
+	int return_val = pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
+	if(return_val)
+	{
+		printf("error starting worker %d\n", return_val);
+		wrk->thread_id = 0;
+	}
+	return return_val;
 }
 
 int stop_worker(worker* wrk)
 {
-	return pthread_cancel(wrk->thread_id);
+	int return_val = pthread_cancel(wrk->thread_id);
+	if(return_val == 0)
+	{
+		wrk->thread_id = 0;
+	}
+	else
+	{
+		printf("error stopping worker %d\n", return_val);
+	}
+	return return_val;
 }
 
 void deinitialize_worker(worker* wrk)
@@ -75,14 +91,17 @@ static void* worker_function(void* args)
 		// pop a job from the queue, to execute
 		job* job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue));
 
-		// execute the job that has been popped
-		execute(job_p);
-
-		// once the job is executed we delete the job, if executor is memory managing the job
-		// i.e. it was a job submitted by the client as a function
-		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		if(job_p != NULL)
 		{
-			delete_job(job_p);
+			// execute the job that has been popped
+			execute(job_p);
+
+			// once the job is executed we delete the job, if executor is memory managing the job
+			// i.e. it was a job submitted by the client as a function
+			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+			{
+				delete_job(job_p);
+			}
 		}
 	}
 

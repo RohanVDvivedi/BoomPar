@@ -23,8 +23,8 @@ int start_worker(worker* wrk);
 
 int stop_worker(worker* wrk);
 
-int submit_function_worker(worker* wrk, void* (*function_p)(void* input_p), void* input_p);
+int submit_function_to_worker(worker* wrk, void* (*function_p)(void* input_p), void* input_p);
 
-int submit_job_worker(worker* wrk, job* job_p);
+int submit_job_to_worker(worker* wrk, job* job_p);
 
 #endif
