@@ -103,22 +103,20 @@ static void* worker_function(void* args)
 {
 	worker* wrk = ((worker*)(args));
 
-	while(1)
+	job* job_p = NULL;
+
+	// pop a job from the queue, blocking as long as provided timeout,
+	// if timedout, we exit
+	while( (job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue))) )
 	{
-		// pop a job from the queue, to execute
-		job* job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue));
+		// execute the job that has been popped
+		execute(job_p);
 
-		if(job_p != NULL)
+		// once the job is executed we delete the job, if executor is memory managing the job
+		// i.e. it was a job submitted by the client as a function
+		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
 		{
-			// execute the job that has been popped
-			execute(job_p);
-
-			// once the job is executed we delete the job, if executor is memory managing the job
-			// i.e. it was a job submitted by the client as a function
-			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
-			{
-				delete_job(job_p);
-			}
+			delete_job(job_p);
 		}
 	}
 

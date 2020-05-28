@@ -12,11 +12,12 @@ void* simple_job_function(void* input)
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
 #define BOUNDED_WORKER_QUEUE 	0
+#define WORKER_QUEUE_TIMEOUT	3000000
 
 int main()
 {
 	printf("Worker built and initialized\n\n");
-	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE);
+	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE, WORKER_QUEUE_TIMEOUT);
 
 	int input_jobs_param[JOBs_COUNT];
 	int i;
@@ -36,9 +37,10 @@ int main()
 
 	printf("Worker thread id : %d\n\n", (int)(wrk->thread_id));
 
-	usleep(3 * 1000 * 1000);
+	//usleep(3 * 1000 * 1000);
 
 	// This is where the worker starts working
+	pthread_join(wrk->thread_id, NULL);
 
 	printf("\n");
 

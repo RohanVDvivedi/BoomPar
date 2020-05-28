@@ -21,7 +21,8 @@ struct sync_queue
 	pthread_cond_t q_full_wait;
 
 	// this is the timeout, for which a blocking push/pop operation will wait
-	// set this to -1, to to set timeout to infinite
+	// this is only applicable for blocking push pop operations, non-blocking operations will not be affected by this value
+	// set this to -1, to to set timeout to infinite, other negative values and 0 are not recommended to use, and may elicit undefined behaviour
 	long long int wait_time_out_in_microseconds;
 
 	// queue is bounded in size or not
@@ -37,10 +38,12 @@ void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_b
 
 int is_full_sync_queue(sync_queue* sq);
 
-void push_sync_queue_blocking(sync_queue* sq, const void* data_p);
+int push_sync_queue_blocking(sync_queue* sq, const void* data_p);
 
+// it will block for atmost wait_time_out_in_microseconds
 int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p);
 
+// it will block for atmost wait_time_out_in_microseconds
 const void* pop_sync_queue_blocking(sync_queue* sq);
 
 const void* pop_sync_queue_non_blocking(sync_queue* sq);
