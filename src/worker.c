@@ -1,5 +1,12 @@
 #include<worker.h>
 
+typedef enum worker_job_type worker_job_type;
+enum worker_job_type
+{
+	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
+	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
+};
+
 worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds)
 {
 	worker* wrk = (worker*) malloc(sizeof(worker));
@@ -33,6 +40,10 @@ int stop_worker(worker* wrk)
 	{
 		wrk->thread_id = 0;
 	}
+	else if(return_val == ESRCH)
+	{
+		printf("Worker thread not found, thread may have exited prior to this call\n");
+	}
 	else
 	{
 		printf("error stopping worker %d\n", return_val);
@@ -42,6 +53,21 @@ int stop_worker(worker* wrk)
 
 void deinitialize_worker(worker* wrk)
 {
+	job* job_p = NULL;
+
+	// pop all jobs from the queue, and delete them
+	while(!is_empty_sync_queue(&(wrk->job_queue)))
+	{
+		job_p = (job*) pop_sync_queue_non_blocking(&(wrk->job_queue)); 
+
+		// once the job is executed we delete the job, if workeris memory managing the job
+		// i.e. it was a job submitted by the client as a function
+		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		{
+			delete_job(job_p);
+		}
+	}
+
 	deinitialize_sync_queue(&(wrk->job_queue));
 }
 
@@ -50,13 +76,6 @@ void delete_worker(worker* wrk)
 	deinitialize_worker(wrk);
 	free(wrk);
 }
-
-typedef enum worker_job_type worker_job_type;
-enum worker_job_type
-{
-	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
-	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
-};
 
 int submit_function_to_worker(worker* wrk, void* (*function_p)(void* input_p), void* input_p)
 {
@@ -112,7 +131,7 @@ static void* worker_function(void* args)
 		// execute the job that has been popped
 		execute(job_p);
 
-		// once the job is executed we delete the job, if executor is memory managing the job
+		// once the job is executed we delete the job, if worker is memory managing the job
 		// i.e. it was a job submitted by the client as a function
 		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
 		{

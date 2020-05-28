@@ -1,6 +1,8 @@
 #ifndef WORKER_H
 #define WORKER_H
 
+#include<errno.h>
+
 #include<job.h>
 #include<sync_queue.h>
 
