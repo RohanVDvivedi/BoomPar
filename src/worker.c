@@ -1,0 +1,90 @@
+#include<worker.h>
+
+worker* get_worker(unsigned long long int size, int is_bounded_queue)
+{
+	worker* wrk = (worker*) malloc(sizeof(worker));
+	initialize_worker(wrk, size, is_bounded_queue);
+	return wrk;
+}
+
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue)
+{
+	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue);
+}
+
+static void* worker_function(void* args);
+
+int start_worker(worker* wrk)
+{
+	return pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
+}
+
+int stop_worker(worker* wrk)
+{
+	return pthread_cancel(wrk->thread_id);
+}
+
+void deinitialize_worker(worker* wrk)
+{
+	deinitialize_sync_queue(&(wrk->job_queue));
+}
+
+void delete_worker(worker* wrk)
+{
+	deinitialize_worker(wrk);
+	free(wrk);
+}
+
+typedef enum worker_job_type worker_job_type;
+enum worker_job_type
+{
+	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
+	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
+};
+
+int submit_function_to_worker(worker* wrk, void* (*function_p)(void* input_p), void* input_p)
+{
+	// create a new job with the given parameters
+	job* job_p = get_job(function_p, input_p);
+	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_WORKER;
+
+	int was_job_queued = push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+
+	if(was_job_queued == 0)
+	{
+		delete_job(job_p);
+	}
+
+	return was_job_queued;
+}
+
+int submit_job_to_worker(worker* wrk, job* job_p)
+{
+	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_CLIENT;
+	return push_sync_queue_non_blocking(&(wrk->job_queue), job_p);
+}
+
+// this is the function that will be continuously executed by the worker thread,
+// dequeuing jobs continuously from the job_queue, to execute them
+static void* worker_function(void* args)
+{
+	worker* wrk = ((worker*)(args));
+
+	while(1)
+	{
+		// pop a job from the queue, to execute
+		job* job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue));
+
+		// execute the job that has been popped
+		execute(job_p);
+
+		// once the job is executed we delete the job, if executor is memory managing the job
+		// i.e. it was a job submitted by the client as a function
+		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		{
+			delete_job(job_p);
+		}
+	}
+
+	return NULL;
+}
