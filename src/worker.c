@@ -120,6 +120,8 @@ int submit_job_to_worker(worker* wrk, job* job_p)
 // dequeuing jobs continuously from the job_queue, to execute them
 static void* worker_function(void* args)
 {
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
 	worker* wrk = ((worker*)(args));
 
 	job* job_p = NULL;
@@ -128,6 +130,9 @@ static void* worker_function(void* args)
 	// if timedout, we exit
 	while( (job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue))) )
 	{
+		// A worker thread can not be cancelled while it is executing a job
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
 		// execute the job that has been popped
 		execute(job_p);
 
@@ -137,6 +142,9 @@ static void* worker_function(void* args)
 		{
 			delete_job(job_p);
 		}
+
+		// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}
 
 	return NULL;
