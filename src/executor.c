@@ -286,7 +286,6 @@ int submit_function(executor* executor_p, void* (*function_p)(void* input_p), vo
 		delete_job(job_p);
 	}
 
-	// return to let the caller know that he can no longet submit on this executor
 	return was_job_queued;
 }
 
@@ -297,7 +296,6 @@ int submit_job(executor* executor_p, job* job_p)
 	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_CLIENT;
 	was_job_queued = submit_job_internal(executor_p, job_p);
 
-	// return to let the caller know that he can no longet submit on this executor
 	return was_job_queued;
 }
 
