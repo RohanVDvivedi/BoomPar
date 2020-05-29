@@ -13,7 +13,7 @@ void* simple_job_function(void* input)
 #define WORKER_QUEUE_SIZE 		10
 #define BOUNDED_WORKER_QUEUE 	0
 #define WORKER_QUEUE_TIMEOUT	500000//3000000 // 500000
-#define WORKER_POLICY			WAIT_ON_TIMEDOUT /*KILL_ON_TIMEDOUT*/ /*USE_CALLBACK*/
+#define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK
 
 //#define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 
@@ -39,6 +39,7 @@ void job_queue_empty_timedout_callback(worker* wrk, const void* additional_param
 				break;
 			}
 		}
+		printf("Total jobs submitted %d\n\n", i);
 	#endif
 }
 
@@ -50,9 +51,9 @@ int main()
 	printf("Worker will be tested to execute %d jobs in all\n\n", JOBs_COUNT);
 
 	printf("Initializing input job parameters\n\n");
-	for(i = 0; i < JOBs_COUNT; i++)
+	for(int j = 0; j < JOBs_COUNT; j++)
 	{
-		input_jobs_param[i] = i;
+		input_jobs_param[j] = j;
 	}
 
 	printf("Input job parameters initialized\n\n");
