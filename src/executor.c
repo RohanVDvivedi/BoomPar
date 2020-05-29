@@ -1,12 +1,5 @@
 #include<executor.h>
 
-typedef enum executor_job_type executor_job_type;
-enum executor_job_type
-{
-	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
-	JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR = 1
-};
-
 // checks if the condition to stop the threads has been reached for the given executor
 // returns 1 if the condition has been reached
 // call this function only after protecting it with executor_p->job_queue_mutex
@@ -170,33 +163,14 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
-	executor_p->maximum_threads = maximum_threads;
+	executor_p->maximum_workers = ((maximum_workers == 0) ? 1 : maximum_workers);
 	executor_p->empty_job_queue_wait_time_out_in_micro_seconds = empty_job_queue_wait_time_out_in_micro_seconds;
 
-	switch(executor_p->type)
-	{
-		// for a FIXED_THREAD_COUNT_EXECUTOR, the min and max count of thread is same
-		case FIXED_THREAD_COUNT_EXECUTOR :
-		{
-			executor_p->minimum_threads = executor_p->maximum_threads;
-			break;
-		}
-		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 0 thread, initially, and keeps on increasing with load
-		// a NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR, creates a new thread for every new job submitted, hence minimum and maximum threads are undefined
-		case NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR :
-		case CACHED_THREAD_POOL_EXECUTOR :
-		{
-			executor_p->minimum_threads = 0;
-			break;
-		}
-	}
-	initialize_queue(&(executor_p->job_queue), maximum_threads);
-	pthread_mutex_init(&(executor_p->job_queue_mutex), NULL);
-	pthread_cond_init(&(executor_p->job_queue_empty_wait), NULL);
+	initialize_sync_queue(&(executor_p->job_queue), maximum_threads, 0, empty_job_queue_wait_time_out_in_micro_seconds);
 
-	pthread_mutex_init(&(executor_p->thread_count_mutex), NULL);
-	pthread_cond_init(&(executor_p->thread_count_wait), NULL);
-	executor_p->thread_count = 0;
+	pthread_mutex_init(&(executor_p->worker_count_lock), NULL);
+	executor_p->waiting_workers_count = waiting_workers_count;
+	executor_p->total_workers_count = total_workers_count;
 
 	// unset the stop variables, just to be sure :p
 	executor_p->requested_to_stop_after_current_job = 0;
@@ -215,10 +189,7 @@ static int submit_job_internal(executor* executor_p, job* job_p)
 {
 	int was_job_queued = 0;
 
-	// lock job_queue_mutex
-	pthread_mutex_lock(&(executor_p->job_queue_mutex));
-
-	// we can go ahead and create and queue the job, if shutwdown was never called, on this executor
+	// we can go ahead and create and queue the job, if shutdown was never called, on this executor
 	if( !is_shutdown_called(executor_p))
 	{
 		// update job status, from CREATED to QUEUED
@@ -226,9 +197,7 @@ static int submit_job_internal(executor* executor_p, job* job_p)
 		if(job_status_change(job_p, QUEUED))
 		{
 			// push job_p to job_queue
-			push_queue(&(executor_p->job_queue), job_p);
-
-			was_job_queued = 1;
+			was_job_queued = push_sync_queue(&(executor_p->job_queue), job_p);
 
 			switch(executor_p->type)
 			{
@@ -264,9 +233,6 @@ static int submit_job_internal(executor* executor_p, job* job_p)
 		}
 	}
 
-	// unlock job_queue_mutex
-	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
-
 	// return to let the caller know that he can no longet submit on this executor
 	return was_job_queued;
 }
@@ -301,25 +267,23 @@ int submit_job(executor* executor_p, job* job_p)
 
 void shutdown_executor(executor* executor_p, int shutdown_immediately)
 {
-	// lock job_queue_mutex
-	pthread_mutex_lock(&(executor_p->job_queue_mutex));
-
 	if(shutdown_immediately == 1)
 	{
 		executor_p->requested_to_stop_after_current_job = 1;
 
+		sync_queue temp_queue;
+		initialize_sync_queue(&(temp_queue), executor_p->job_queue.qp.queue_size, 0, 200);
+		transfer_elements_sync_queue(&(temp_queue), &(executor_p->job_queue), executor_p->job_queue.qp.queue_size * 2);
+
 		// if we are asked to shutdown immediately, we have to clean up the jobs from the job_queue, here
 		// first pop each remaining job and delete it individually, after checking if this is required
-		job* top_job_p = ((job*)(get_top_queue(&(executor_p->job_queue))));
-		while(top_job_p != NULL)
+		job* top_job_p = NULL;
+		while(top_job_p = pop_sync_queue_non_blocking(&(temp_queue)))
 		{
-			// if the top job is not null, remove it from queue, and delete it, if necessary
-			pop_queue(&(executor_p->job_queue));
-
-			// if the job that we just popped is memory managed by the executor
-			// i.e. it was submitted by the client with submit_function, we delet the job
+			// if the job that we just popped is memory managed by the worker
+			// i.e. it was submitted by the client with submit_function, we delete the job
 			// else we only need to pop it 
-			if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR)
+			if(top_job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
 			{
 				delete_job(top_job_p);
 			}
@@ -329,21 +293,12 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 			{
 				set_result(top_job_p, NULL);
 			}
-
-			top_job_p = ((job*)(get_top_queue(&(executor_p->job_queue))));
 		}
 	}
 	else
 	{
 		executor_p->requested_to_stop_after_queue_is_empty = 1;
 	}
-
-	// wake all the threads to recheck their wait conditions
-	// broadcast to all the thread that are waiting for job_queue, because it is now never going to be filled
-	pthread_cond_broadcast(&(executor_p->job_queue_empty_wait));
-
-	// unlock job_queue_mutex
-	pthread_mutex_unlock(&(executor_p->job_queue_mutex));
 }
 
 // returns if all the threads completed
@@ -396,18 +351,11 @@ int delete_executor(executor* executor_p)
 		return 0;
 	}
 
-	// deleting/deinitializing job_queue, contents
-	deinitialize_queue(&(executor_p->job_queue));
+	// deleting/deinitializing job_queue
+	deinitialize_sync_queue(&(executor_p->job_queue));
 
 	// destory the job_queue mutexes
-	pthread_mutex_destroy(&(executor_p->job_queue_mutex));
-	// destory the job_queue conditional wait variables
-	pthread_cond_destroy(&(executor_p->job_queue_empty_wait));
-
-	// destory the thread_count mutexes
-	pthread_mutex_destroy(&(executor_p->thread_count_mutex));
-	// destory the thread_count conditional wait variables
-	pthread_cond_destroy(&(executor_p->thread_count_wait));
+	pthread_mutex_destroy(&(executor_p->worker_count_lock));
 
 	// free the executor
 	free(executor_p);

@@ -1,12 +1,5 @@
 #include<worker.h>
 
-typedef enum worker_job_type worker_job_type;
-enum worker_job_type
-{
-	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
-	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
-};
-
 worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params)
 {
 	worker* wrk = (worker*) malloc(sizeof(worker));

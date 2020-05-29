@@ -6,6 +6,13 @@
 #include<job.h>
 #include<sync_queue.h>
 
+typedef enum worker_job_type worker_job_type;
+enum worker_job_type
+{
+	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
+	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
+};
+
 typedef enum worker_policy worker_policy;
 enum worker_policy
 {
