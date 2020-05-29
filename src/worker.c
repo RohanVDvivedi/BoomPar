@@ -7,16 +7,19 @@ enum worker_job_type
 	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
 };
 
-worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds)
+worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, int (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params)
 {
 	worker* wrk = (worker*) malloc(sizeof(worker));
-	initialize_worker(wrk, size, is_bounded_queue, job_queue_wait_timeout_in_microseconds);
+	initialize_worker(wrk, size, is_bounded_queue, job_queue_wait_timeout_in_microseconds, policy, job_queue_empty_timedout_callback, additional_params);
 	return wrk;
 }
 
-void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds)
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, int (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params)
 {
 	wrk->thread_id = 0;
+	wrk->policy = policy;
+	wrk->job_queue_empty_timedout_callback = job_queue_empty_timedout_callback;
+	wrk->additional_params = additional_params;
 	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue, job_queue_wait_timeout_in_microseconds);
 }
 
@@ -126,25 +129,50 @@ static void* worker_function(void* args)
 
 	job* job_p = NULL;
 
-	// pop a job from the queue, blocking as long as provided timeout,
-	// if timedout, we exit
-	while( (job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue))) )
+	while(1)
 	{
-		// A worker thread can not be cancelled while it is executing a job
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-
-		// execute the job that has been popped
-		execute(job_p);
-
-		// once the job is executed we delete the job, if worker is memory managing the job
-		// i.e. it was a job submitted by the client as a function
-		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		// pop a job from the queue, blocking as long as provided timeout,
+		// if timedout, we exit
+		while( (job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue))) )
 		{
-			delete_job(job_p);
+			// A worker thread can not be cancelled while it is executing a job
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+			// execute the job that has been popped
+			execute(job_p);
+
+			// once the job is executed we delete the job, if worker is memory managing the job
+			// i.e. it was a job submitted by the client as a function
+			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+			{
+				delete_job(job_p);
+			}
+
+			// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 		}
 
-		// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		// Behaviour according to policy, if we waited on the job queue and timedout
+		if(wrk->policy == WAIT_ON_TIMEDOUT)
+		{
+			continue;
+		}
+		else if(wrk->policy == KILL_ON_TIMEDOUT)
+		{
+			break;
+		}
+		else if(wrk->policy == USE_CALLBACK_AFTER_TIMEDOUT)
+		{
+			if(wrk->job_queue_empty_timedout_callback == NULL ||
+			 wrk->job_queue_empty_timedout_callback(wrk, wrk->additional_params))
+			{
+				break;
+			}
+			else
+			{
+				continue;
+			}
+		}
 	}
 
 	return NULL;
