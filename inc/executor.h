@@ -6,14 +6,10 @@
 #include<pthread.h>
 #include<errno.h>
 
-#include<queue.h>
-#include<hashmap.h>
 
+#include<sync_queue.h>
+#include<worker.h>
 #include<job.h>
-
-// the executor handles its own job structures
-// user does not submit jobs but functions and their input data pointers
-// executor will create a job from it, and queue it for executing it on its threads
 
 typedef enum executor_type executor_type;
 enum executor_type
@@ -35,38 +31,35 @@ struct executor
 	executor_type type;
 
 	// this variable is used only if this is a CACHED_THREAD_POOL_EXECUTOR,
-	// and we want an upper bound on the count of threads
-	// if this is -1, the maximum number of threads is infinite
+	// and we want an upper bound on the number of worker threads being used
 	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
-	unsigned long long int maximum_threads;
-	unsigned long long int minimum_threads;
+	unsigned long long int maximum_workers;
 
-	// this is queue for the jobs, that gets submitted by the client
-	queue job_queue;
+	// this is main queue for the jobs, that gets submitted by the client
+	// the worker threads then start dequeuing jobs from this main queue to fill their internal queues
+	sync_queue job_queue;
+
+
+// WORKER COUNT TO KEEP THE SYSTEM AWARE OF ALL THE THREADS IN THE SYSTEM
+
+	pthread_mutex_t worker_count_lock;
 
 	// this is the number of threads that are waiting on the empty job_queue
 	// this int is also protected using the job_queue_mutex, and is incremented and decremented, by the thread itself
 	// as the thread go to wait, or wakes up on  job_queue_empty_wait
-	unsigned long long int threads_waiting_on_empty_job_queue;
+	unsigned long long int waiting_workers_count;
+
+	// total number of workers active in the executor
+	unsigned long long int total_workers_count;
+
+
+
+// in CACHED_THREAD_POOL_EXECUTOR this is the maximum amount of time a worker thread, will live if there is no job to dequeue from the common job_queue
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
-	// job_queue_mutex for protection of job_queue data structure
-	pthread_mutex_t job_queue_mutex;
-	
-	// job_queue_empty_wait for synchronization, when there are threads waiting for empty job_queue
-	pthread_cond_t job_queue_empty_wait;
 
-	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
-
-	// keeps the current count of threads created by executor
-	unsigned long long int thread_count;
-
-	// thread_count_mutex is for protection of thread count variable
-	pthread_mutex_t thread_count_mutex;
-
-	// thread_count_wait is for waiting on thread count variable
-	pthread_cond_t thread_count_wait;
+// LOGIC TO MANAGE HOW THE EXECUTOR WILL SHUTDOWN
 
 	// self explanatory variable, is set only by shutdown executor method
 	int requested_to_stop_after_queue_is_empty;
