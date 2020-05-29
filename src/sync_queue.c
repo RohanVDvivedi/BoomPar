@@ -162,3 +162,30 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 	pthread_mutex_unlock(&(sq->q_lock));
 	return data_p;
 }
+
+unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements)
+{
+	unsigned long long int transferred_elements_count = 0;
+
+	pthread_mutex_lock(&(src->q_lock));
+	pthread_mutex_lock(&(dst->q_lock));
+
+		for(; transferred_elements_count < max_elements; transferred_elements_count++)
+		{
+			if(isQueueEmpty(&(src->qp)) || (dst->is_bounded && isQueueHolderFull(&(dst->qp))))
+			{
+				break;
+			}
+			else
+			{
+				const void* data_p = get_top_queue(&(src->qp));
+				pop_queue(&(src->qp));
+				push_queue(&(dst->qp), data_p);
+			}
+		}
+
+	pthread_mutex_unlock(&(src->q_lock));
+	pthread_mutex_unlock(&(dst->q_lock));
+
+	return transferred_elements_count;
+}

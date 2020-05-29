@@ -13,21 +13,33 @@ void* simple_job_function(void* input)
 #define WORKER_QUEUE_SIZE 		10
 #define BOUNDED_WORKER_QUEUE 	0
 #define WORKER_QUEUE_TIMEOUT	500000//3000000 // 500000
-#define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK
+#define WORKER_POLICY			WAIT_ON_TIMEDOUT /*KILL_ON_TIMEDOUT*/ /*USE_CALLBACK*/
+
+//#define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 
 int i = 0;
 int input_jobs_param[JOBs_COUNT];
 
+#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
+	job input_jobs[JOBs_COUNT];
+	sync_queue input_jobs_queue;
+#endif
+
 void job_queue_empty_timedout_callback(worker* wrk, const void* additional_params)
 {
-	for(; i < JOBs_COUNT; i++)
-	{
-		input_jobs_param[i] = i;
-		if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
+	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
+		printf("Using sync queue tranfer for submitting jobs\n\n");
+		transfer_elements_sync_queue(&(wrk->job_queue), &input_jobs_queue, JOBs_COUNT);
+	#else
+		printf("Using input functions in callback function for submitting jobs\n\n");
+		for(; i < JOBs_COUNT; i++)
 		{
-			break;
+			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
+			{
+				break;
+			}
 		}
-	}
+	#endif
 }
 
 int main()
@@ -37,12 +49,19 @@ int main()
 
 	printf("Worker will be tested to execute %d jobs in all\n\n", JOBs_COUNT);
 
+	printf("Initializing input job parameters\n\n");
+	for(i = 0; i < JOBs_COUNT; i++)
+	{
+		input_jobs_param[i] = i;
+	}
+
+	printf("Input job parameters initialized\n\n");
+
 	if(WORKER_POLICY != USE_CALLBACK)
 	{
 		printf("Submitting initial set of the jobs\n");
 		for(i = 0; i < JOBs_COUNT/2; i++)
 		{
-			input_jobs_param[i] = i;
 			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
 			{
 				break;
@@ -52,7 +71,18 @@ int main()
 	}
 	else
 	{
-		printf("Main thread will not be submitting any worker jobs\n\n");
+		#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
+			printf("Main thread will not be submitting any worker jobs, but it will queue them in external input_jobs_queue\n\n");
+			initialize_sync_queue(&(input_jobs_queue), JOBs_COUNT/2, 0, 3000000);
+			for(i = 0; i < JOBs_COUNT; i++)
+			{
+				initialize_job(&(input_jobs[i]), simple_job_function, &(input_jobs_param[i]));
+				push_sync_queue_non_blocking(&(input_jobs_queue), &(input_jobs[i]));
+			}
+			printf("The input job queue contains %llu elements\n\n", input_jobs_queue.qp.queue_size);
+		#else 
+			printf("Main thread will not be submitting any worker jobs\n\n");
+		#endif
 	}
 
 	printf("Starting worker\n\n");
@@ -68,7 +98,6 @@ int main()
 		printf("Submitting the rest of the jobs\n");
 		for(; i < JOBs_COUNT; i++)
 		{
-			input_jobs_param[i] = i;
 			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
 			{
 				break;

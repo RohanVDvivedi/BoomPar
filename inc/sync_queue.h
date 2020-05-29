@@ -50,6 +50,9 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq);
 
 int is_empty_sync_queue(sync_queue* sq);
 
+// returns the number of elements that were transferred, it will transfer no more than max_elements
+unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements);
+
 void deinitialize_sync_queue(sync_queue* sq);
 
 void delete_sync_queue(sync_queue* sq);
