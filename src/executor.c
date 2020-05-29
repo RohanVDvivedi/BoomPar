@@ -128,35 +128,29 @@ static void* executors_pthread_runnable_function(void* args)
 	return NULL;
 }
 
-// returns 1 if a new thread is created and added to the executor
-static int create_thread(executor* executor_p)
+// returns pointer to the new worker if created for the executor
+static worker* create_worker(executor* executor_p)
 {
-	int is_thread_added = 0;
+	worker* wrk = NULL;
 
-	// lock threads, while we add add a thread to the data structure
-	pthread_mutex_lock(&(executor_p->thread_count_mutex));
+	// lock worker_count_lock, while we add add a thread to the data structure
+	pthread_mutex_lock(&(executor_p->worker_count_lock));
 
 	// create a new thread for the executor, if the executor type is NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
 	// or if we are not exceeding the maximum thread count for the executor
-	if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || executor_p->thread_count < executor_p->maximum_threads)
+	if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || executor_p->total_workers_count < executor_p->maximum_workers)
 	{
-		// the id to the new thread
-		pthread_t thread_id_p;
-
-		// create a new thread that runs, with an executor, executor_p
-		pthread_create(&thread_id_p, NULL, executors_pthread_runnable_function, executor_p);
+		// create a new worker
+		wrk = get_worker(3, 1, long long int job_queue_wait_timeout_in_microseconds, USE_CALLBACK, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), executor_p);
 
 		// increment the count of the threads the executor manages
-		executor_p->thread_count++;
-
-		// we created a new thread so, set is_thread_added to 1
-		is_thread_added = 1;
+		executor_p->total_workers_count++;
 	}
 
-	// unlock threads
-	pthread_mutex_unlock(&(executor_p->thread_count_mutex));
+	// unlock worker_count_lock
+	pthread_mutex_unlock(&(executor_p->worker_count_lock));
 
-	return is_thread_added;
+	return wrk;
 }
 
 executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
@@ -243,7 +237,7 @@ int submit_function(executor* executor_p, void* (*function_p)(void* input_p), vo
 
 	// create a new job with the given parameters
 	job* job_p = get_job(function_p, input_p);
-	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_EXECUTOR;
+	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_WORKER;
 
 	was_job_queued = submit_job_internal(executor_p, job_p);
 
@@ -294,6 +288,8 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 				set_result(top_job_p, NULL);
 			}
 		}
+
+		deinitialize_sync_queue(&(temp_queue));
 	}
 	else
 	{

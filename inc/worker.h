@@ -50,13 +50,13 @@ struct worker
 	// the callback function that gets called when the job_queue of the worker is empty
 	// return 0 			=> 		to return and wait for new tasks
 	// return (non zero) 	=> 		to safely kill the worker
-	void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params);
+	void (*job_queue_empty_callback)(worker* wrk, const void* additional_params);
 	const void* additional_params;
 };
 
-worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params);
+worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_callback)(worker* wrk, const void* additional_params), const void* additional_params);
 
-void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params);
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_callback)(worker* wrk, const void* additional_params), const void* additional_params);
 
 void deinitialize_worker(worker* wrk);
 

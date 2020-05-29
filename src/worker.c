@@ -1,17 +1,17 @@
 #include<worker.h>
 
-worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params)
+worker* get_worker(unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_callback)(worker* wrk, const void* additional_params), const void* additional_params)
 {
 	worker* wrk = (worker*) malloc(sizeof(worker));
-	initialize_worker(wrk, size, is_bounded_queue, job_queue_wait_timeout_in_microseconds, policy, job_queue_empty_timedout_callback, additional_params);
+	initialize_worker(wrk, size, is_bounded_queue, job_queue_wait_timeout_in_microseconds, policy, job_queue_empty_callback, additional_params);
 	return wrk;
 }
 
-void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_timedout_callback)(worker* wrk, const void* additional_params), const void* additional_params)
+void initialize_worker(worker* wrk, unsigned long long int size, int is_bounded_queue, long long int job_queue_wait_timeout_in_microseconds, worker_policy policy, void (*job_queue_empty_callback)(worker* wrk, const void* additional_params), const void* additional_params)
 {
 	wrk->thread_id = 0;
 	wrk->policy = policy;
-	wrk->job_queue_empty_timedout_callback = job_queue_empty_timedout_callback;
+	wrk->job_queue_empty_callback = job_queue_empty_callback;
 	wrk->additional_params = additional_params;
 	initialize_sync_queue(&(wrk->job_queue), size, is_bounded_queue, job_queue_wait_timeout_in_microseconds);
 }
@@ -188,9 +188,9 @@ static void* worker_function(void* args)
 		}
 		else if(wrk->policy == USE_CALLBACK)
 		{
-			if(wrk->job_queue_empty_timedout_callback != NULL)
+			if(wrk->job_queue_empty_callback != NULL)
 			{
-			 	wrk->job_queue_empty_timedout_callback(wrk, wrk->additional_params);
+			 	wrk->job_queue_empty_callback(wrk, wrk->additional_params);
 			}
 
 			if(is_empty_sync_queue(&(wrk->job_queue)))
