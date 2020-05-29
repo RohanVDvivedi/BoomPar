@@ -39,7 +39,7 @@ typedef struct worker worker;
 struct worker
 {
 	// thread_id of the worker thread
-	pthread_t thread_id;
+	volatile pthread_t thread_id;
 
 	// job_queue for storing jobs to be executed by the worker
 	sync_queue job_queue;

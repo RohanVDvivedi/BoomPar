@@ -31,16 +31,13 @@ static int is_shutdown_called(executor* executor_p)
 	return executor_p->requested_to_stop_after_current_job || executor_p->requested_to_stop_after_queue_is_empty;
 }
 
-// this is the function that will be continuously executed by the threads,
-// dequeuing jobs continuously from the job_queue, to execute them
-static void* executors_pthread_runnable_function(void* args)
+// this is the function that will be called by the workers when there are no jobs in their queues
+static void* executors_pthread_runnable_function(worker* wrk, void* additional_params)
 {
-	// this is the executor, that is responsible for creation and execution of the thread
-	executor* executor_p = ((executor*)(args));
+	// this is the executor, that is responsible for creation and execution of this worker
+	executor* executor_p = ((executor*)(additional_params));
 
-	// we can not keep looping if the executor type = NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
-	// because we would have to kill the thread after execution
-	int keep_looping = !(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR);
+	unsigned long long int jobs_count_submitted_to_the_worker = 0;
 
 	do
 	{
@@ -108,22 +105,24 @@ static void* executors_pthread_runnable_function(void* args)
 			}
 		}
 	}
-	while(keep_looping);
 
-	// lock threads, while we add add a thread to the data structure
-	pthread_mutex_lock(&(executor_p->thread_count_mutex));
-
-	// decrement the number of threads of spawned by the executor
-	executor_p->thread_count--;
-
-	// broadcast to all the threads that are waiting for completion of all the threads of this executor
-	if(executor_p->thread_count == 0)
+	if(jobs_count_submitted_to_the_worker == 0)
 	{
-		pthread_cond_broadcast(&(executor_p->thread_count_wait));
-	}
+		// lock threads, while we add add a thread to the data structure
+		pthread_mutex_lock(&(executor_p->thread_count_mutex));
 
-	// unlock threads
-	pthread_mutex_unlock(&(executor_p->thread_count_mutex));
+		// decrement the number of threads of spawned by the executor
+		executor_p->thread_count--;
+
+		// broadcast to all the threads that are waiting for completion of all the threads of this executor
+		if(executor_p->thread_count == 0)
+		{
+			pthread_cond_broadcast(&(executor_p->thread_count_wait));
+		}
+
+		// unlock threads
+		pthread_mutex_unlock(&(executor_p->thread_count_mutex));
+	}
 
 	return NULL;
 }

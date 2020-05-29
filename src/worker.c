@@ -23,7 +23,7 @@ int start_worker(worker* wrk)
 	int return_val = 0;
 	if(wrk->thread_id == 0)
 	{
-		return_val = pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
+		return_val = pthread_create(((pthread_t*)(&(wrk->thread_id))), NULL, worker_function, wrk);
 		if(return_val)
 		{
 			printf("error starting worker %d\n", return_val);
@@ -72,11 +72,15 @@ void deinitialize_worker(worker* wrk)
 	{
 		job_p = (job*) pop_sync_queue_non_blocking(&(wrk->job_queue)); 
 
-		// once the job is executed we delete the job, if workeris memory managing the job
+		// once the job is executed we delete the job, if worker is memory managing the job
 		// i.e. it was a job submitted by the client as a function
 		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
 		{
 			delete_job(job_p);
+		}
+		else if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
+		{
+			set_result(job_p, NULL);
 		}
 	}
 
