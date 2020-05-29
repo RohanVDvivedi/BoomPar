@@ -13,7 +13,7 @@ void* simple_job_function(void* input)
 #define WORKER_QUEUE_SIZE 		10
 #define BOUNDED_WORKER_QUEUE 	0
 #define WORKER_QUEUE_TIMEOUT	500000//3000000 // 500000
-#define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK_AFTER_TIMEDOUT
+#define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK
 
 int i = 0;
 int input_jobs_param[JOBs_COUNT];
@@ -37,7 +37,7 @@ int main()
 
 	printf("Worker will be tested to execute %d jobs in all\n\n", JOBs_COUNT);
 
-	if(WORKER_POLICY != USE_CALLBACK_AFTER_TIMEDOUT)
+	if(WORKER_POLICY != USE_CALLBACK)
 	{
 		printf("Submitting initial set of the jobs\n");
 		for(i = 0; i < JOBs_COUNT/2; i++)
@@ -60,11 +60,11 @@ int main()
 
 	printf("Worker thread id : %d\n\n", (int)(wrk->thread_id));
 
-	printf("Main thread will sleep for 1 second\n\n");
-	usleep(1 * 1000 * 1000);
-
-	if(WORKER_POLICY != USE_CALLBACK_AFTER_TIMEDOUT)
+	if(WORKER_POLICY != USE_CALLBACK)
 	{
+		printf("Main thread will sleep for 1 second\n\n");
+		usleep(1 * 1000 * 1000);
+
 		printf("Submitting the rest of the jobs\n");
 		for(; i < JOBs_COUNT; i++)
 		{

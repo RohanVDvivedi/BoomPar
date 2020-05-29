@@ -131,25 +131,41 @@ static void* worker_function(void* args)
 
 	while(1)
 	{
-		// pop a job from the queue, blocking as long as provided timeout,
-		// if timedout, we exit
-		while( (job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue))) )
+		while(1)
 		{
-			// A worker thread can not be cancelled while it is executing a job
-			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-
-			// execute the job that has been popped
-			execute(job_p);
-
-			// once the job is executed we delete the job, if worker is memory managing the job
-			// i.e. it was a job submitted by the client as a function
-			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+			// pop a job from the queue, blocking as long as provided timeout,
+			// if timedout, we exit
+			if(wrk->policy == USE_CALLBACK)
 			{
-				delete_job(job_p);
+				job_p = (job*) pop_sync_queue_non_blocking(&(wrk->job_queue));
+			}
+			else
+			{
+				job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue));
 			}
 
-			// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
-			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			if(job_p != NULL)
+			{
+				// A worker thread can not be cancelled while it is executing a job
+				pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+				// execute the job that has been popped
+				execute(job_p);
+
+				// once the job is executed we delete the job, if worker is memory managing the job
+				// i.e. it was a job submitted by the client as a function
+				if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+				{
+					delete_job(job_p);
+				}
+
+				// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
+				pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		// Behaviour according to policy, if we waited on the job queue and timedout
@@ -161,7 +177,7 @@ static void* worker_function(void* args)
 		{
 			break;
 		}
-		else if(wrk->policy == USE_CALLBACK_AFTER_TIMEDOUT)
+		else if(wrk->policy == USE_CALLBACK)
 		{
 			if(wrk->job_queue_empty_timedout_callback != NULL)
 			{
