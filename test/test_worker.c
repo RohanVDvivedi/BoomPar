@@ -25,7 +25,7 @@ int input_jobs_param[JOBs_COUNT];
 	sync_queue input_jobs_queue;
 #endif
 
-void job_queue_empty_timedout_callback(worker* wrk, const void* additional_params)
+void job_queue_empty_callback(worker* wrk, const void* additional_params)
 {
 	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 		printf("Using sync queue tranfer for submitting jobs, current jobs now %llu\n\n", input_jobs_queue.qp.queue_size);
@@ -45,7 +45,7 @@ void job_queue_empty_timedout_callback(worker* wrk, const void* additional_param
 
 int main()
 {
-	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE, WORKER_QUEUE_TIMEOUT, WORKER_POLICY, job_queue_empty_timedout_callback, NULL);
+	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE, WORKER_QUEUE_TIMEOUT, WORKER_POLICY, job_queue_empty_callback, NULL);
 	printf("Worker built and initialized %d\n\n", WORKER_POLICY);
 
 	printf("Worker will be tested to execute %d jobs in all\n\n", JOBs_COUNT);
