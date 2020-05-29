@@ -36,19 +36,32 @@ sync_queue* get_sync_queue(unsigned long long int size, int is_bounded, long lon
 
 void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded, long long int wait_time_out_in_microseconds);
 
+// returns 1, if the sync queue is full, else returns 0
 int is_full_sync_queue(sync_queue* sq);
 
+// returns 1, if the sync queue is empty, else returns 0
+int is_empty_sync_queue(sync_queue* sq);
+
+// returns non zero if waiting timed out, i.e. queue is still full
+// returns 0, if the sync_queue was dequeued while we waited
+int wait_while_full_sync_queue(sync_queue* sq);
+
+// returns non zero if waiting timed out, i.e. queue is still full
+// returns 0, if the sync_queue was dequeued while we waited
+int wait_while_empty_sync_queue(sync_queue* sq);
+
+// it will block for atmost wait_time_out_in_microseconds, for someone to make space in the sync_queue, if it is bounded and full
+// returns 1, if the element was pushed, else returns 0
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p);
 
-// it will block for atmost wait_time_out_in_microseconds
+// it will not block, to wait until there is space in the sync queue to push the element
+// returns 1, if the element was pushed, else returns 0
 int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p);
 
 // it will block for atmost wait_time_out_in_microseconds
 const void* pop_sync_queue_blocking(sync_queue* sq);
 
 const void* pop_sync_queue_non_blocking(sync_queue* sq);
-
-int is_empty_sync_queue(sync_queue* sq);
 
 // returns the number of elements that were transferred, it will transfer no more than max_elements
 unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements);

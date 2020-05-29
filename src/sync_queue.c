@@ -74,6 +74,30 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 	return return_val;
 }
 
+int wait_while_full_sync_queue(sync_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		int wait_error = 0;
+		while(isQueueHolderFull(&(sq->qp)) && !wait_error)
+		{
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+		}
+	pthread_mutex_unlock(&(sq->q_lock));
+	return wait_error;
+}
+
+int wait_while_empty_sync_queue(sync_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		int wait_error = 0;
+		while(isQueueEmpty(&(sq->qp)) && !wait_error)
+		{
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+		}
+	pthread_mutex_unlock(&(sq->q_lock));
+	return wait_error;
+}
+
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p)
 {
 	int is_pushed = 0;
