@@ -146,22 +146,25 @@ static void* worker_function(void* args)
 	{
 		while(1)
 		{
-			// pop a job from the queue, blocking as long as provided timeout,
-			// if timedout, we exit
-			if(wrk->policy == USE_CALLBACK)
+			// if the worker policy is to not USE_CALLBACK, when the job_queue is empty
+			if(wrk->policy != USE_CALLBACK)
 			{
-				job_p = (job*) pop_sync_queue_non_blocking(&(wrk->job_queue));
+				// we blocking wait while, while we are outside the cancel disabled statements
+				// this ensures that worker will not pollute any job memory
+				if(wait_while_empty_sync_queue(&(wrk->job_queue)))
+				{
+					break;
+				}
 			}
-			else
-			{
-				job_p = (job*) pop_sync_queue_blocking(&(wrk->job_queue));
-			}
+
+			// A worker thread can not be cancelled while the worker is dequeuing and executing a job
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+			// pop a job from the queue unblockingly, we can not block while we have disableded thread cancellation
+			job_p = (job*) pop_sync_queue_non_blocking(&(wrk->job_queue));
 
 			if(job_p != NULL)
 			{
-				// A worker thread can not be cancelled while it is executing a job
-				pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-
 				// execute the job that has been popped
 				execute(job_p);
 
@@ -171,11 +174,13 @@ static void* worker_function(void* args)
 				{
 					delete_job(job_p);
 				}
-
-				// Turn on cancelation of the worker thread once the job it was executing has been completed and deleted
-				pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 			}
-			else
+
+			// Turn on cancelation of the worker thread once the job has been executed and deleted
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			
+			// if No job was executed, the job_queue being empty, we need to reevaluate according to the assigned policy
+			if(job_p == NULL)
 			{
 				break;
 			}
