@@ -27,29 +27,45 @@ static void* worker_function(void* args);
 
 int start_worker(worker* wrk)
 {
-	int return_val = pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
-	if(return_val)
+	int return_val = 0;
+	if(wrk->thread_id == 0)
 	{
-		printf("error starting worker %d\n", return_val);
-		wrk->thread_id = 0;
+		return_val = pthread_create(&(wrk->thread_id), NULL, worker_function, wrk);
+		if(return_val)
+		{
+			printf("error starting worker %d\n", return_val);
+			wrk->thread_id = 0;
+		}
+	}
+	else
+	{
+		printf("worker already running at %d\n", (int) wrk->thread_id);
 	}
 	return return_val;
 }
 
 int stop_worker(worker* wrk)
 {
-	int return_val = pthread_cancel(wrk->thread_id);
-	if(return_val == 0)
+	int return_val = 0;
+	if(wrk->thread_id != 0)
 	{
-		wrk->thread_id = 0;
-	}
-	else if(return_val == ESRCH)
-	{
-		printf("Worker thread not found, thread may have exited prior to this call\n");
+		return_val = pthread_cancel(wrk->thread_id);
+		if(return_val == 0)
+		{
+			wrk->thread_id = 0;
+		}
+		else if(return_val == ESRCH)
+		{
+			printf("Worker thread not found, thread may have exited prior to this call\n");
+		}
+		else
+		{
+			printf("error stopping worker %d\n", return_val);
+		}
 	}
 	else
 	{
-		printf("error stopping worker %d\n", return_val);
+		printf("Worker thread already killed\n");
 	}
 	return return_val;
 }
@@ -194,6 +210,9 @@ static void* worker_function(void* args)
 			}
 		}
 	}
+
+	// thread will no longer be running, so just mark it KILLED
+	wrk->thread_id = 0;
 
 	return NULL;
 }
