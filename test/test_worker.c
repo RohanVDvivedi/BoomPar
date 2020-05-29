@@ -15,7 +15,7 @@ void* simple_job_function(void* input)
 #define WORKER_QUEUE_TIMEOUT	500000//3000000 // 500000
 #define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK
 
-//#define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
+#define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 
 int i = 0;
 int input_jobs_param[JOBs_COUNT];
@@ -28,7 +28,7 @@ int input_jobs_param[JOBs_COUNT];
 void job_queue_empty_timedout_callback(worker* wrk, const void* additional_params)
 {
 	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
-		printf("Using sync queue tranfer for submitting jobs\n\n");
+		printf("Using sync queue tranfer for submitting jobs, current jobs now %llu\n\n", input_jobs_queue.qp.queue_size);
 		transfer_elements_sync_queue(&(wrk->job_queue), &input_jobs_queue, JOBs_COUNT);
 	#else
 		printf("Using input functions in callback function for submitting jobs\n\n");
