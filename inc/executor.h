@@ -6,7 +6,6 @@
 #include<pthread.h>
 #include<errno.h>
 
-
 #include<sync_queue.h>
 #include<worker.h>
 #include<job.h>
@@ -14,13 +13,11 @@
 typedef enum executor_type executor_type;
 enum executor_type
 {
-	// there are fixed number of threads, that execute all your jobs
+	// there are fixed number of workers, that execute all your jobs
 	FIXED_THREAD_COUNT_EXECUTOR,
 
-	// the executor starts a new, thread for every job that is submitted
-	NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR,
-
-	// the thread count is maintained by the executor itself, more tasks are submitted, more threads you see
+	// the thread count is maintained by the executor itself
+	// more tasks are submitted, more workers will be seen
 	CACHED_THREAD_POOL_EXECUTOR
 };
 
@@ -32,7 +29,7 @@ struct executor
 
 	// this variable is used only if this is a CACHED_THREAD_POOL_EXECUTOR,
 	// and we want an upper bound on the number of worker threads being used
-	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
+	// if this is a FIXED_THREAD_COUNT_EXECUTOR, then maximum_workers == total_workers_count
 	unsigned long long int maximum_workers;
 
 	// this is main queue for the jobs, that gets submitted by the client
@@ -61,15 +58,13 @@ struct executor
 
 // LOGIC TO MANAGE HOW THE EXECUTOR WILL SHUTDOWN
 
-	// self explanatory variable, is set only by shutdown executor method
-	int requested_to_stop_after_queue_is_empty;
-
-	// self explanatory variable, is set only by shutdown executor method
-	int requested_to_stop_after_current_job;
+	// self explanatory variables, is set only by shutdown executor method
+	volatile int requested_to_shutdown_as_soon_as_possible;
+	volatile int requested_to_shutdown_after_jobs_complete;
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
+executor* get_executor(executor_type type, unsigned long long int maximum_workers, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
 
 // called by client, this function enqueues a job (with function function_p that will execute with input params input_p) in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
