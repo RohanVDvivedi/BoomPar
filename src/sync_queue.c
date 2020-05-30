@@ -1,20 +1,19 @@
 #include<sync_queue.h>
 
-sync_queue* get_sync_queue(unsigned long long int size, int is_bounded, long long int wait_time_out_in_microseconds)
+sync_queue* get_sync_queue(unsigned long long int size, int is_bounded)
 {
 	sync_queue* sq = (sync_queue*) malloc(sizeof(sync_queue));
-	initialize_sync_queue(sq, size, is_bounded, wait_time_out_in_microseconds);
+	initialize_sync_queue(sq, size, is_bounded);
 	return sq;
 }
 
-void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded, long long int wait_time_out_in_microseconds)
+void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded)
 {
 	pthread_mutex_init(&(sq->q_lock), NULL);
 	pthread_cond_init(&(sq->q_empty_wait), NULL);
 	pthread_cond_init(&(sq->q_full_wait), NULL);
 	initialize_queue(&(sq->qp), size);
 	sq->is_bounded = is_bounded;
-	sq->wait_time_out_in_microseconds = wait_time_out_in_microseconds;
 }
 
 void deinitialize_sync_queue(sync_queue* sq)
@@ -47,12 +46,46 @@ int is_empty_sync_queue(sync_queue* sq)
 	return is_empty;
 }
 
-static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p, pthread_mutex_t* mutex_p, long long int wait_time_out_in_microseconds)
+int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
+{
+	int is_pushed = 0;
+	pthread_mutex_lock(&(sq->q_lock));
+
+		// we can not push an element, if queue is bounded and it is full
+		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
+		{
+			push_queue(&(sq->qp), data_p);
+			pthread_cond_broadcast(&(sq->q_empty_wait));
+			is_pushed = 1;
+		}
+
+	pthread_mutex_unlock(&(sq->q_lock));
+	return is_pushed;
+}
+
+const void* pop_sync_queue_non_blocking(sync_queue* sq)
+{
+	const void* data_p = NULL;
+	pthread_mutex_lock(&(sq->q_lock));
+
+		// if queue, is not empty, pop the top element
+		if(!isQueueEmpty(&(sq->qp)))
+		{
+			data_p = get_top_queue(&(sq->qp));
+			pop_queue(&(sq->qp));
+			pthread_cond_broadcast(&(sq->q_full_wait));
+		}
+
+	pthread_mutex_unlock(&(sq->q_lock));
+	return data_p;
+}
+
+static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p, pthread_mutex_t* mutex_p, unsigned long long int wait_time_out_in_microseconds)
 {
 	int return_val = 0;
 
-	// if < 1, blocking indefinitely
-	if(wait_time_out_in_microseconds < 1)
+	// if == 0, we will block indefinitely, on the condition variable
+	if(wait_time_out_in_microseconds == 0)
 	{
 		return_val = pthread_cond_wait(cond_wait_p, mutex_p);
 	}
@@ -74,31 +107,31 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 	return return_val;
 }
 
-int wait_while_full_sync_queue(sync_queue* sq)
+int wait_while_full_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 		int wait_error = 0;
 		while(isQueueHolderFull(&(sq->qp)) && !wait_error)
 		{
-			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 		}
 	pthread_mutex_unlock(&(sq->q_lock));
 	return wait_error;
 }
 
-int wait_while_empty_sync_queue(sync_queue* sq)
+int wait_while_empty_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 		int wait_error = 0;
 		while(isQueueEmpty(&(sq->qp)) && !wait_error)
 		{
-			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 		}
 	pthread_mutex_unlock(&(sq->q_lock));
 	return wait_error;
 }
 
-int push_sync_queue_blocking(sync_queue* sq, const void* data_p)
+int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds)
 {
 	int is_pushed = 0;
 	pthread_mutex_lock(&(sq->q_lock));
@@ -111,7 +144,7 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p)
 			// note : timeout is also a wait error
 			while(isQueueHolderFull(&(sq->qp)) && !wait_error)
 			{
-				wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+				wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 			}
 		}
 
@@ -127,24 +160,7 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p)
 	return is_pushed;
 }
 
-int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
-{
-	int is_pushed = 0;
-	pthread_mutex_lock(&(sq->q_lock));
-
-		// we can not push an element, if queue is bounded and it is full
-		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
-		{
-			push_queue(&(sq->qp), data_p);
-			pthread_cond_broadcast(&(sq->q_empty_wait));
-			is_pushed = 1;
-		}
-
-	pthread_mutex_unlock(&(sq->q_lock));
-	return is_pushed;
-}
-
-const void* pop_sync_queue_blocking(sync_queue* sq)
+const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
 {
 	const void* data_p = NULL;
 	pthread_mutex_lock(&(sq->q_lock));
@@ -155,25 +171,8 @@ const void* pop_sync_queue_blocking(sync_queue* sq)
 		// note : timeout is also a wait error
 		while(isQueueEmpty(&(sq->qp)) && !wait_error)
 		{
-			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), sq->wait_time_out_in_microseconds);
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 		}
-
-		// if queue, is not empty, pop the top element
-		if(!isQueueEmpty(&(sq->qp)))
-		{
-			data_p = get_top_queue(&(sq->qp));
-			pop_queue(&(sq->qp));
-			pthread_cond_broadcast(&(sq->q_full_wait));
-		}
-
-	pthread_mutex_unlock(&(sq->q_lock));
-	return data_p;
-}
-
-const void* pop_sync_queue_non_blocking(sync_queue* sq)
-{
-	const void* data_p = NULL;
-	pthread_mutex_lock(&(sq->q_lock));
 
 		// if queue, is not empty, pop the top element
 		if(!isQueueEmpty(&(sq->qp)))
