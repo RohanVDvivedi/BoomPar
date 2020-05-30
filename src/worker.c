@@ -9,9 +9,6 @@ struct worker_thread_params
 	// the job_queue that the 
 	sync_queue* job_queue;
 
-	// worker policy that the worker thread is meant to follow
-	worker_policy policy;
-
 	// the maximum timeout the thread blocks until while there are no jobs in the job_queue to work on
 	unsigned long long int job_queue_empty_timeout_in_microseconds;
 
@@ -22,12 +19,11 @@ struct worker_thread_params
 	void* additional_params;
 };
 
-worker_thread_params* get_worker_thread_params(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+worker_thread_params* get_worker_thread_params(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	worker_thread_params* wtp = (worker_thread_params*) malloc(sizeof(worker_thread_params));
 	wtp->start_up = start_up;
 	wtp->job_queue = job_queue;
-	wtp->policy = policy;
 	wtp->job_queue_empty_timeout_in_microseconds = job_queue_empty_timeout_in_microseconds;
 	wtp->clean_up = clean_up;
 	wtp->additional_params = additional_params;
@@ -36,10 +32,10 @@ worker_thread_params* get_worker_thread_params(sync_queue* job_queue, worker_pol
 
 static void* worker_function(void* args);
 
-pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	pthread_t thread_id;
-	worker_thread_params* wtp = get_worker_thread_params(job_queue, policy, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
+	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	int return_val = pthread_create(&thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
@@ -50,20 +46,6 @@ pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned lon
 		pthread_detach(thread_id);
 	}
 	return thread_id;
-}
-
-int stop_worker(pthread_t thread_id)
-{
-	int return_val = pthread_cancel(thread_id);
-	if(return_val == ESRCH)
-	{
-		printf("Worker thread not found, thread may have exited prior to this call\n");
-	}
-	else
-	{
-		printf("error stopping worker %d\n", return_val);
-	}
-	return return_val;
 }
 
 int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p)
@@ -142,21 +124,6 @@ static void* worker_function(void* args)
 		return NULL;
 	}
 
-	unsigned long long int job_queue_empty_timeout_in_microseconds;
-
-	if(wtp.policy == WAIT_FOREVER_ON_JOB_QUEUE)
-	{
-		job_queue_empty_timeout_in_microseconds = 0;
-	}
-	else if(wtp.policy == KILL_ON_TIMEDOUT)
-	{
-		job_queue_empty_timeout_in_microseconds = wtp.job_queue_empty_timeout_in_microseconds;
-	}
-	else
-	{
-		return NULL;
-	}
-
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	if(wtp.start_up != NULL)
@@ -167,7 +134,7 @@ static void* worker_function(void* args)
 	while(1)
 	{
 		// we blocking wait while the job queue is empty, when we are outside the cancel disabled statements
-		if(wait_while_empty_sync_queue(wtp.job_queue, job_queue_empty_timeout_in_microseconds))
+		if(wait_while_empty_sync_queue(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds))
 		{
 			break;
 		}

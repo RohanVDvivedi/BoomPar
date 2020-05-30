@@ -21,14 +21,11 @@ void clean_up(void* additional_params)
 
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
-#define WORKER_QUEUE_TIMEOUT	1000000
-#define WORKER_POLICY			WAIT_FOREVER_ON_JOB_QUEUE /*KILL_ON_TIMEDOUT*/
+#define WORKER_QUEUE_TIMEOUT	0//1000000
 
 #define SET_1_JOBS	3
 #define SET_2_JOBS	3
 #define SET_3_JOBS	JOBs_COUNT - SET_1_JOBS - SET_2_JOBS
-
-#define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 
 int total_jobs_submitted = 0;
 
@@ -70,7 +67,7 @@ int main()
 	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
 	printf("Starting worker\n\n");
-	thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
+	thread_id = start_worker(&job_queue, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
 
 	printf("Worker thread id : %lu\n\n", thread_id);
 
@@ -113,9 +110,6 @@ int main()
 
 	printf("Main thread will sleep for 0.5 second\n\n");
 	usleep(500 * 1000);
-
-	printf("Stopping worker\n\n");
-	stop_worker(thread_id);
 
 	printf("Printing result\n");
 	for(int i = 0; i < JOBs_COUNT; i++)
