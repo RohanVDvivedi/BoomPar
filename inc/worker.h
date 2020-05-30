@@ -34,7 +34,17 @@ enum worker_policy
 	// => for any type of worker can be killed, by pushing a NULL in the job queue
 };
 
-pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds);
+pthread_t start_worker(
+							sync_queue* job_queue, 							// ** the worker thread uses this sync_queue to receive jobs to finish
+							worker_policy policy, 							// ** the policy followed by the worker thread
+							unsigned long long int job_queue_empty_timeout_in_microseconds, // **
+							void(*start_up)(void* additional_params), 		// * start_up function is called by the thread on start up 
+							void(*clean_up)(void* additional_params), 		// * clean_up function is called by the thread before returning
+							void* additional_params							// * this parameters will be passed to the start_up and clean_up functions
+						);
+// note
+// ** mandatory parameters to the function
+// * optional parameters to the function
 
 int stop_worker(pthread_t thread_id);
 

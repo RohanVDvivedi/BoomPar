@@ -3,26 +3,43 @@
 typedef struct worker_thread_params worker_thread_params;
 struct worker_thread_params
 {
+	// this function is called before the worker thread tries to dequeue the first job
+	void (*start_up)(void* additional_params);
+
+	// the job_queue that the 
 	sync_queue* job_queue;
+
+	// worker policy that the worker thread is meant to follow
 	worker_policy policy;
+
+	// the maximum timeout the thread blocks until while there are no jobs in the job_queue to work on
 	unsigned long long int job_queue_empty_timeout_in_microseconds;
+
+	// this function is called after the last job is executed and deleted, and the thread has decided to kill itself
+	void (*clean_up)(void* additional_params);
+
+	// the parameter that is passed in with start_up and the clean up job 
+	void* additional_params;
 };
 
-worker_thread_params* get_worker_thread_params(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds)
+worker_thread_params* get_worker_thread_params(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	worker_thread_params* wtp = (worker_thread_params*) malloc(sizeof(worker_thread_params));
+	wtp->start_up = start_up;
 	wtp->job_queue = job_queue;
 	wtp->policy = policy;
 	wtp->job_queue_empty_timeout_in_microseconds = job_queue_empty_timeout_in_microseconds;
+	wtp->clean_up = clean_up;
+	wtp->additional_params = additional_params;
 	return wtp;
 }
 
 static void* worker_function(void* args);
 
-pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds)
+pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	pthread_t thread_id;
-	worker_thread_params* wtp = get_worker_thread_params(job_queue, policy, job_queue_empty_timeout_in_microseconds);
+	worker_thread_params* wtp = get_worker_thread_params(job_queue, policy, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	int return_val = pthread_create(&thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
@@ -142,6 +159,11 @@ static void* worker_function(void* args)
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+	if(wtp.start_up != NULL)
+	{
+		wtp.start_up(wtp.additional_params);
+	}
+
 	while(1)
 	{
 		// we blocking wait while the job queue is empty, when we are outside the cancel disabled statements
@@ -175,6 +197,11 @@ static void* worker_function(void* args)
 
 		// Turn on cancelation of the worker thread once the job has been executed and deleted
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	}
+
+	if(wtp.clean_up != NULL)
+	{
+		wtp.clean_up(wtp.additional_params);
 	}
 
 	return NULL;

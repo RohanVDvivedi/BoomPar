@@ -1,12 +1,22 @@
 #include<worker.h>
 #include<unistd.h>
 
+void start_up(void* additional_params)
+{
+	printf("Worker thread started : %s\n", ((char*)additional_params));
+}
+
 void* simple_job_function(void* input)
 {
 	int* input_int = (int*) input;
 	printf("Thread[%d] => %d\n", (int) pthread_self(), (*input_int));
 	*input_int = (*input_int) + 100;
 	return input_int;
+}
+
+void clean_up(void* additional_params)
+{
+	printf("Worker thread completed : %s\n", ((char*)additional_params));
 }
 
 #define JOBs_COUNT				10
@@ -60,7 +70,7 @@ int main()
 	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
 	printf("Starting worker\n\n");
-	thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT);
+	thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
 
 	printf("Worker thread id : %lu\n\n", thread_id);
 
