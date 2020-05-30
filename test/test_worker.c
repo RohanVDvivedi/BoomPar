@@ -11,128 +11,88 @@ void* simple_job_function(void* input)
 
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
-#define BOUNDED_WORKER_QUEUE 	0
-#define WORKER_QUEUE_TIMEOUT	500000//3000000 // 500000
-#define WORKER_POLICY			/*WAIT_ON_TIMEDOUT*/ /*KILL_ON_TIMEDOUT*/ USE_CALLBACK
+#define WORKER_QUEUE_TIMEOUT	1000000
+#define WORKER_POLICY			WAIT_FOREVER_ON_JOB_QUEUE /*KILL_ON_TIMEDOUT*/
+
+#define SET_1_JOBS	3
+#define SET_2_JOBS	3
+#define SET_3_JOBS	JOBs_COUNT - SET_1_JOBS - SET_2_JOBS
 
 #define USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
 
-int i = 0;
-int input_jobs_param[JOBs_COUNT];
+int total_jobs_submitted = 0;
 
-#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
-	job input_jobs[JOBs_COUNT];
-	sync_queue input_jobs_queue;
-#endif
+int input_function_params[JOBs_COUNT];
 
-void job_queue_empty_callback(worker* wrk, const void* additional_params)
-{
-	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
-		printf("Using sync queue tranfer for submitting jobs, current jobs now %llu\n\n", input_jobs_queue.qp.queue_size);
-		transfer_elements_sync_queue(&(wrk->job_queue), &input_jobs_queue, JOBs_COUNT);
-	#else
-		printf("Using input functions in callback function for submitting jobs\n\n");
-		for(; i < JOBs_COUNT; i++)
-		{
-			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
-			{
-				break;
-			}
-		}
-		printf("Total jobs submitted %d\n\n", i);
-	#endif
-}
+int input_job_params[JOBs_COUNT];
+job input_jobs[JOBs_COUNT];
 
 int main()
 {
-	worker* wrk = get_worker(WORKER_QUEUE_SIZE, BOUNDED_WORKER_QUEUE, WORKER_QUEUE_TIMEOUT, WORKER_POLICY, job_queue_empty_callback, NULL);
-	printf("Worker built and initialized %d\n\n", WORKER_POLICY);
+	printf("Worker will be tested to execute %d jobs in all, half functional and half promised jobs\n\n", 2 * JOBs_COUNT);
 
-	printf("Worker will be tested to execute %d jobs in all\n\n", JOBs_COUNT);
-
-	printf("Initializing input job parameters\n\n");
-	for(int j = 0; j < JOBs_COUNT; j++)
+	printf("Initializing input parameters\n\n");
+	for(int i = 0; i < JOBs_COUNT; i++)
 	{
-		input_jobs_param[j] = j;
+		input_function_params[i] = 2 * i;
+		input_job_params[i] = 2 * i + 1;
+		initialize_job(&(input_jobs[i]), simple_job_function, &(input_job_params[i]));
 	}
 
-	printf("Input job parameters initialized\n\n");
+	printf("Initializing job queue\n\n");
+	sync_queue job_queue;
+	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE, 0);
 
-	if(WORKER_POLICY != USE_CALLBACK)
+	printf("Submitting initial set of the jobs\n");
+	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted+=2)
 	{
-		printf("Submitting initial set of the jobs\n");
-		for(i = 0; i < JOBs_COUNT/2; i++)
-		{
-			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
-			{
-				break;
-			}
-		}
-		printf("Submitted %d jobs to worker\n", i);
+		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
+		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
 	}
-	else
-	{
-		#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
-			printf("Main thread will not be submitting any worker jobs, but it will queue them in external input_jobs_queue\n\n");
-			initialize_sync_queue(&(input_jobs_queue), JOBs_COUNT/2, 0, 3000000);
-			for(i = 0; i < JOBs_COUNT; i++)
-			{
-				initialize_job(&(input_jobs[i]), simple_job_function, &(input_jobs_param[i]));
-				push_sync_queue_non_blocking(&(input_jobs_queue), &(input_jobs[i]));
-			}
-			printf("The input job queue contains %llu elements\n\n", input_jobs_queue.qp.queue_size);
-		#else 
-			printf("Main thread will not be submitting any worker jobs\n\n");
-		#endif
-	}
+	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
 	printf("Starting worker\n\n");
-	start_worker(wrk);
+	pthread_t thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT);
 
-	printf("Worker thread id : %d\n\n", (int)(wrk->thread_id));
+	printf("Worker thread id : %lu\n\n", thread_id);
 
-	if(WORKER_POLICY != USE_CALLBACK)
+	printf("Main thread will sleep for 1 second\n\n");
+	usleep(1 * 1000 * 1000);
+
+	printf("Submitting the rest of the jobs\n");
+	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted+=2)
 	{
-		printf("Main thread will sleep for 1 second\n\n");
-		usleep(1 * 1000 * 1000);
-
-		printf("Submitting the rest of the jobs\n");
-		for(; i < JOBs_COUNT; i++)
-		{
-			if(submit_function_to_worker(wrk, simple_job_function, &(input_jobs_param[i])) == 0)
-			{
-				break;
-			}
-		}
-		printf("Submitted %d jobs in total\n\n", i);
+		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
+		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
 	}
-	else
+	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
+
+	printf("Main thread will sleep for 2 second\n\n");
+	usleep(2 * 1000 * 1000);
+
+	printf("Submitting the rest of the jobs\n");
+	for(int i = 0; i < SET_3_JOBS; i++, total_jobs_submitted+=2)
 	{
-		printf("Main thread will not be submitting any worker jobs\n\n");
+		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
+		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
 	}
+	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
-	// This is where the worker starts working
-	printf("Main thread waiting to join worker thread\n\n");
-	pthread_join(wrk->thread_id, NULL);
-
-	printf("\n");
+	printf("Main thread will sleep for 0.5 second\n\n");
+	usleep(500 * 1000);
 
 	printf("Stopping worker\n\n");
-	stop_worker(wrk);
+	stop_worker(thread_id);
 
 	printf("Printing result\n");
 	for(int i = 0; i < JOBs_COUNT; i++)
 	{
-		printf("Output[%d] = %d\n", i, input_jobs_param[i]);
+		printf("Output_func[%d] = %d\n", i, input_function_params[i]);
+		printf("Output_jobb[%d] = %d\n", i, input_job_params[i]);
 	}
 	printf("\n");
 
-	printf("Deleting worker\n\n");
-	delete_worker(wrk);
-
-	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
-		deinitialize_sync_queue(&(input_jobs_queue));
-	#endif
+	deinitialize_sync_queue(&(job_queue));
 
 	printf("Test completed\n\n");
 	return 0;
