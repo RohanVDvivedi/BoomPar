@@ -28,6 +28,10 @@ pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned lon
 	{
 		printf("Error starting worker : %d\n", return_val);
 	}
+	else
+	{
+		pthread_detach(thread_id);
+	}
 	return thread_id;
 }
 
