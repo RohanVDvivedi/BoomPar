@@ -37,7 +37,7 @@ int stop_worker(pthread_t thread_id);
 
 // submit function or job, returns 1 if the job was successfully submitted to the worker
 // function fails and returns 0 if, the job_queue is blocking and it is full 
-int submit_function(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p);
-int submit_job(sync_queue* job_queue, job* job_p);
+int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p);
+int submit_job_worker(sync_queue* job_queue, job* job_p);
 
 #endif

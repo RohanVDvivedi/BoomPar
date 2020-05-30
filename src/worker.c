@@ -45,7 +45,7 @@ int stop_worker(pthread_t thread_id)
 	return return_val;
 }
 
-int submit_function_to_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p)
+int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p)
 {
 	int was_job_queued = 0;
 
@@ -68,7 +68,7 @@ int submit_function_to_worker(sync_queue* job_queue, void* (*function_p)(void* i
 	return was_job_queued;
 }
 
-int submit_job_to_worker(sync_queue* job_queue, job* job_p)
+int submit_job_worker(sync_queue* job_queue, job* job_p)
 {
 	int was_job_queued = 0;
 

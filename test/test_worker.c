@@ -27,6 +27,8 @@ int input_function_params[JOBs_COUNT];
 int input_job_params[JOBs_COUNT];
 job input_jobs[JOBs_COUNT];
 
+pthread_t thread_id;
+
 int main()
 {
 	printf("Worker will be tested to execute %d jobs in all, half functional and half promised jobs\n\n", 2 * JOBs_COUNT);
@@ -46,13 +48,19 @@ int main()
 	printf("Submitting initial set of the jobs\n");
 	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted+=2)
 	{
-		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
-		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
+		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		{
+			printf("Func submit error %d\n\n", i);
+		}
+		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
+		{
+			printf("Job submit error %d\n\n", i);
+		}
 	}
 	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
 	printf("Starting worker\n\n");
-	pthread_t thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT);
+	thread_id = start_worker(&job_queue, WORKER_POLICY, WORKER_QUEUE_TIMEOUT);
 
 	printf("Worker thread id : %lu\n\n", thread_id);
 
@@ -62,8 +70,14 @@ int main()
 	printf("Submitting the rest of the jobs\n");
 	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted+=2)
 	{
-		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
-		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
+		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		{
+			printf("Func submit error %d\n\n", i);
+		}
+		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
+		{
+			printf("Job submit error %d\n\n", i);
+		}
 	}
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
@@ -73,8 +87,14 @@ int main()
 	printf("Submitting the rest of the jobs\n");
 	for(int i = 0; i < SET_3_JOBS; i++, total_jobs_submitted+=2)
 	{
-		submit_function(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted]));
-		submit_job(&job_queue, &(input_jobs[total_jobs_submitted]));
+		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		{
+			printf("Func submit error %d\n\n", i);
+		}
+		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
+		{
+			printf("Job submit error %d\n\n", i);
+		}
 	}
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
