@@ -112,7 +112,10 @@ int main()
 	}
 	printf("\n");
 
-	discard_leftover_jobs(&job_queue);
+	if(WORKER_POLICY == KILL_ON_TIMEDOUT)
+	{
+		discard_leftover_jobs(&job_queue);
+	}
 
 	deinitialize_sync_queue(&job_queue);
 
