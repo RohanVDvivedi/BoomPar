@@ -130,6 +130,10 @@ int main()
 	printf("Deleting worker\n\n");
 	delete_worker(wrk);
 
+	#if defined USE_SYNC_QUEUE_TRANSFER_TO_REFILL_JOBS
+		deinitialize_sync_queue(&(input_jobs_queue));
+	#endif
+
 	printf("Test completed\n\n");
 	return 0;
 }
