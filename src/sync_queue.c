@@ -207,6 +207,9 @@ unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue*
 			}
 		}
 
+		pthread_cond_broadcast(&(src->q_full_wait));
+		pthread_cond_broadcast(&(dst->q_empty_wait));
+
 	pthread_mutex_unlock(&(src->q_lock));
 	pthread_mutex_unlock(&(dst->q_lock));
 
