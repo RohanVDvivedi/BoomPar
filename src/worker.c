@@ -88,19 +88,27 @@ int submit_job_worker(sync_queue* job_queue, job* job_p)
 	return was_job_queued;
 }
 
+int submit_stop_worker(sync_queue* job_queue)
+{
+	return push_sync_queue_non_blocking(job_queue, NULL);
+}
+
 void discard_leftover_jobs(sync_queue* job_queue)
 {
 	while(!is_empty_sync_queue(job_queue))
 	{
 		job* job_p = (job*) pop_sync_queue_non_blocking(job_queue);
 
-		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		if(job_p != NULL)
 		{
-			delete_job(job_p);
-		}
-		else if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
-		{
-			set_result(job_p, NULL);
+			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+			{
+				delete_job(job_p);
+			}
+			else if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
+			{
+				set_result(job_p, NULL);
+			}
 		}
 	}
 }
@@ -159,6 +167,10 @@ static void* worker_function(void* args)
 			{
 				delete_job(job_p);
 			}
+		}
+		else
+		{
+			break;
 		}
 
 		// Turn on cancelation of the worker thread once the job has been executed and deleted

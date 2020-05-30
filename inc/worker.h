@@ -29,6 +29,9 @@ enum worker_policy
 		// This is policy is to be used when you have already queued all the jobs, 
 		// and expect the worker thread to kill itself, once finished
 		// in this policy, the thread will wait for job_queue_empty_timeout_in_microseconds time before killing itself
+
+
+	// => for any type of worker can be killed, by pushing a NULL in the job queue
 };
 
 pthread_t start_worker(sync_queue* job_queue, worker_policy policy, unsigned long long int job_queue_empty_timeout_in_microseconds);
@@ -39,6 +42,11 @@ int stop_worker(pthread_t thread_id);
 // function fails and returns 0 if, the job_queue is blocking and it is full 
 int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p);
 int submit_job_worker(sync_queue* job_queue, job* job_p);
+
+// The function below will submit a NULL in the job_queue, this kill any one worker that dequeues it
+// It returns 1, if NULL was pushed, else it will return NULL
+// A WAIT_FOREVER_ON_JOB_QUEUE can be stopped only by sending this command at the end of all the jobs
+int submit_stop_worker(sync_queue* job_queue);
 
 // to discard jobs that are still remaining, in the job queue, even after the worker thread has been killed
 // there would not be any jobs remaining in the queue after this call

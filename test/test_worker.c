@@ -98,6 +98,9 @@ int main()
 	}
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
+	printf("Submitting stop worker\n\n");
+	submit_stop_worker(&job_queue);
+
 	printf("Main thread will sleep for 0.5 second\n\n");
 	usleep(500 * 1000);
 
@@ -112,10 +115,8 @@ int main()
 	}
 	printf("\n");
 
-	if(WORKER_POLICY == KILL_ON_TIMEDOUT)
-	{
-		discard_leftover_jobs(&job_queue);
-	}
+	printf("Discarding all unfinished jobs\n\n");
+	discard_leftover_jobs(&job_queue);
 
 	deinitialize_sync_queue(&job_queue);
 
