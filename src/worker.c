@@ -84,6 +84,23 @@ int submit_job_worker(sync_queue* job_queue, job* job_p)
 	return was_job_queued;
 }
 
+void discard_leftover_jobs(sync_queue* job_queue)
+{
+	while(!is_empty_sync_queue(job_queue))
+	{
+		job* job_p = (job*) pop_sync_queue_non_blocking(job_queue);
+
+		if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
+		{
+			delete_job(job_p);
+		}
+		else if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
+		{
+			set_result(job_p, NULL);
+		}
+	}
+}
+
 // this is the function that will be continuously executed by the worker thread,
 // dequeuing jobs continuously from the job_queue, to execute them
 static void* worker_function(void* args)

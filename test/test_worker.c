@@ -12,7 +12,7 @@ void* simple_job_function(void* input)
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
 #define WORKER_QUEUE_TIMEOUT	1000000
-#define WORKER_POLICY			/*WAIT_FOREVER_ON_JOB_QUEUE*/ KILL_ON_TIMEDOUT
+#define WORKER_POLICY			WAIT_FOREVER_ON_JOB_QUEUE /*KILL_ON_TIMEDOUT*/
 
 #define SET_1_JOBS	3
 #define SET_2_JOBS	3
@@ -112,7 +112,9 @@ int main()
 	}
 	printf("\n");
 
-	deinitialize_sync_queue(&(job_queue));
+	discard_leftover_jobs(&job_queue);
+
+	deinitialize_sync_queue(&job_queue);
 
 	printf("Test completed\n\n");
 	return 0;

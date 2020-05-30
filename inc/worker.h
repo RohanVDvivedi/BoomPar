@@ -40,4 +40,8 @@ int stop_worker(pthread_t thread_id);
 int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p);
 int submit_job_worker(sync_queue* job_queue, job* job_p);
 
+// to discard jobs that are still remaining, in the job queue, even after the worker thread has been killed
+// there would not be any jobs remaining in the queue after this call
+void discard_leftover_jobs(sync_queue* job_queue);
+
 #endif
