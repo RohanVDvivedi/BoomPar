@@ -12,7 +12,7 @@ void* simple_job_function(void* input)
 #define JOBs_COUNT				10
 #define WORKER_QUEUE_SIZE 		10
 #define WORKER_QUEUE_TIMEOUT	1000000
-#define WORKER_POLICY			WAIT_FOREVER_ON_JOB_QUEUE /*KILL_ON_TIMEDOUT*/
+#define WORKER_POLICY			/*WAIT_FOREVER_ON_JOB_QUEUE*/ KILL_ON_TIMEDOUT
 
 #define SET_1_JOBS	3
 #define SET_2_JOBS	3
@@ -46,7 +46,7 @@ int main()
 	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE, 0);
 
 	printf("Submitting initial set of the jobs\n");
-	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted+=2)
+	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted++)
 	{
 		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
 		{
@@ -68,7 +68,7 @@ int main()
 	usleep(1 * 1000 * 1000);
 
 	printf("Submitting the rest of the jobs\n");
-	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted+=2)
+	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted++)
 	{
 		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
 		{
@@ -85,7 +85,7 @@ int main()
 	usleep(2 * 1000 * 1000);
 
 	printf("Submitting the rest of the jobs\n");
-	for(int i = 0; i < SET_3_JOBS; i++, total_jobs_submitted+=2)
+	for(int i = 0; i < SET_3_JOBS; i++, total_jobs_submitted++)
 	{
 		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
 		{
