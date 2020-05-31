@@ -77,7 +77,7 @@ int main()
 	for(int i = 0; i < WATING_JOB_COUNT; i++)
 	{
 		// wait for waiting job to finish and then delete it
-		printf("Deinitialiing waiting job %d\n", i);
+		printf("Deinitializing waiting job %d\n", i);
 		get_result(&(waiting_jobs[i]));
 		deinitialize_job(&(waiting_jobs[i]));
 	}
