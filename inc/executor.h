@@ -6,9 +6,8 @@
 #include<pthread.h>
 #include<errno.h>
 
-#include<queue.h>
-#include<hashmap.h>
-
+#include<sync_queue.h>
+#include<worker.h>
 #include<job.h>
 
 typedef enum executor_type executor_type;
@@ -27,45 +26,29 @@ struct executor
 	// defines the type of the executor it is
 	executor_type type;
 
-	// this variable is used only if this is a CACHED_THREAD_POOL_EXECUTOR,
-	// and we want an upper bound on the count of threads
-	// if this is -1, the maximum number of threads is infinite
-	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
-	unsigned int maximum_threads;
-	unsigned int minimum_threads;
-
 	// this is queue for the jobs, that gets submitted by the client
-	queue job_queue;
-
-	// this is the number of threads that are waiting on the empty job_queue
-	// this int is also protected using the job_queue_mutex, and is incremented and decremented, by the thread itself
-	// as the thread go to wait, or wakes up on  job_queue_empty_wait
-	unsigned int threads_waiting_on_empty_job_queue;
+	sync_queue job_queue;
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
-	// job_queue_mutex for protection of job_queue data structure
-	pthread_mutex_t job_queue_mutex;
-	
-	// job_queue_empty_wait for synchronization, when there are threads waiting for empty job_queue
-	pthread_cond_t job_queue_empty_wait;
-
-	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
+	// the maximum and minimum worker count allowed by the executor
+	unsigned int maximum_worker_count;
+	unsigned int minimum_worker_count;
 
 	// keeps the current count of threads created by executor
-	unsigned int thread_count;
+	unsigned int active_worker_count;
 
 	// thread_count_mutex is for protection of thread count variable
-	pthread_mutex_t thread_count_mutex;
+	pthread_mutex_t worker_count_mutex;
 
 	// thread_count_wait is for waiting on thread count variable
-	pthread_cond_t thread_count_wait;
+	pthread_cond_t worker_count_until_zero_wait;
 
 	// self explanatory variable, is set only by shutdown executor method
-	int requested_to_stop_after_queue_is_empty;
+	volatile int requested_to_stop_after_queue_is_empty;
 
 	// self explanatory variable, is set only by shutdown executor method
-	int requested_to_stop_after_current_job;
+	volatile int requested_to_stop_after_current_job;
 };
 
 // creates a new executor, for the client
