@@ -35,7 +35,7 @@ int job_status_change(job* job_p, job_status job_new_status)
 	return has_job_status_changed;
 }
 
-void* execute_wrapper(void* job_v_p)
+static void* execute_wrapper(void* job_v_p)
 {
 	job* job_p = ((job*)job_v_p);
 	execute(job_p);
@@ -51,10 +51,15 @@ pthread_t execute_async(job* job_p)
 	}
 
 	// the id to the new thread
-	pthread_t thread_id_p;
+	pthread_t thread_id = 0;
 
 	// create a new thread that runs, with an executor, executor_p
-	pthread_create(&thread_id_p, NULL, execute_wrapper, job_p);
+	pthread_create(&thread_id, NULL, execute_wrapper, job_p);
+
+	if(thread_id != 0)
+	{
+		pthread_detach(thread_id);
+	}
 
 	return thread_id_p;
 

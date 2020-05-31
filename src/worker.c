@@ -34,7 +34,7 @@ static void* worker_function(void* args);
 
 pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
-	pthread_t thread_id;
+	pthread_t thread_id = 0;
 	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	int return_val = pthread_create(&thread_id, NULL, worker_function, wtp);
 	if(return_val)
