@@ -61,7 +61,7 @@ pthread_t execute_async(job* job_p)
 		pthread_detach(thread_id);
 	}
 
-	return thread_id_p;
+	return thread_id;
 
 	ERROR :;
 	return 0;
