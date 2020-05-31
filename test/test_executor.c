@@ -4,17 +4,17 @@
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
-	//usleep(3 * 1000);
+	usleep(100);
 	printf("c %d => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
 }
 
-#define EXECUTOR_TYPE			FIXED_THREAD_COUNT_EXECUTOR /*NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR*/ /*CACHED_THREAD_POOL_EXECUTOR*/
+#define EXECUTOR_TYPE			/*FIXED_THREAD_COUNT_EXECUTOR*/ CACHED_THREAD_POOL_EXECUTOR
 #define EXECUTOR_THREADS_COUNT 	4
 
 #define WAIT_FOR_SHUTDOWN       1
-#define SHUTDOWN_IMMEDIATELY 	0
+#define SHUTDOWN_IMMEDIATELY 	1
 
 #define TEST_JOBs_COUNT 120
 
@@ -93,8 +93,7 @@ int main()
 		}
 	}
 
-	printf("thread count %llu\n", executor_p->thread_count);
-	printf("unexecuted job count %llu\n", executor_p->job_queue.queue_size);
+	printf("thread count %u\n", executor_p->active_worker_count);
 
 	if(delete_executor(executor_p))
 	{
