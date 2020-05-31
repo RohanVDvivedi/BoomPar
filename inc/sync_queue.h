@@ -20,6 +20,12 @@ struct sync_queue
 	// conditional wait of the queue is full
 	pthread_cond_t q_full_wait;
 
+	// this is the number of threads waiting on the q_empty_wait
+	unsigned int q_empty_wait_thread_count;
+
+	// this is the number of threads waiting on the q_full_wait
+	unsigned int q_full_wait_thread_count;
+
 	// queue is bounded in size or not
 	int is_bounded;
 
@@ -97,5 +103,13 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 
 // returns the number of elements that were transferred, it will transfer no more than max_elements
 unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements);
+
+
+/*
+*	TO CHECK THE NUMBER OF CONSUMERS AND PRODUCERS WAITING ON THE CONDITIONAL WAITS OF SYNC_QUEUE
+*/
+unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq);
+
+unsigned int get_threads_waiting_on_full_sync_queue(sync_queue* sq);
 
 #endif

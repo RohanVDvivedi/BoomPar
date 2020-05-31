@@ -12,6 +12,8 @@ void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_b
 	pthread_mutex_init(&(sq->q_lock), NULL);
 	pthread_cond_init(&(sq->q_empty_wait), NULL);
 	pthread_cond_init(&(sq->q_full_wait), NULL);
+	sq->q_empty_wait_thread_count = 0;
+	sq->q_full_wait_thread_count = 0;
 	initialize_queue(&(sq->qp), size);
 	sq->is_bounded = is_bounded;
 }
@@ -113,7 +115,9 @@ int wait_while_full_sync_queue(sync_queue* sq, unsigned long long int wait_time_
 		int wait_error = 0;
 		while(isQueueHolderFull(&(sq->qp)) && !wait_error)
 		{
+			sq->q_full_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
+			sq->q_full_wait_thread_count--;
 		}
 	pthread_mutex_unlock(&(sq->q_lock));
 	return wait_error;
@@ -125,7 +129,9 @@ int wait_while_empty_sync_queue(sync_queue* sq, unsigned long long int wait_time
 		int wait_error = 0;
 		while(isQueueEmpty(&(sq->qp)) && !wait_error)
 		{
+			sq->q_empty_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
+			sq->q_empty_wait_thread_count--;
 		}
 	pthread_mutex_unlock(&(sq->q_lock));
 	return wait_error;
@@ -144,7 +150,9 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 			// note : timeout is also a wait error
 			while(isQueueHolderFull(&(sq->qp)) && !wait_error)
 			{
+				sq->q_full_wait_thread_count++;
 				wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
+				sq->q_full_wait_thread_count--;
 			}
 		}
 
@@ -171,7 +179,9 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 		// note : timeout is also a wait error
 		while(isQueueEmpty(&(sq->qp)) && !wait_error)
 		{
+			sq->q_empty_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
+			sq->q_empty_wait_thread_count--;
 		}
 
 		// if queue, is not empty, pop the top element
@@ -214,4 +224,20 @@ unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue*
 	pthread_mutex_unlock(&(dst->q_lock));
 
 	return transferred_elements_count;
+}
+
+unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		unsigned int return_val = sq->q_empty_wait_thread_count;
+	pthread_mutex_unlock(&(sq->q_lock));
+	return return_val;
+}
+
+unsigned int get_threads_waiting_on_full_sync_queue(sync_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		unsigned int return_val = sq->q_full_wait_thread_count;
+	pthread_mutex_unlock(&(sq->q_lock));
+	return return_val;
 }
