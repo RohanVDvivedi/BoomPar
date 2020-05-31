@@ -11,18 +11,11 @@
 
 #include<job.h>
 
-// the executor handles its own job structures
-// user does not submit jobs but functions and their input data pointers
-// executor will create a job from it, and queue it for executing it on its threads
-
 typedef enum executor_type executor_type;
 enum executor_type
 {
 	// there are fixed number of threads, that execute all your jobs
 	FIXED_THREAD_COUNT_EXECUTOR,
-
-	// the executor starts a new, thread for every job that is submitted
-	NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR,
 
 	// the thread count is maintained by the executor itself, more tasks are submitted, more threads you see
 	CACHED_THREAD_POOL_EXECUTOR
@@ -38,8 +31,8 @@ struct executor
 	// and we want an upper bound on the count of threads
 	// if this is -1, the maximum number of threads is infinite
 	// if this is a FIXED_THREAD_COUNT_EXECUTOR, this is the fixed thread count
-	unsigned long long int maximum_threads;
-	unsigned long long int minimum_threads;
+	unsigned int maximum_threads;
+	unsigned int minimum_threads;
 
 	// this is queue for the jobs, that gets submitted by the client
 	queue job_queue;
@@ -47,7 +40,7 @@ struct executor
 	// this is the number of threads that are waiting on the empty job_queue
 	// this int is also protected using the job_queue_mutex, and is incremented and decremented, by the thread itself
 	// as the thread go to wait, or wakes up on  job_queue_empty_wait
-	unsigned long long int threads_waiting_on_empty_job_queue;
+	unsigned int threads_waiting_on_empty_job_queue;
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
@@ -60,7 +53,7 @@ struct executor
 	// we pick one job from the job_queue top and assign one thread from thread queue top to execute
 
 	// keeps the current count of threads created by executor
-	unsigned long long int thread_count;
+	unsigned int thread_count;
 
 	// thread_count_mutex is for protection of thread count variable
 	pthread_mutex_t thread_count_mutex;
@@ -76,7 +69,7 @@ struct executor
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
+executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
 
 // called by client, this function enqueues a job (with function function_p that will execute with input params input_p) in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded

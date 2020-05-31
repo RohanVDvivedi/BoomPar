@@ -45,11 +45,8 @@ static void* executors_pthread_runnable_function(void* args)
 	// this is the executor, that is responsible for creation and execution of the thread
 	executor* executor_p = ((executor*)(args));
 
-	// we can not keep looping if the executor type = NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
-	// because we would have to kill the thread after execution
-	int keep_looping = !(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR);
-
-	do
+	int keep_looping = 1;
+	while(keep_looping)
 	{
 		// lock job_queue_mutex
 		pthread_mutex_lock(&(executor_p->job_queue_mutex));
@@ -115,7 +112,6 @@ static void* executors_pthread_runnable_function(void* args)
 			}
 		}
 	}
-	while(keep_looping);
 
 	// lock threads, while we add add a thread to the data structure
 	pthread_mutex_lock(&(executor_p->thread_count_mutex));
@@ -143,9 +139,8 @@ static int create_thread(executor* executor_p)
 	// lock threads, while we add add a thread to the data structure
 	pthread_mutex_lock(&(executor_p->thread_count_mutex));
 
-	// create a new thread for the executor, if the executor type is NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR
-	// or if we are not exceeding the maximum thread count for the executor
-	if(executor_p->type == NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR || executor_p->thread_count < executor_p->maximum_threads)
+	// create a new thread for the executor, only if we are not exceeding the maximum thread count for the executor
+	if(executor_p->thread_count < executor_p->maximum_threads)
 	{
 		// the id to the new thread
 		pthread_t thread_id_p;
@@ -166,7 +161,7 @@ static int create_thread(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* get_executor(executor_type type, unsigned long long int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
+executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
@@ -182,8 +177,6 @@ executor* get_executor(executor_type type, unsigned long long int maximum_thread
 			break;
 		}
 		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 0 thread, initially, and keeps on increasing with load
-		// a NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR, creates a new thread for every new job submitted, hence minimum and maximum threads are undefined
-		case NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR :
 		case CACHED_THREAD_POOL_EXECUTOR :
 		{
 			executor_p->minimum_threads = 0;
@@ -238,12 +231,6 @@ static int submit_job_internal(executor* executor_p, job* job_p)
 					// we do not care if no one wakes up now, somneone will will eventually complete their current job and pick this one up
 					// do not create any new thread beacuse it is a FIXED_THREAD_COUNT_EXECUTOR
 					pthread_cond_signal(&(executor_p->job_queue_empty_wait));
-					break;
-				}
-				case NEW_THREAD_PER_JOB_SUBMITTED_EXECUTOR :
-				{
-					// we do not care, and so if a new job is creted and submitted, we must create a new thread for it
-					create_thread(executor_p);
 					break;
 				}
 				case CACHED_THREAD_POOL_EXECUTOR :
