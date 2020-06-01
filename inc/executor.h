@@ -26,10 +26,12 @@ struct executor
 	// defines the type of the executor it is
 	executor_type type;
 
+
 	// this is queue for the jobs, that gets submitted by the client
 	sync_queue job_queue;
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
+
 
 	// the maximum and minimum worker count allowed by the executor
 	unsigned int maximum_worker_count;
@@ -44,15 +46,30 @@ struct executor
 	// thread_count_wait is for waiting on thread count variable
 	pthread_cond_t worker_count_until_zero_wait;
 
+
 	// self explanatory variable, is set only by shutdown executor method
 	volatile int requested_to_stop_after_queue_is_empty;
 
 	// self explanatory variable, is set only by shutdown executor method
 	volatile int requested_to_stop_after_current_job;
+
+
+	// Functionality to call worker_startup worker_finish with predefined call_back_params
+	// called when a new worker starts in the executor
+	void (*worker_startup)(void* call_back_params);
+	// called when a worker dies or gets killed in the executor
+	void (*worker_finish)(void* call_back_params);
+	void* call_back_params;
+
+	/*
+	*	 call back functionality can be used to
+	*	1. To allocate and de allocate thread specific memory so that the jobs do not have to allocate memory
+	*	2. To restart/start/close Socket connections for each thread, so that such resources can be reused
+	*/
 };
 
 // creates a new executor, for the client
-executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds);
+executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
 // called by client, this function enqueues a job (with function function_p that will execute with input params input_p) in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded

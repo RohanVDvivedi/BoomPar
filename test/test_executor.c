@@ -1,6 +1,11 @@
 #include<executor.h>
 #include<unistd.h>
 
+void worker_startup(void* args)
+{
+	printf("Worker at thread_id = %d STARTED\n", (int)pthread_self());
+}
+
 void* my_job_function(void* my_int)
 {
 	int i = (*((int*)my_int));
@@ -8,6 +13,11 @@ void* my_job_function(void* my_int)
 	printf("c %d => [%d]\n", (int)pthread_self(), i);
 	(*((int*)my_int)) += 100;
 	return my_int;
+}
+
+void worker_finish(void* args)
+{
+	printf("Worker at thread_id = %d FINISHED\n", (int)pthread_self());
 }
 
 #define EXECUTOR_TYPE			FIXED_THREAD_COUNT_EXECUTOR /*CACHED_THREAD_POOL_EXECUTOR*/
@@ -28,7 +38,7 @@ int main()
 {
 	printf("Main thread : %d\n", (int)pthread_self());
 
-	executor* executor_p = get_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, THREAD_TIME_OUT_in_microseconds);
+	executor* executor_p = get_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
 
 	// to store the references to all the input integers that we create, for each and every job
 	int jobs_input_param[TEST_JOBs_COUNT];

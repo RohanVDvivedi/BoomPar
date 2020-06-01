@@ -7,6 +7,12 @@ static int is_shutdown_called(executor* executor_p)
 
 static void start_up(void* args)
 {
+	executor* executor_p = ((executor*)(args));
+
+	if(executor_p->worker_startup != NULL)
+	{
+		executor_p->worker_startup(executor_p->call_back_params);
+	}
 }
 
 static void clean_up(void* args)
@@ -22,6 +28,11 @@ static void clean_up(void* args)
 		}
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+
+	if(executor_p->worker_finish != NULL)
+	{
+		executor_p->worker_finish(executor_p->call_back_params);
+	}
 }
 
 // returns 1 if a new thread is created and added to the executor
@@ -48,7 +59,7 @@ static int create_worker(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds)
+executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
@@ -83,6 +94,11 @@ executor* get_executor(executor_type type, unsigned int maximum_threads, unsigne
 	// unset the stop variables, just to be sure :p
 	executor_p->requested_to_stop_after_current_job = 0;
 	executor_p->requested_to_stop_after_queue_is_empty = 0;
+
+	// to allow the threads to callback when they start, exit
+	executor_p->worker_startup = worker_startup;
+	executor_p->worker_finish = worker_finish;
+	executor_p->call_back_params = call_back_params;
 
 	// create the minimum number of threads required for functioning
 	for(unsigned long long int i = 0; i < executor_p->minimum_worker_count; i++)
