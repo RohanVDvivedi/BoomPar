@@ -133,17 +133,11 @@ static void* worker_function(void* args)
 
 	while(1)
 	{
-		// we blocking wait while the job queue is empty, when we are outside the cancel disabled statements
-		if(wait_while_empty_sync_queue(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds))
-		{
-			break;
-		}
-
 		// A worker thread can not be cancelled while the worker is dequeuing and executing a job
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
-		// pop a job from the queue unblockingly, we can not block while we have disableded thread cancellation
-		job* job_p = (job*) pop_sync_queue_non_blocking(wtp.job_queue);
+		// pop a job from the queue blockingly with predertmined timeout
+		job* job_p = (job*) pop_sync_queue_blocking(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
 
 		if(job_p != NULL)
 		{

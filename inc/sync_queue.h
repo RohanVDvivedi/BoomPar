@@ -79,14 +79,6 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq);
 *	YOU WOULD BLOCK INDEFINITELY ON THE CALL
 */
 
-// returns non zero if waiting timed out, i.e. queue is still full
-// returns 0, if the sync_queue was dequeued while we waited or if it was already not full
-int wait_while_full_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds);
-
-// returns non zero if waiting timed out, i.e. queue is still empty
-// returns 0, if the sync_queue was dequeued while we waited or if the sync_queue was already not empty
-int wait_while_empty_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds);
-
 // it will block for atmost wait_time_out_in_microseconds, for someone to make space in the sync_queue, if it is bounded and full
 // returns 1, if the element was pushed, else returns 0
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds);

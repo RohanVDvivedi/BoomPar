@@ -57,7 +57,7 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
 		{
 			push_queue(&(sq->qp), data_p);
-			pthread_cond_broadcast(&(sq->q_empty_wait));
+			pthread_cond_signal(&(sq->q_empty_wait));
 			is_pushed = 1;
 		}
 
@@ -75,7 +75,7 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 		{
 			data_p = get_top_queue(&(sq->qp));
 			pop_queue(&(sq->qp));
-			pthread_cond_broadcast(&(sq->q_full_wait));
+			pthread_cond_signal(&(sq->q_full_wait));
 		}
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -109,34 +109,6 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 	return return_val;
 }
 
-int wait_while_full_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
-{
-	pthread_mutex_lock(&(sq->q_lock));
-		int wait_error = 0;
-		while(isQueueHolderFull(&(sq->qp)) && !wait_error)
-		{
-			sq->q_full_wait_thread_count++;
-			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
-			sq->q_full_wait_thread_count--;
-		}
-	pthread_mutex_unlock(&(sq->q_lock));
-	return wait_error;
-}
-
-int wait_while_empty_sync_queue(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
-{
-	pthread_mutex_lock(&(sq->q_lock));
-		int wait_error = 0;
-		while(isQueueEmpty(&(sq->qp)) && !wait_error)
-		{
-			sq->q_empty_wait_thread_count++;
-			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
-			sq->q_empty_wait_thread_count--;
-		}
-	pthread_mutex_unlock(&(sq->q_lock));
-	return wait_error;
-}
-
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds)
 {
 	int is_pushed = 0;
@@ -160,7 +132,7 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
 		{
 			push_queue(&(sq->qp), data_p);
-			pthread_cond_broadcast(&(sq->q_empty_wait));
+			pthread_cond_signal(&(sq->q_empty_wait));
 			is_pushed = 1;
 		}
 
@@ -189,7 +161,7 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 		{
 			data_p = get_top_queue(&(sq->qp));
 			pop_queue(&(sq->qp));
-			pthread_cond_broadcast(&(sq->q_full_wait));
+			pthread_cond_signal(&(sq->q_full_wait));
 		}
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -217,8 +189,16 @@ unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue*
 			}
 		}
 
+	if(transferred_elements_count == 1)
+	{
+		pthread_cond_signal(&(src->q_full_wait));
+		pthread_cond_signal(&(dst->q_empty_wait));
+	}
+	else if(transferred_elements_count > 1)
+	{
 		pthread_cond_broadcast(&(src->q_full_wait));
 		pthread_cond_broadcast(&(dst->q_empty_wait));
+	}
 
 	pthread_mutex_unlock(&(src->q_lock));
 	pthread_mutex_unlock(&(dst->q_lock));
