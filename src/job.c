@@ -149,13 +149,13 @@ int check_result_ready(job* job_p)
 	return result_ready_to_read;
 }
 
-unsigned long long int get_thread_count_waiting_for_result(job* job_p)
+unsigned int get_thread_count_waiting_for_result(job* job_p)
 {
 	// lock the mutex
 	pthread_mutex_lock(&(job_p->result_ready_mutex));
 
 	// set variable to threads_waiting_for_result
-	unsigned long long int threads_waiting_for_result = job_p->threads_waiting_for_result;
+	unsigned int threads_waiting_for_result = job_p->threads_waiting_for_result;
 
 	// unlock the mutex
 	pthread_mutex_unlock(&(job_p->result_ready_mutex));

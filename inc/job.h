@@ -34,7 +34,7 @@ struct job
 	// you have utilities to get, set result, aswellas wait for result
 	// check if result is ready, and also you can learn the number of threads that are waiting for the result
 
-	unsigned long long int threads_waiting_for_result;
+	unsigned int threads_waiting_for_result;
 
 	// signified if the result of the job is set and ready to be ready by anyother thread
 	int result_ready_to_read;
@@ -84,7 +84,7 @@ void* get_result(job* job_p);
 int check_result_ready(job* job_p);
 
 // this function will return the number of threads that are waiting for a result to be available, at any instant
-unsigned long long int get_thread_count_waiting_for_result(job* job_p);
+unsigned int get_thread_count_waiting_for_result(job* job_p);
 
 // once deinitialized, a job variable can be reused, by using initialize_job function
 void deinitialize_job(job* job_p);
