@@ -9,4 +9,4 @@ setup instructions
  * git clone https://github.com/RohanVDvivedi/BoomPar.git
  * cd BoomPar
  * sudo make clean install
- * add "-lboompar" linker flag, while compiling your application
+ * add "-lboompar -lpthread -lcutlery" linker flag, while compiling your application
