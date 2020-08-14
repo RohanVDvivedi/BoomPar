@@ -1,15 +1,11 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include<stdio.h>
-#include<stdlib.h>
-
 #include<pthread.h>
 
 #include<jobstatus.h>
 
-// you, the client is suppossed to free the input_p and output_p pointers
-
+// you, the client is suppossed to free the input_p and output_p pointers of any job
 typedef struct job job;
 struct job
 {

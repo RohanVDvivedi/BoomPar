@@ -1,5 +1,8 @@
 #include<job.h>
 
+#include<stdio.h>
+#include<stdlib.h>
+
 job* get_job(void* (*function_p)(void* input_p), void* input_p)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));

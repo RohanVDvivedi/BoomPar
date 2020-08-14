@@ -1,5 +1,8 @@
 #include<worker.h>
 
+#include<stdlib.h>
+#include<stdio.h>
+
 typedef struct worker_thread_params worker_thread_params;
 struct worker_thread_params
 {
@@ -40,6 +43,7 @@ pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_e
 	if(return_val)
 	{
 		printf("Error starting worker : %d\n", return_val);
+		free(wtp);
 	}
 	else
 	{

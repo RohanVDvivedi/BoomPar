@@ -1,3 +1,4 @@
+#include<stdio.h>
 #include<job.h>
 
 void* my_job_function_simple(void* my_int)

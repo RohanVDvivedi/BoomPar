@@ -1,13 +1,9 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
-#include<stdio.h>
-#include<stdlib.h>
 #include<pthread.h>
-#include<errno.h>
 
 #include<sync_queue.h>
-#include<worker.h>
 #include<job.h>
 
 typedef enum executor_type executor_type;

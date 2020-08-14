@@ -1,5 +1,10 @@
 #include<executor.h>
 
+#include<worker.h>
+
+#include<stdio.h>
+#include<stdlib.h>
+
 static int is_shutdown_called(executor* executor_p)
 {
 	return executor_p->requested_to_stop_after_current_job || executor_p->requested_to_stop_after_queue_is_empty;
