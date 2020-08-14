@@ -1,7 +1,7 @@
 # BoomPar
 This is a multi threading library in C, built as an abstraction layer over pthread (POSIX threads) library.
 
-###Features
+### Features
  * job: A wrapper to submit a task to be done, with a promise for completion.
  * executor: A (cached or fixed-thread-count) thread pool based job execution API, similar to Java's [ExecutorService](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html).
 
