@@ -3,7 +3,15 @@
 
 #include<pthread.h>
 
-#include<jobstatus.h>
+// a job can be in any of the three states
+typedef enum job_status job_status;
+enum job_status
+{
+	CREATED   = 0,
+	QUEUED    = 1,
+	RUNNING   = 2,
+	COMPLETED = 3
+};
 
 // you, the client is suppossed to free the input_p and output_p pointers of any job
 typedef struct job job;

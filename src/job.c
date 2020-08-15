@@ -3,6 +3,43 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+/*
+** BELOW FUNCTIONS are the only ones to be used for manipulating the stare of a job status
+*/
+
+job_status get_next_status(job_status status);
+
+void set_to_next_status(job_status* status_p)
+{
+	(*status_p) = get_next_status(*status_p);
+}
+
+job_status get_initial_state_status()
+{
+	return CREATED;
+}
+
+job_status get_next_status(job_status status)
+{
+	switch(status)
+	{
+		case CREATED :
+			return QUEUED;
+		case QUEUED :
+			return RUNNING;
+		case RUNNING :
+			return COMPLETED;
+		case COMPLETED :
+			return COMPLETED;
+		default :
+			return CREATED;
+	}
+}
+
+/*
+** ABOVE FUNCTIONS are the only ones to be used for manipulating the stare of a job status
+*/
+
 job* get_job(void* (*function_p)(void* input_p), void* input_p)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
