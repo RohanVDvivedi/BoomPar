@@ -7,19 +7,19 @@
 ** BELOW FUNCTIONS are the only ones to be used for manipulating the stare of a job status
 */
 
-job_status get_next_status(job_status status);
+static job_status get_next_status(job_status status);
 
-void set_to_next_status(job_status* status_p)
+static void set_to_next_status(job_status* status_p)
 {
 	(*status_p) = get_next_status(*status_p);
 }
 
-job_status get_initial_state_status()
+static job_status get_initial_state_status()
 {
 	return CREATED;
 }
 
-job_status get_next_status(job_status status)
+static job_status get_next_status(job_status status)
 {
 	switch(status)
 	{
