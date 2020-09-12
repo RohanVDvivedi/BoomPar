@@ -1,0 +1,2 @@
+ * segregate/refactor logic to provide an independent promise structure and logic
+ * the job structure will depend on this promise for its own implementation, i.e. job may not be promise, but will encapsulate a promise
