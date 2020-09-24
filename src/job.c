@@ -39,25 +39,19 @@ static job_status get_next_status(job_status status)
 ** ABOVE FUNCTIONS are the only ones to be used for manipulating the stare of a job status
 */
 
-job* get_job(void* (*function_p)(void* input_p), void* input_p)
+job* get_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
-	initialize_job(job_p, function_p, input_p);
+	initialize_job(job_p, function_p, input_p, promise_for_output);
 	return job_p;
 }
 
-void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p)
+void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
 {
 	job_p->status = get_initial_state_status();
-
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
-	job_p->output_p = NULL;
-
-	job_p->threads_waiting_for_result = 0;
-	job_p->result_ready_to_read = 0;
-	pthread_mutex_init(&(job_p->result_ready_mutex), NULL);
-	pthread_cond_init(&(job_p->result_ready_wait), NULL);
+	job_p->promise_for_output = promise_for_output;
 
 	job_p->job_type = 0;
 }
@@ -124,8 +118,11 @@ int execute(job* job_p)
 		goto ERROR;
 	}
 
-	// sets the output_p pointer of job_p, to point data pointed to by output_pointer
-	set_result(job_p, output_pointer);
+	// fulfill the promised output of the job
+	if(job_p->promise_for_output != NULL)
+	{
+		set_promised_result(job_p->promise_for_output, output_pointer);
+	}
 
 	return 0;
 
@@ -135,8 +132,10 @@ int execute(job* job_p)
 
 void deinitialize_job(job* job_p)
 {
-	pthread_mutex_destroy(&(job_p->result_ready_mutex));
-	pthread_cond_destroy(&(job_p->result_ready_wait));
+	job_p->status = get_initial_state_status();
+	job_p->input_p = NULL;
+	job_p->function_p = NULL;
+	job_p->promise_for_output = NULL;
 }
 
 void delete_job(job* job_p)
