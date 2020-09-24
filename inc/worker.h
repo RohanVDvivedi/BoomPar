@@ -10,14 +10,7 @@
 // DO NOT CANCEL A WORKER THREAD, THIS MAY LOCK THE JOB_QUEUE PERMANENTLY
 // even if you cancel we assure you there will not be partial execution of jobs, 
 // or memory leaks from unfinished, unreleased job memory
-// use submit_stop_worker to asynchronously stopping the worker
-
-typedef enum worker_job_type worker_job_type;
-enum worker_job_type
-{
-	JOB_WITH_MEMORY_MANAGED_BY_CLIENT = 0,
-	JOB_WITH_MEMORY_MANAGED_BY_WORKER = 1
-};
+// please use submit_stop_worker to asynchronously stopping the worker
 
 pthread_t start_worker(
 							sync_queue* job_queue, 							// ** the worker thread uses this sync_queue to receive jobs to finish
@@ -30,10 +23,9 @@ pthread_t start_worker(
 // ** mandatory parameters to the function
 // * optional parameters to the function
 
-// submit function or job, returns 1 if the job was successfully submitted to the worker
+// create and submit job (with/without promise), returns 1 if the job was successfully submitted to the worker
 // function fails and returns 0 if, the job_queue is blocking and it is full 
-int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p);
-int submit_job_worker(sync_queue* job_queue, job* job_p);
+int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
 
 // The function below will submit a NULL in the job_queue, this kill any one worker that dequeues this NULL job
 // It returns 1, if NULL was pushed, else it will return NULL

@@ -52,13 +52,12 @@ pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_e
 	return thread_id;
 }
 
-int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p)
+int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
 {
 	int was_job_queued = 0;
 
 	// create a new job with the given parameters
 	job* job_p = get_job(function_p, input_p);
-	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_WORKER;
 
 	// update job status, from CREATED to QUEUED
 	// if this update of job status is successfull, then only we go forward and queue the job
@@ -70,22 +69,6 @@ int submit_function_worker(sync_queue* job_queue, void* (*function_p)(void* inpu
 	if(was_job_queued == 0)
 	{
 		delete_job(job_p);
-	}
-
-	return was_job_queued;
-}
-
-int submit_job_worker(sync_queue* job_queue, job* job_p)
-{
-	int was_job_queued = 0;
-
-	job_p->job_type = JOB_WITH_MEMORY_MANAGED_BY_CLIENT;
-
-	// update job status, from CREATED to QUEUED
-	// if this update of job status is successfull, then only we go forward and queue the job
-	if(job_status_change(job_p, QUEUED))
-	{
-		was_job_queued = push_sync_queue_non_blocking(job_queue, job_p);
 	}
 
 	return was_job_queued;
@@ -104,14 +87,7 @@ void discard_leftover_jobs(sync_queue* job_queue)
 
 		if(job_p != NULL)
 		{
-			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
-			{
-				delete_job(job_p);
-			}
-			else if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_CLIENT)
-			{
-				set_result(job_p, NULL);
-			}
+			delete_job(job_p);
 		}
 	}
 }
@@ -148,12 +124,8 @@ static void* worker_function(void* args)
 			// execute the job that has been popped
 			execute(job_p);
 
-			// once the job is executed we delete the job, if worker is memory managing the job
-			// i.e. it was a job submitted by the client as a function
-			if(job_p->job_type == JOB_WITH_MEMORY_MANAGED_BY_WORKER)
-			{
-				delete_job(job_p);
-			}
+			// once the job is executed we delete the job
+			delete_job(job_p);
 		}
 		else
 		{

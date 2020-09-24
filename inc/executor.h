@@ -67,36 +67,12 @@ struct executor
 // creates a new executor, for the client
 executor* get_executor(executor_type type, unsigned int maximum_threads, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
-// called by client, this function enqueues a job (with function function_p that will execute with input params input_p) in the job_queue of the executor
+// this function creates a job to execute function_p on input_p and set promise_for_output with the output of the job
+// and enqueues this job  in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // job submission fails if any of the thread has called, shutdown_executor() on this executor
-int submit_function(executor* executor_p, void* (*function_p)(void* input_p), void* input_p);
-
-// called by client, this function enqueues a job_p in the job_queue of the executor
-// it returns 0, if the job was not submitted, and 1 if the job submission succeeded
-// job submission fails if any of the thread has called, shutdown_executor() on this executor
-int submit_job(executor* executor_p, job* job_p);
-
-/* ************************************
-
-Points to note : 
-1. internal submit_function also uses job, it queues a job by constructing it with the given function_p and input_p pointers
-2. but a job that gets submitted by submit_function, is created and deleted by the executor itself
-3. while you are suppossed to delete the job_p that you sibmit by submit_job function
-4. although, it is self explanatory that in both cases you are solely responsible to delete the input parameter of the job
-
-when to use submit_function : 
-1. when you do not want to wait for the function to execute and complete. i.e. you are not going to be waiting for the job to finish
-2. you are not interested in the result of the job/execution of the function
-3. in these case you are suppossed to delete the input parameter in the function itself
-4. we request you to submit a function_p that returns a Null, since there is noone going to wait for result or use it, and noone freeing the respective memory
-
-when to use submit_job :
-1. when you are going to be asynchronously waiting fior the job to finish. i.e. you want to wait for the result.
-2. in this case you are suppossed to be calling the delete_job function on the sumbitted job
-3. also in this case, you can wait for the result, after receiving the result delete the job, along with the input parameter and output result that you receive
-
-*************************************** */
+// if the promise_for_output may be NULL, if you do not wish to wait for completion of the job
+int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
 
 // the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
