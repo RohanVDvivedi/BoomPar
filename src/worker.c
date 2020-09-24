@@ -57,7 +57,7 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	int was_job_queued = 0;
 
 	// create a new job with the given parameters
-	job* job_p = get_job(function_p, input_p);
+	job* job_p = get_job(function_p, input_p, promise_for_output);
 
 	// update job status, from CREATED to QUEUED
 	// if this update of job status is successfull, then only we go forward and queue the job

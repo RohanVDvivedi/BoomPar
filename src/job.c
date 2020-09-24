@@ -52,8 +52,6 @@ void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
 	job_p->promise_for_output = promise_for_output;
-
-	job_p->job_type = 0;
 }
 
 int job_status_change(job* job_p, job_status job_new_status)
