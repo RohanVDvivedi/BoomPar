@@ -132,10 +132,14 @@ int execute(job* job_p)
 
 void deinitialize_job(job* job_p)
 {
+	if(job_p->promise_for_output)
+	{
+		set_promised_result(job_p->promise_for_output, NULL);
+	}
+	job_p->promise_for_output = NULL;
 	job_p->status = get_initial_state_status();
 	job_p->input_p = NULL;
 	job_p->function_p = NULL;
-	job_p->promise_for_output = NULL;
 }
 
 void delete_job(job* job_p)
