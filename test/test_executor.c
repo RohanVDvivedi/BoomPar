@@ -52,13 +52,13 @@ int main()
 
 	// create a submittable job
 	int l = 5001;
-	job test_submitted_job_p;
-	initialize_job(&test_submitted_job_p, my_job_function, &l);
+	promise test_promised;
+	initialize_promise(&test_promised);
 
 	// submit jobs, one by one
 	for(int i=0; i < TEST_JOBs_COUNT;i++)
 	{
-		if(submit_function(executor_p, my_job_function, &jobs_input_param[i]))
+		if(submit_job(executor_p, my_job_function, &jobs_input_param[i], NULL))
 		{
 			//printf("Successfully submitted job with input %d\n", i);
 		}
@@ -70,21 +70,21 @@ int main()
 		// this is to test the functionality of submit_job function
 		if(i == (TEST_JOBs_COUNT-1)/12)
 		{
-			submit_job(executor_p, &test_submitted_job_p);
+			submit_job(executor_p, my_job_function, &l, &test_promised);
 		}
 	}
 	printf("finished queueing all jobs\n");
 
-	int* l_p = get_result(&test_submitted_job_p);
+	int* l_p = get_promised_result(&test_promised);
 	if(l_p != NULL)
 	{
-		printf("the result from test_submitted_job_p : %d, at address %p, while the address of l was %p\n", *l_p, l_p, &l);
+		printf("the result from &test_promised : %d, at address %p, while the address of l was %p\n", *l_p, l_p, &l);
 	}
 	else
 	{
 		printf("test_job_p could not be executed\n");
 	}
-	deinitialize_job(&test_submitted_job_p);
+	deinitialize_promise(&test_promised);
 
 	printf("Calling shutdown with SHUTDOWN_IMMEDIATELY = %d\n", SHUTDOWN_IMMEDIATELY);
 	shutdown_executor(executor_p, SHUTDOWN_IMMEDIATELY);
