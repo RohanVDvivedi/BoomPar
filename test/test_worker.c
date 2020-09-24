@@ -20,20 +20,19 @@ void clean_up(void* additional_params)
 	printf("Worker thread completed : %s\n", ((char*)additional_params));
 }
 
-#define JOBs_COUNT				10
-#define WORKER_QUEUE_SIZE 		10
+#define JOBs_COUNT				20
+#define WORKER_QUEUE_SIZE 		20
 #define WORKER_QUEUE_TIMEOUT	0//1000000
 
-#define SET_1_JOBS	3
-#define SET_2_JOBS	3
+#define SET_1_JOBS	6
+#define SET_2_JOBS	6
 #define SET_3_JOBS	JOBs_COUNT - SET_1_JOBS - SET_2_JOBS
 
 int total_jobs_submitted = 0;
 
-int input_function_params[JOBs_COUNT];
+int function_params[JOBs_COUNT];
+promise function_promises[JOBs_COUNT/2];
 
-int input_job_params[JOBs_COUNT];
-job input_jobs[JOBs_COUNT];
 
 pthread_t thread_id;
 
@@ -41,12 +40,14 @@ int main()
 {
 	printf("Worker will be tested to execute %d jobs in all, half functional and half promised jobs\n\n", 2 * JOBs_COUNT);
 
-	printf("Initializing input parameters\n\n");
+	printf("Initializing input parameters and output promises\n\n");
 	for(int i = 0; i < JOBs_COUNT; i++)
 	{
-		input_function_params[i] = 2 * i;
-		input_job_params[i] = 2 * i + 1;
-		initialize_job(&(input_jobs[i]), simple_job_function, &(input_job_params[i]));
+		function_params[i] = i;
+		if(i % 2 == 0) 
+		{
+			initialize_promise(&(function_promises[i/2]));
+		}
 	}
 
 	printf("Initializing job queue\n\n");
@@ -56,14 +57,11 @@ int main()
 	printf("Submitting initial set of the jobs\n");
 	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted++)
 	{
-		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		if(!submit_job_worker(&job_queue, simple_job_function, &(function_params[total_jobs_submitted]), total_jobs_submitted % 2 == 0 ? &(function_promises[total_jobs_submitted/2]) : NULL))
 		{
-			printf("Func submit error %d\n\n", i);
+			printf("Job submit error %d\n\n", total_jobs_submitted);
 		}
-		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
-		{
-			printf("Job submit error %d\n\n", i);
-		}
+		printf("%d jobs in total\n", total_jobs_submitted);
 	}
 	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
@@ -78,13 +76,10 @@ int main()
 	printf("Submitting the rest of the jobs\n");
 	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted++)
 	{
-		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		printf("%d jobs in total\n", total_jobs_submitted);
+		if(!submit_job_worker(&job_queue, simple_job_function, &(function_params[total_jobs_submitted]), total_jobs_submitted % 2 == 0 ? &(function_promises[total_jobs_submitted/2]) : NULL))
 		{
-			printf("Func submit error %d\n\n", i);
-		}
-		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
-		{
-			printf("Job submit error %d\n\n", i);
+			printf("Job submit error %d\n\n", total_jobs_submitted);
 		}
 	}
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
@@ -95,13 +90,10 @@ int main()
 	printf("Submitting the rest of the jobs\n");
 	for(int i = 0; i < SET_3_JOBS; i++, total_jobs_submitted++)
 	{
-		if(!submit_function_worker(&job_queue, simple_job_function, &(input_function_params[total_jobs_submitted])))
+		printf("%d jobs in total\n", total_jobs_submitted);
+		if(!submit_job_worker(&job_queue, simple_job_function, &(function_params[total_jobs_submitted]), total_jobs_submitted % 2 == 0 ? &(function_promises[total_jobs_submitted/2]) : NULL))
 		{
-			printf("Func submit error %d\n\n", i);
-		}
-		if(!submit_job_worker(&job_queue, &(input_jobs[total_jobs_submitted])))
-		{
-			printf("Job submit error %d\n\n", i);
+			printf("Job submit error %d\n\n", total_jobs_submitted);
 		}
 	}
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
@@ -112,16 +104,20 @@ int main()
 	printf("Main thread will sleep for 0.5 second\n\n");
 	usleep(500 * 1000);
 
+	printf("Discarding all unfinished jobs\n\n");
+	discard_leftover_jobs(&job_queue);
+
 	printf("Printing result\n");
 	for(int i = 0; i < JOBs_COUNT; i++)
 	{
-		printf("Output_func[%d] = %d\n", i, input_function_params[i]);
-		printf("Output_jobb[%d] = %d\n", i, input_job_params[i]);
+		if(i % 2 == 0)
+		{
+			int* res = ((int*)get_promised_result(&(function_promises[i/2])));
+			printf("output[%d] as promised = %d\n", i, res == NULL ? -1 : *res);
+			deinitialize_promise(&(function_promises[i/2]));
+		}
 	}
 	printf("\n");
-
-	printf("Discarding all unfinished jobs\n\n");
-	discard_leftover_jobs(&job_queue);
 
 	deinitialize_sync_queue(&job_queue);
 

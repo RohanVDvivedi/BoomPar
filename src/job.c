@@ -130,7 +130,7 @@ int execute(job* job_p)
 
 void deinitialize_job(job* job_p)
 {
-	if(job_p->promise_for_output)
+	if(job_p->promise_for_output != NULL && job_p->status != COMPLETED)
 	{
 		set_promised_result(job_p->promise_for_output, NULL);
 	}
