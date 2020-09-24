@@ -14,7 +14,7 @@ enum job_status
 	COMPLETED = 3
 };
 
-// you, the client is suppossed to free the input_p and output_p pointers of any job
+// you, the client is suppossed to free the input_p and promise_for_output pointers of any job
 typedef struct job job;
 struct job
 {
@@ -34,12 +34,6 @@ struct job
 	// once the job is executed, the output of the job is set in this promise
 	// promise has to be provided by the user, creating a job does not implicityly create promise
 	promise* promise_for_output;
-
-	// ****************
-	// the below variable, is something, that has to be used by other libraries
-	// if they are using the job structure, to define their task representation of quantum
-	// it is not used by job.h or job.c, but it is default to 0, when you create job by get_job function
-	int job_type;
 };
 
 // A job can be created/initialized with promise_for_output,
