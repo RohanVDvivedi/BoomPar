@@ -47,6 +47,17 @@ void* get_promised_result(promise* p)
 	return res;
 }
 
+int is_promised_result_ready(promise* p)
+{
+	pthread_mutex_lock(&(p->promise_lock));
+
+	int is_result_ready = p->output_result_ready;
+
+	pthread_mutex_unlock(&(p->promise_lock));
+
+	return is_result_ready;
+}
+
 void deinitialize_promise(promise* p)
 {
 	p->output_result_ready = 0;
