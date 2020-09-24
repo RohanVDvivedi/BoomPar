@@ -1,3 +1,0 @@
- * segregate/refactor logic to provide an independent promise structure and logic
- * the job structure will depend on this promise for its own implementation, i.e. job may not be promise, but will encapsulate a promise
- * jaob can be created with or even without a promise for its fulfillment, result of a job without a promise can not be received by the submitting party
