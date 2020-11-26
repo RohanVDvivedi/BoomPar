@@ -92,7 +92,7 @@ executor* get_executor(executor_type type, unsigned int maximum_threads, unsigne
 		}
 	}
 
-	// use unbounded sync queue for the mutex
+	// use unbounded sync queue for thread safety
 	initialize_sync_queue(&(executor_p->job_queue), maximum_threads, 0);
 
 	executor_p->active_worker_count = 0;
