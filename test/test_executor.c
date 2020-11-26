@@ -100,7 +100,7 @@ int main()
 		}
 		else
 		{
-			printf("Looks like wait function threw error %d\n", wait_error);
+			printf("Looks like wait function threw error\n");
 		}
 	}
 
