@@ -17,7 +17,7 @@ void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_b
 	pthread_cond_init(&(sq->q_full_wait), NULL);
 	sq->q_empty_wait_thread_count = 0;
 	sq->q_full_wait_thread_count = 0;
-	initialize_queue(&(sq->qp), size);
+	initialize_queue(&(sq->qp), ((size == 0) ? 1 : size));	// if size == 0, then size = 1
 	sq->is_bounded = is_bounded;
 }
 
@@ -38,7 +38,7 @@ void delete_sync_queue(sync_queue* sq)
 int is_full_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		int is_full = isQueueHolderFull(&(sq->qp));
+		int is_full = is_full_queue(&(sq->qp));
 	pthread_mutex_unlock(&(sq->q_lock));
 	return is_full;
 }
@@ -46,7 +46,7 @@ int is_full_sync_queue(sync_queue* sq)
 int is_empty_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		int is_empty = isQueueEmpty(&(sq->qp));
+		int is_empty = is_empty_queue(&(sq->qp));
 	pthread_mutex_unlock(&(sq->q_lock));
 	return is_empty;
 }
@@ -56,13 +56,15 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 	int is_pushed = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// we can not push an element, if queue is bounded and it is full
-		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
-		{
-			push_queue(&(sq->qp), data_p);
+		// if an unbounded queue is full, expand it
+		if(!sq->is_bounded && is_full_queue(&(sq->qp)))
+			expand_queue(&(sq->qp));
+
+		is_pushed = push_queue(&(sq->qp), data_p);
+
+		// signal other threads if an element was pushed
+		if(is_pushed)
 			pthread_cond_signal(&(sq->q_empty_wait));
-			is_pushed = 1;
-		}
 
 	pthread_mutex_unlock(&(sq->q_lock));
 	return is_pushed;
@@ -71,18 +73,22 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 const void* pop_sync_queue_non_blocking(sync_queue* sq)
 {
 	const void* data_p = NULL;
+	int is_popped = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// if queue, is not empty, pop the top element
-		if(!isQueueEmpty(&(sq->qp)))
-		{
-			data_p = get_top_queue(&(sq->qp));
-			pop_queue(&(sq->qp));
+		data_p = get_top_queue(&(sq->qp));
+		is_popped = pop_queue(&(sq->qp));
+
+		// signal other threads, if an element was popped
+		if(is_popped)
 			pthread_cond_signal(&(sq->q_full_wait));
-		}
+
+		// if an unbounded queue, occupies more than thrice the needed space, shrink it
+		if(!sq->is_bounded && (get_total_size_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));
-	return data_p;
+	return is_popped ? data_p : NULL;	// if the data is not popped, we can/must not return it
 }
 
 static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p, pthread_mutex_t* mutex_p, unsigned long long int wait_time_out_in_microseconds)
@@ -119,25 +125,24 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 
 		int wait_error = 0;
 
-		if(sq->is_bounded)
+		// keep on looping while the bounded queue is full and there is no wait_error
+		// note : timeout is also a wait error
+		while(sq->is_bounded && is_full_queue(&(sq->qp)) && !wait_error)
 		{
-			// keep on looping while the queue is full and there is no wait_error
-			// note : timeout is also a wait error
-			while(isQueueHolderFull(&(sq->qp)) && !wait_error)
-			{
-				sq->q_full_wait_thread_count++;
-				wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
-				sq->q_full_wait_thread_count--;
-			}
+			sq->q_full_wait_thread_count++;
+			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
+			sq->q_full_wait_thread_count--;
 		}
 
-		// we can not push an element, if queue is bounded and it is full
-		if(!(sq->is_bounded && isQueueHolderFull(&(sq->qp))))
-		{
-			push_queue(&(sq->qp), data_p);
+		// if an unbounded queue is full, expand it
+		if(!sq->is_bounded && is_full_queue(&(sq->qp)))
+			expand_queue(&(sq->qp));
+
+		is_pushed = push_queue(&(sq->qp), data_p);
+
+		// signal other threads if an element was pushed
+		if(is_pushed)
 			pthread_cond_signal(&(sq->q_empty_wait));
-			is_pushed = 1;
-		}
 
 	pthread_mutex_unlock(&(sq->q_lock));
 	return is_pushed;
@@ -146,13 +151,14 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
 {
 	const void* data_p = NULL;
+	int is_popped = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
 		int wait_error = 0;
 
 		// keep on looping while the queue is empty and there is no wait_error
 		// note : timeout is also a wait error
-		while(isQueueEmpty(&(sq->qp)) && !wait_error)
+		while(is_empty_queue(&(sq->qp)) && !wait_error)
 		{
 			sq->q_empty_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
@@ -160,53 +166,19 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 		}
 
 		// if queue, is not empty, pop the top element
-		if(!isQueueEmpty(&(sq->qp)))
-		{
-			data_p = get_top_queue(&(sq->qp));
-			pop_queue(&(sq->qp));
+		data_p = get_top_queue(&(sq->qp));
+		is_popped = pop_queue(&(sq->qp));
+
+		// signal other threads, if an element was popped
+		if(is_popped)
 			pthread_cond_signal(&(sq->q_full_wait));
-		}
+
+		// if an unbounded queue, occupies more than thrice the needed space, shrink it
+		if(!sq->is_bounded && (get_total_size_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));
-	return data_p;
-}
-
-unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements)
-{
-	unsigned long long int transferred_elements_count = 0;
-
-	pthread_mutex_lock(&(src->q_lock));
-	pthread_mutex_lock(&(dst->q_lock));
-
-		for(; transferred_elements_count < max_elements; transferred_elements_count++)
-		{
-			if(isQueueEmpty(&(src->qp)) || (dst->is_bounded && isQueueHolderFull(&(dst->qp))))
-			{
-				break;
-			}
-			else
-			{
-				const void* data_p = get_top_queue(&(src->qp));
-				pop_queue(&(src->qp));
-				push_queue(&(dst->qp), data_p);
-			}
-		}
-
-	if(transferred_elements_count == 1)
-	{
-		pthread_cond_signal(&(src->q_full_wait));
-		pthread_cond_signal(&(dst->q_empty_wait));
-	}
-	else if(transferred_elements_count > 1)
-	{
-		pthread_cond_broadcast(&(src->q_full_wait));
-		pthread_cond_broadcast(&(dst->q_empty_wait));
-	}
-
-	pthread_mutex_unlock(&(src->q_lock));
-	pthread_mutex_unlock(&(dst->q_lock));
-
-	return transferred_elements_count;
+	return is_popped ? data_p : NULL;
 }
 
 unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)

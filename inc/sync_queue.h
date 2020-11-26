@@ -32,10 +32,10 @@ struct sync_queue
 
 
 
-
 /*
 *	INITIALIZATION AND DEINITIALIZATION FUNCTIONS FOR SYNC QUEUE
 */
+// size must be > 0, if the provided size is equal to 0, the queue is initialized with initial size of 1
 
 sync_queue* get_sync_queue(unsigned long long int size, int is_bounded);
 
@@ -44,7 +44,6 @@ void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_b
 void deinitialize_sync_queue(sync_queue* sq);
 
 void delete_sync_queue(sync_queue* sq);
-
 
 
 
@@ -69,7 +68,6 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq);
 
 
 
-
 /*
 *	BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
 *	HERE wait_time_out_in_microseconds IS A MANDATORY PARAMETER, IF YOU PROVIDE 0,
@@ -83,15 +81,6 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 // it will block for atmost wait_time_out_in_microseconds
 const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds);
 
-
-
-
-/*
-*	UTILITY FUNCTION TO TRANSFER ELEMENTS FROM src TO dst ATOMICALLY
-*/
-
-// returns the number of elements that were transferred, it will transfer no more than max_elements
-unsigned long long int transfer_elements_sync_queue(sync_queue* dst, sync_queue* src, unsigned long long int max_elements);
 
 
 /*
