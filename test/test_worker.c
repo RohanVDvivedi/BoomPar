@@ -10,7 +10,7 @@ void start_up(void* additional_params)
 void* simple_job_function(void* input)
 {
 	int* input_int = (int*) input;
-	printf("Thread[%d] => %d\n", (int) pthread_self(), (*input_int));
+	printf("Thread[%lu] => %d\n", pthread_self(), (*input_int));
 	*input_int = (*input_int) + 100;
 	return input_int;
 }
@@ -21,8 +21,8 @@ void clean_up(void* additional_params)
 }
 
 #define JOBs_COUNT				20
-#define WORKER_QUEUE_SIZE 		20
-#define WORKER_QUEUE_TIMEOUT	0//1000000
+#define WORKER_QUEUE_SIZE 		3
+#define WORKER_QUEUE_TIMEOUT	0 //1000000
 
 #define SET_1_JOBS	6
 #define SET_2_JOBS	6
@@ -38,16 +38,14 @@ pthread_t thread_id;
 
 int main()
 {
-	printf("Worker will be tested to execute %d jobs in all, half functional and half promised jobs\n\n", 2 * JOBs_COUNT);
+	printf("Worker will be tested to execute %d jobs in all, half non-promised (no output) and half promised jobs\n\n", JOBs_COUNT);
 
 	printf("Initializing input parameters and output promises\n\n");
 	for(int i = 0; i < JOBs_COUNT; i++)
 	{
 		function_params[i] = i;
-		if(i % 2 == 0) 
-		{
+		if(i % 2 == 0)
 			initialize_promise(&(function_promises[i/2]));
-		}
 	}
 
 	printf("Initializing job queue\n\n");
