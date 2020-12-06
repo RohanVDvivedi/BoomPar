@@ -1,0 +1,5 @@
+* model the library to provide a co routine like support
+ * provide separate stack for every task
+ * allow program counter and stack pointer storing
+ * create very small minimal stack space for detached worker threads
+ * provide a wait list queue in the worker, and a function to switch tasks inside the task
