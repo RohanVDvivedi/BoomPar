@@ -6,6 +6,8 @@ This is a multi threading library in C, built as an abstraction layer over pthre
  * executor: A (cached or fixed-thread-count) thread pool based job execution API, similar to Java's [ExecutorService](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html).
 
 ## Setup instructions
+**Install dependencies :**
+ * [Cutlery](https://github.com/RohanVDvivedi/Cutlery)
 
 **Download source code :**
  * `git clone https://github.com/RohanVDvivedi/BoomPar.git`
