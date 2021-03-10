@@ -24,9 +24,10 @@ This is a multi threading library in C, built as an abstraction layer over pthre
  * add `-lboompar -lpthread -lcutlery` linker flag, while compiling your application
  * do not forget to include appropriate public api headers as and when needed. this includes
    * `#include<job.h>`
+   * `#include<promise.h>`
    * `#include<executor.h>`
 
-   * `#include<worker.h>` and `#include<sync_queue.h>` api header are ony required if you want to built your own custom executor.
+   * `#include<worker.h>` and `#include<sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
 
 ## Instructions for uninstalling library
 
