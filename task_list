@@ -1,7 +1,0 @@
-
-
-* The library is working perfectly fine as a multithreaded task executor. There are plans to extend it to provide a co routine like support. (it is left for far into the future, backward copatibility will be ensured)
- * provide separate stack for every task
- * allow program counter and stack pointer storing per task
- * create very small minimal stack space for detached worker threads
- * provide a wait list queue in the worker, and a function to enter_wait_state until change in file_descriptor function
