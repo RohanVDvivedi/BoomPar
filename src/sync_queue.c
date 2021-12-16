@@ -84,7 +84,7 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 			pthread_cond_signal(&(sq->q_full_wait));
 
 		// if an unbounded queue, occupies more than thrice the needed space, shrink it
-		if(!sq->is_bounded && (get_total_size_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+		if(!sq->is_bounded && (get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
 			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -174,7 +174,7 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 			pthread_cond_signal(&(sq->q_full_wait));
 
 		// if an unbounded queue, occupies more than thrice the needed space, shrink it
-		if(!sq->is_bounded && (get_total_size_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+		if(!sq->is_bounded && (get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
 			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));
