@@ -26,7 +26,7 @@ struct sync_queue
 	// queue is bounded in size or not
 	int is_bounded;
 
-	// queue for stroing the push/pop ed variables
+	// queue for storing the push/pop ed variables
 	queue qp;
 };
 

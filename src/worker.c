@@ -9,7 +9,7 @@ struct worker_thread_params
 	// this function is called before the worker thread tries to dequeue the first job
 	void (*start_up)(void* additional_params);
 
-	// the job_queue that the 
+	// the job_queue that the worker will dequeue jobs from
 	sync_queue* job_queue;
 
 	// the maximum timeout the thread blocks until while there are no jobs in the job_queue to work on

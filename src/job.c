@@ -36,7 +36,7 @@ static job_status get_next_status(job_status status)
 }
 
 /*
-** ABOVE FUNCTIONS are the only ones to be used for manipulating the stare of a job status
+** ABOVE FUNCTIONS are the only ones to be used for manipulating the state of a job status
 */
 
 job* get_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
