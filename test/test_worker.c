@@ -52,7 +52,7 @@ int main()
 	sync_queue job_queue;
 	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE, 0);
 
-	printf("Submitting initial set of the jobs\n");
+	printf("Submitting initial 6 set of the jobs\n");
 	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted++)
 	{
 		if(!submit_job_worker(&job_queue, simple_job_function, &(function_params[total_jobs_submitted]), total_jobs_submitted % 2 == 0 ? &(function_promises[total_jobs_submitted/2]) : NULL))
@@ -66,12 +66,12 @@ int main()
 	printf("Starting worker\n\n");
 	thread_id = start_worker(&job_queue, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
 
-	printf("Worker thread id : %lu\n\n", thread_id);
+	printf("Main thread id : %lu\n\n", thread_id);
 
 	printf("Main thread will sleep for 1 second\n\n");
 	usleep(1 * 1000 * 1000);
 
-	printf("Submitting the rest of the jobs\n");
+	printf("Submitting 6 other jobs\n");
 	for(int i = 0; i < SET_2_JOBS; i++, total_jobs_submitted++)
 	{
 		printf("%d jobs in total\n", total_jobs_submitted);
