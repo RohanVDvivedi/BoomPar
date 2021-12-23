@@ -50,7 +50,7 @@ int main()
 		jobs_input_param[i] = i;
 	}
 
-	// create a submittable job
+	// create a promise to submit a resolvable job
 	int l = 5001;
 	promise test_promised;
 	initialize_promise(&test_promised);
@@ -67,7 +67,7 @@ int main()
 			printf("Job submission failed with input %d\n", i);
 		}
 
-		// this is to test the functionality of submit_job function
+		// this is to test the functionality of a job than can return via a promise
 		if(i == (TEST_JOBs_COUNT-1)/12)
 		{
 			submit_job(executor_p, my_job_function, &l, &test_promised);
