@@ -43,7 +43,7 @@ struct job
 // and then you have effectively created a job, for which you do not need to get its output or wait for it to complete
 
 // creates a new job
-job* get_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
+job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
 
 // initializes a job, as if it is just created, this function can be used to create a job on stack, or inside other objects
 void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);

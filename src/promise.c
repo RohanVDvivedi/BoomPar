@@ -1,6 +1,6 @@
 #include<promise.h>
 
-promise* get_promise()
+promise* new_promise()
 {
 	promise* p = malloc(sizeof(promise));
 	initialize_promise(p);

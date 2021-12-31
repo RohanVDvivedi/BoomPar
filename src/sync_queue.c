@@ -3,7 +3,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-sync_queue* get_sync_queue(unsigned long long int size, int is_bounded)
+sync_queue* new_sync_queue(unsigned long long int size, int is_bounded)
 {
 	sync_queue* sq = (sync_queue*) malloc(sizeof(sync_queue));
 	initialize_sync_queue(sq, size, is_bounded);

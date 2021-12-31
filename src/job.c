@@ -39,7 +39,7 @@ static job_status get_next_status(job_status status)
 ** ABOVE FUNCTIONS are the only ones to be used for manipulating the state of a job status
 */
 
-job* get_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
 	initialize_job(job_p, function_p, input_p, promise_for_output);

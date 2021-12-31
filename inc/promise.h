@@ -18,7 +18,7 @@ struct promise
 	pthread_cond_t promise_wait;
 };
 
-promise* get_promise();
+promise* new_promise();
 
 void initialize_promise(promise* p);
 
