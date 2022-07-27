@@ -1,0 +1,5 @@
+ * user linux api of user context to allow separate stacks and to yeild out of the job
+ * make job just like a co-routine on multiple threads, reduce the stack size of these threads saving memory
+ * allow jobs to have different stack sizes (probably smaller)
+ * make a job go to sleep/ pushing it back into the wait queue and store it against a pointer that it is waiting on, it could be a pthread_mutex_t* or pthread_cond_t*, or a semaphore, or even a file descriptor etc, anything.
+ * a wake can be called waking all or one of the jobs sleeping on the wait_queue
