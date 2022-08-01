@@ -4,3 +4,6 @@
  * make job just like a co-routine on multiple threads, reduce the stack size of these threads saving memory
  * allow jobs to have different stack sizes (probably smaller)
  * wake_one and wake_all calls can be used on a pointer to wake up one or more jobs that are waiting on a pointer, for a resource
+
+ * implement promises to hold more than one result as a queue, releasing them in order.
+ * provide functionality for wait_for_next_n_results, wait_for_n_results. will make the promise wait for next n or absolute n results produced.
