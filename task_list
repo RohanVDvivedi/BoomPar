@@ -6,4 +6,4 @@
  * wake_one and wake_all calls can be used on a pointer to wake up one or more jobs that are waiting on a pointer, for a resource
 
  * implement promises to hold more than one result as a queue, releasing them in order.
- * provide functionality for wait_for_next_n_results, wait_for_n_results. will make the promise wait for next n or absolute n results produced.
+ * implement get_results function to get n results from the promise, or do a get_result to get 1 result from the promise.
