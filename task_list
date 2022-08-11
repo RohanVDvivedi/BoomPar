@@ -1,12 +1,16 @@
  * use linux api of user context to allow separate stacks and let the job wait on a pointer (pointing to mutex or condition variable or anything)
  * we use this pointer to put the job in a hash table, to eventually wake it up when the event occurs. a wait wih NULL implied an exit.
- * a yield implies exit with a return value, or a return fron the job function is also a return with a value.
+ * a yield implies exit with a return value, or a return fron the job function is also a return with a value, both will be terminating the job.
  * make job just like a co-routine on multiple threads, reduce the stack size of these threads saving memory
  * allow jobs to have different stack sizes (probably smaller)
  * wake_one and wake_all calls can be used on a pointer to wake up one or more jobs that are waiting on a pointer, for a resource
+ * provide a function called voluntary_job_switch to switch a job putting it back on the sync_queue
 
  * implement promises to hold more than one result as a queue, releasing them in order.
  * implement get_results function to get n results from the promise, or do a get_result to get 1 result from the promise.
+ * allow 1 promise to be registered to multiple jobs (default functionality, yet using it is a fool's errand now).
+ * implement dstream, a stream to pass bytes arround the jobs efficiently. (optimization must be to reduce memory allocation and copying bytes altogether)
+ * allow jobs to go on wait until there isn't anything to be read on the dstream or promise that would need attention.
 
  * implement shared_ptr like that of c++ here, destroying the pointer/reference will destroy the object only if its reference count reaches 0
  * get_new_sharable_reference increments the reference count and returns the pointer to the object
