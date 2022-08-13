@@ -6,12 +6,15 @@
  * wake_one and wake_all calls can be used on a pointer to wake up one or more jobs that are waiting on a pointer, for a resource
  * provide a function called voluntary_job_switch to switch a job putting it back on the sync_queue
 
- * implement promises to hold more than one result as a queue, releasing them in order.
- * implement get_results function to get n results from the promise, or do a get_result to get 1 result from the promise.
- * allow 1 promise to be registered to multiple jobs (default functionality, yet using it is a fool's errand now).
+ * add promise fullfilled call back function, with call back params
+ * use this call back to implement get_one, get_all functionality
+
  * implement dstream, a stream to pass bytes arround the jobs efficiently. (optimization must be to reduce memory allocation and copying bytes altogether)
+ * dstream should be a blocking queue of bytes for the jobs to communicate internally
  * allow jobs to go on wait until there isn't anything to be read on the dstream or promise that would need attention.
 
  * implement shared_ptr like that of c++ here, destroying the pointer/reference will destroy the object only if its reference count reaches 0
  * get_new_sharable_reference increments the reference count and returns the pointer to the object
  * use this shared_ptr for BufferPool page_request struct
+
+ * make all promises and jobs to use shared_ptr-s, so that freeing them is not a concern
