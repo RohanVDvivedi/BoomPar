@@ -39,7 +39,7 @@ int main()
 {
 	printf("Main thread : %d\n", (int)pthread_self());
 
-	executor* executor_p = get_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
+	executor* executor_p = new_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
 
 	// to store the references to all the input integers that we create, for each and every job
 	int jobs_input_param[TEST_JOBs_COUNT];
