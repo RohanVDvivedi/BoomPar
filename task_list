@@ -1,10 +1,3 @@
-SHARED_PTR
- * implement shared_pointer api
- * placing the spinlocked reference counter right before the actual struct
- * get_new_data() , get_data() and share_pointer() and delete_data()
- * use this shared_ptr for BufferPool page_request struct (*future)
- * make all promises and jobs to use shared_ptr-s, so that freeing them is not a concern
-
 PROMISE
  * add promise fullfilled call back function, with call back params
  * use this call back to implement get_one, get_all functionality on a pomise sync queue
@@ -24,6 +17,5 @@ WORKER
  * reduce the stack size of worker threads saving memory
 
 FUTURE
- * use this shared_ptr for BufferPool page_request struct
- * make all promises and jobs to use shared_ptr-s, so that freeing them is not a concern
+ * provide smart_pointer
  * yield(time_period_in_nano_seconds) allows a running job to go on a wait, 0 implies a voluntary relinquish of cpu, we will need a job timer heap
