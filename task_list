@@ -1,20 +1,29 @@
- * use linux api of user context to allow separate stacks and let the job wait on a pointer (pointing to mutex or condition variable or anything)
- * we use this pointer to put the job in a hash table, to eventually wake it up when the event occurs. a wait wih NULL implied an exit.
- * a yield implies exit with a return value, or a return fron the job function is also a return with a value, both will be terminating the job.
- * make job just like a co-routine on multiple threads, reduce the stack size of these threads saving memory
- * allow jobs to have different stack sizes (probably smaller)
- * wake_one and wake_all calls can be used on a pointer to wake up one or more jobs that are waiting on a pointer, for a resource
- * provide a function called voluntary_job_switch to switch a job putting it back on the sync_queue
-
- * add promise fullfilled call back function, with call back params
- * use this call back to implement get_one, get_all functionality
-
- * implement dstream, a stream to pass bytes arround the jobs efficiently. (optimization must be to reduce memory allocation and copying bytes altogether)
- * dstream should be a blocking queue of bytes for the jobs to communicate internally
- * allow jobs to go on wait until there isn't anything to be read on the dstream or promise that would need attention.
-
- * implement shared_ptr like that of c++ here, destroying the pointer/reference will destroy the object only if its reference count reaches 0
- * get_new_sharable_reference increments the reference count and returns the pointer to the object
- * use this shared_ptr for BufferPool page_request struct
-
+SHARED_PTR
+ * implement shared_pointer api
+ * placing the spinlocked reference counter right before the actual struct
+ * get_new_data() , get_data() and share_pointer() and delete_data()
+ * use this shared_ptr for BufferPool page_request struct (*future)
  * make all promises and jobs to use shared_ptr-s, so that freeing them is not a concern
+
+PROMISE
+ * add promise fullfilled call back function, with call back params
+ * use this call back to implement get_one, get_all functionality on a pomise sync queue
+
+JOB
+ * add WAIT as a job state
+ * use linux api of user context to allow separate stacks for jobs
+
+SYNC_STREAM
+ * implement sync_stream api, using pthread_spin_lock
+
+EXECUTOR
+ * create a job waiters hashtable where they can wait in the executor on sync_stream or a timer
+ * wake_one and wake_all calls to wake jobs that are waiting on a sync stream
+
+WORKER
+ * reduce the stack size of worker threads saving memory
+
+FUTURE
+ * use this shared_ptr for BufferPool page_request struct
+ * make all promises and jobs to use shared_ptr-s, so that freeing them is not a concern
+ * yield(time_period_in_nano_seconds) allows a running job to go on a wait, 0 implies a voluntary relinquish of cpu, we will need a job timer heap
