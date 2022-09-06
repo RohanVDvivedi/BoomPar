@@ -13,6 +13,7 @@ EXECUTOR
  * wake_one and wake_all calls to wake jobs that are waiting on a sync stream
 
 WORKER
+ * use callbacks in the worker, and pass then from executor
  * reduce the stack size of worker threads saving memory
 
 FUTURE
