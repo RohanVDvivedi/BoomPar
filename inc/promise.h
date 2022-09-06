@@ -4,6 +4,10 @@
 #include<pthread.h>
 #include<stdlib.h>
 
+#include<arraylist.h>
+
+#include<callback.h>
+
 typedef struct promise promise;
 struct promise
 {
@@ -16,6 +20,10 @@ struct promise
 
 	// threads wait on this conditional variable until promise value could be obtained
 	pthread_cond_t promise_wait;
+
+	// number of callbacks requested upon fulfilment of this promise
+	// a cutlery queue, where each element is a callback 
+	queue callbacks_requested;
 };
 
 promise* new_promise();

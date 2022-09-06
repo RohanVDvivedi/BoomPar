@@ -2,7 +2,7 @@
 
 #include<stdlib.h>
 
-callback* get_new_callback(const void* callback_param, void (*callback_func)(void*, const void* callback_param))
+callback* new_callback(const void* callback_param, void (*callback_func)(void*, const void* callback_param))
 {
 	callback* cb = malloc(sizeof(callback));
 	cb->callback_param = callback_param;
