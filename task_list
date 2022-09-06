@@ -1,11 +1,11 @@
-PROMISE
- * use this call back to implement get_one, get_all functionality on a pomise sync queue
+PROMISE_DATA
+ * implement as a sync queue, and adds its own callback to all the promises and you can wait on it until n promises are ready for you to consume and promised results are returned as an cutlery array
 
 JOB
  * add WAIT as a job state
  * use linux api of user context to allow separate stacks for jobs
 
-SYNC_STREAM
+SYNC_JOB_STREAM
  * implement sync_stream api, using pthread_spin_lock
 
 EXECUTOR
