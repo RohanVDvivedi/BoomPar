@@ -5,6 +5,12 @@
 
 #include<callback.h>
 
+/*
+	This queue is essentially a wrapper over dstream of cutlery to hold callbacks
+	It is not thread safe, you need your own locks to make its access thread safe
+	It can only hold callback structs (as defined in callback.h), It is flat structure.
+*/
+
 // dstream is itself a callback queue
 typedef dstream callback_queue;
 
