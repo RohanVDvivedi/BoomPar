@@ -31,7 +31,8 @@ promise* new_promise();
 void initialize_promise(promise* p);
 
 // set_result must be called only once after the promise has been initialized or newly created with get_promise function
-void set_promised_result(promise* p, void* res);
+// it will fail with a 0, if the promised result was already set
+int set_promised_result(promise* p, void* res);
 
 // get result will not block, if the promise is already ready
 void* get_promised_result(promise* p);

@@ -15,18 +15,27 @@ void initialize_promise(promise* p)
 	pthread_cond_init(&(p->promise_wait), NULL);
 }
 
-void set_promised_result(promise* p, void* res)
+int set_promised_result(promise* p, void* res)
 {
+	int was_promised_result_set = 0;
+
 	pthread_mutex_lock(&(p->promise_lock));
 
-	// set the result
-	p->output_result = res;
+	if(!p->output_result_ready)
+	{
+		// set the result
+		p->output_result = res;
 
-	// set the result is ready and wake up all the threads that are waiting for the result
-	p->output_result_ready = 1;
-	pthread_cond_broadcast(&(p->promise_wait));
+		was_promised_result_set = 1;
+
+		// set the result is ready and wake up all the threads that are waiting for the result
+		p->output_result_ready = 1;
+		pthread_cond_broadcast(&(p->promise_wait));
+	}
 
 	pthread_mutex_unlock(&(p->promise_lock));
+
+	return was_promised_result_set;
 }
 
 void* get_promised_result(promise* p)
