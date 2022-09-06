@@ -24,7 +24,7 @@ static void call_all_requested_callbacks(promise* p)
 		// use take the lock on to pop
 		pthread_mutex_lock(&(p->promise_lock));
 
-			callback* cb = get_top_of_queue(&(p->callbacks_requested));
+			const callback* cb = get_top_of_queue(&(p->callbacks_requested));
 			int is_empty = pop_from_queue(&(p->callbacks_requested));
 
 		pthread_mutex_unlock(&(p->promise_lock));
@@ -95,6 +95,36 @@ int is_promised_result_ready(promise* p)
 	pthread_mutex_unlock(&(p->promise_lock));
 
 	return is_result_ready;
+}
+
+void add_result_ready_callback(promise* p, const void* callback_param, void (*callback_func)(void*, const void* callback_param))
+{
+	// create a new callback object
+	callback* cb = new_callback(callback_param, callback_func);
+
+	pthread_mutex_lock(&(p->promise_lock));
+
+	int is_result_ready = p->output_result_ready;
+
+	// if the result is not ready then push the callback to the queue
+	if(!is_result_ready)
+	{
+		// push to queue, expand if the push fails
+		if(!push_to_queue(&(p->callbacks_requested), cb))
+		{
+			expand_queue(&(p->callbacks_requested));
+			push_to_queue(&(p->callbacks_requested), cb)
+		}
+	}
+
+	pthread_mutex_unlock(&(p->promise_lock));
+
+	// else if the result was ready then we call the callbac right away
+	if(is_result_ready)
+	{
+		call_callback(cb, p->output_result);
+		delete_callback(cb);
+	}
 }
 
 void deinitialize_promise(promise* p)

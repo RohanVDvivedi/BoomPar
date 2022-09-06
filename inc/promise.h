@@ -42,6 +42,9 @@ void* get_promised_result(promise* p);
 // to check if a promised result is ready, kind of non blocking way to access a promise
 int is_promised_result_ready(promise* p);
 
+// if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
+void add_result_ready_callback(promise* p, const callback* cb);
+
 void deinitialize_promise(promise* p);
 
 void delete_promise(promise* p);
