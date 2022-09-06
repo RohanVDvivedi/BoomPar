@@ -1,5 +1,4 @@
 PROMISE
- * add promise fullfilled call back function, with call back params
  * use this call back to implement get_one, get_all functionality on a pomise sync queue
 
 JOB
