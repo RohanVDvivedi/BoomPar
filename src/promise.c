@@ -13,6 +13,7 @@ void initialize_promise(promise* p)
 	p->output_result = NULL;
 	pthread_mutex_init(&(p->promise_lock), NULL);
 	pthread_cond_init(&(p->promise_wait), NULL);
+	initialize_queue(&(p->callbacks_requested), 0);
 }
 
 int set_promised_result(promise* p, void* res)
@@ -69,6 +70,7 @@ int is_promised_result_ready(promise* p)
 
 void deinitialize_promise(promise* p)
 {
+	deinitialize_queue(&(p->callbacks_requested), 0);
 	p->output_result_ready = 0;
 	p->output_result = NULL;
 	pthread_mutex_destroy(&(p->promise_lock));

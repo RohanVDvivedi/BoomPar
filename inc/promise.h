@@ -4,7 +4,7 @@
 #include<pthread.h>
 #include<stdlib.h>
 
-#include<arraylist.h>
+#include<queue.h>
 
 #include<callback.h>
 
