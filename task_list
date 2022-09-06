@@ -1,5 +1,4 @@
 PROMISE
- * make callbacks plain pass by value structs and make callback queue using the dstream api of cutlery
  * use this call back to implement get_one, get_all functionality on a pomise sync queue
 
 JOB
