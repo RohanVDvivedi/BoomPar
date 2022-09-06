@@ -16,6 +16,32 @@ void initialize_promise(promise* p)
 	initialize_queue(&(p->callbacks_requested), 0);
 }
 
+// call this function only after the output_result_ready has been set
+static void call_all_requested_callbacks(promise* p)
+{
+	while(1)
+	{
+		// use take the lock on to pop
+		pthread_mutex_lock(&(p->promise_lock));
+
+			callback* cb = get_top_of_queue(&(p->callbacks_requested));
+			int is_empty = pop_from_queue(&(p->callbacks_requested));
+
+		pthread_mutex_unlock(&(p->promise_lock));
+
+		// the actual callback function is called without any locks taken
+		if(cb != NULL)
+		{
+			call_callback(cb, p->output_result);
+			delete_callback(cb);
+		}
+
+		// if nothing was popped, then the  callback queue is probably empty
+		if(is_empty)
+			break;
+	}
+}
+
 int set_promised_result(promise* p, void* res)
 {
 	int was_promised_result_set = 0;
@@ -35,6 +61,9 @@ int set_promised_result(promise* p, void* res)
 	}
 
 	pthread_mutex_unlock(&(p->promise_lock));
+
+	// call all the callbacks
+	call_all_requested_callbacks(p);
 
 	return was_promised_result_set;
 }
