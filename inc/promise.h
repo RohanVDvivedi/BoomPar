@@ -43,7 +43,7 @@ void* get_promised_result(promise* p);
 int is_promised_result_ready(promise* p);
 
 // if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
-void add_result_ready_callback(promise* p, const callback* cb);
+void add_result_ready_callback(promise* p, const void* callback_param, void (*callback_func)(void*, const void* callback_param));
 
 void deinitialize_promise(promise* p);
 

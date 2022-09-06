@@ -24,8 +24,10 @@ static void call_all_requested_callbacks(promise* p)
 		// use take the lock on to pop
 		pthread_mutex_lock(&(p->promise_lock));
 
-			const callback* cb = get_top_of_queue(&(p->callbacks_requested));
-			int is_empty = pop_from_queue(&(p->callbacks_requested));
+			callback* cb = (callback*) get_top_of_queue(&(p->callbacks_requested));
+			pop_from_queue(&(p->callbacks_requested));
+
+			int is_empty = is_empty_queue(&(p->callbacks_requested));
 
 		pthread_mutex_unlock(&(p->promise_lock));
 
@@ -113,7 +115,7 @@ void add_result_ready_callback(promise* p, const void* callback_param, void (*ca
 		if(!push_to_queue(&(p->callbacks_requested), cb))
 		{
 			expand_queue(&(p->callbacks_requested));
-			push_to_queue(&(p->callbacks_requested), cb)
+			push_to_queue(&(p->callbacks_requested), cb);
 		}
 	}
 
@@ -129,7 +131,15 @@ void add_result_ready_callback(promise* p, const void* callback_param, void (*ca
 
 void deinitialize_promise(promise* p)
 {
-	deinitialize_queue(&(p->callbacks_requested), 0);
+	// delete all callbacks
+	while(!is_empty_queue(&(p->callbacks_requested)))
+	{
+		callback* cb = (callback*) get_top_of_queue(&(p->callbacks_requested));
+		pop_from_queue(&(p->callbacks_requested));
+		delete_callback(cb);
+	}
+
+	deinitialize_queue(&(p->callbacks_requested));
 	p->output_result_ready = 0;
 	p->output_result = NULL;
 	pthread_mutex_destroy(&(p->promise_lock));
