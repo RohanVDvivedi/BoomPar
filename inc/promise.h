@@ -7,6 +7,7 @@
 #include<queue.h>
 
 #include<callback.h>
+#include<callback_queue.h>
 
 typedef struct promise promise;
 struct promise
@@ -23,9 +24,8 @@ struct promise
 	// threads wait on this conditional variable until promise value could be obtained
 	pthread_cond_t promise_wait;
 
-	// number of callbacks requested upon fulfilment of this promise
-	// a cutlery queue, where each element is a callback 
-	queue callbacks_requested;
+	// queue of callbacks requested upon fulfilment of this promise
+	callback_queue callbacks;
 };
 
 promise* new_promise();
@@ -43,7 +43,7 @@ void* get_promised_result(promise* p);
 int is_promised_result_ready(promise* p);
 
 // if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
-void add_result_ready_callback(promise* p, const void* callback_param, void (*callback_func)(void*, const void* callback_param));
+void add_result_ready_callback(promise* p, callback cb);
 
 void deinitialize_promise(promise* p);
 
