@@ -30,7 +30,19 @@ void register_promise(promise_all* pa, promise* p)
 	add_result_ready_callback(p, cb);
 }
 
-array get_promised_results(promise_all* pa, unsigned int result_count);
+array get_promised_results(promise_all* pa, unsigned int result_count)
+{
+	array results_array;
+	initialize_array(&results_array, result_count);
+
+	for(unsigned int i = 0; i < result_count; i++)
+	{
+		const void* result = pop_sync_queue_blocking(pa, 0);
+		set_in_array(&results_array, result, i);
+	}
+
+	return results_array;
+}
 
 void deinitialize_promise_all(promise_all* pa)
 {
