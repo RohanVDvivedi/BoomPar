@@ -1,6 +1,6 @@
 #include<promise_all.h>
 
-promise_all* new_promise_all(unsigned int promises_count, promise** promises)
+promise_all* new_promise_all(unsigned int promises_count, promise * const * promises)
 {
 	promise_all* pa = new_sync_queue((promises_count / 16) + 16, 0);
 
@@ -10,7 +10,7 @@ promise_all* new_promise_all(unsigned int promises_count, promise** promises)
 	return pa;
 }
 
-void initialize_promise_all(promise_all* pa, unsigned int promises_count, promise** promises)
+void initialize_promise_all(promise_all* pa, unsigned int promises_count, promise * const * promises)
 {
 	initialize_sync_queue(pa, (promises_count / 16) + 16, 0);
 

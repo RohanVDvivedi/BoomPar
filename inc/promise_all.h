@@ -5,11 +5,13 @@
 
 #include<sync_queue.h>
 
+#include<promise.h>
+
 typedef sync_queue promise_all;
 
-promise_all* new_promise_all(unsigned int promises_count, const promise** promises);
+promise_all* new_promise_all(unsigned int promises_count, promise * const * promises);
 
-void initialize_promise_all(promise_all* pa, unsigned int promises_count, promise** promises);
+void initialize_promise_all(promise_all* pa, unsigned int promises_count, promise * const * promises);
 
 void register_promise(promise_all* pa, promise* p);
 
