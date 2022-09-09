@@ -1,5 +1,5 @@
 PROMISE_DATA
- * implement as a sync queue, and adds its own callback to all the promises and you can wait on it until n promises are ready for you to consume and promised results are returned as an cutlery array
+ * think how to destroy a promise, thinks like single callback, callback passing promise instead of its result, fortify concept of what gets passed to callback params, etc, OR in worst case make promise reference counted, mainly make promise deletable right after use.
 
 JOB
  * add WAIT as a job state
