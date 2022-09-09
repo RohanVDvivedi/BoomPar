@@ -37,9 +37,9 @@ struct sync_queue
 */
 // size must be > 0, if the provided size is equal to 0, the queue is initialized with initial size of 1
 
-sync_queue* new_sync_queue(unsigned long long int size, int is_bounded);
+sync_queue* new_sync_queue(unsigned int size, int is_bounded);
 
-void initialize_sync_queue(sync_queue* sq, unsigned long long int size, int is_bounded);
+void initialize_sync_queue(sync_queue* sq, unsigned int size, int is_bounded);
 
 void deinitialize_sync_queue(sync_queue* sq);
 
