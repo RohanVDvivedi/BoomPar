@@ -13,28 +13,7 @@ void initialize_promise(promise* p)
 	p->output_result = NULL;
 	pthread_mutex_init(&(p->promise_lock), NULL);
 	pthread_cond_init(&(p->promise_wait), NULL);
-	initialize_callback_queue(&(p->callbacks), 0);
-}
-
-// call this function only after the output_result_ready has been set
-static void call_all_requested_callbacks(promise* p)
-{
-	// use take the lock only to pop
-	pthread_mutex_lock(&(p->promise_lock));
-
-	while(!is_empty_callback_queue(&(p->callbacks)))
-	{
-		callback cb = pop_callback(&(p->callbacks));
-
-		pthread_mutex_unlock(&(p->promise_lock));
-
-		// the actual callback function is called without any locks taken
-		call_callback(&cb, p->output_result);
-
-		pthread_mutex_lock(&(p->promise_lock));
-	}
-
-	pthread_mutex_unlock(&(p->promise_lock));
+	p->promise_completed_queue = NULL;
 }
 
 int set_promised_result(promise* p, void* res)
@@ -42,6 +21,9 @@ int set_promised_result(promise* p, void* res)
 	int was_promised_result_set = 0;
 
 	pthread_mutex_lock(&(p->promise_lock));
+
+	// push this promise to this queue, if the promise is completed
+	sync_queue* push_promise_to = NULL;
 
 	if(!p->output_result_ready)
 	{
@@ -53,12 +35,16 @@ int set_promised_result(promise* p, void* res)
 		// set the result is ready and wake up all the threads that are waiting for the result
 		p->output_result_ready = 1;
 		pthread_cond_broadcast(&(p->promise_wait));
+
+		// push this promise to this queue, if the promise is completed
+		push_promise_to = p->promise_completed_queue;
 	}
 
 	pthread_mutex_unlock(&(p->promise_lock));
 
-	// call all the callbacks
-	call_all_requested_callbacks(p);
+	// push the promise object if it was completed and the promise_completed_queue exists
+	if(push_promise_to)
+		push_sync_queue_blocking(push_promise_to, p, 0);
 
 	return was_promised_result_set;
 }
@@ -90,7 +76,7 @@ int is_promised_result_ready(promise* p)
 	return is_result_ready;
 }
 
-void add_result_ready_callback(promise* p, callback cb)
+void set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
 {
 	pthread_mutex_lock(&(p->promise_lock));
 
@@ -98,18 +84,18 @@ void add_result_ready_callback(promise* p, callback cb)
 
 	// if the result is not ready then push the callback to the queue
 	if(!is_result_ready)
-		push_callback(&(p->callbacks), cb);
+		p->promise_completed_queue = promise_completed_queue;
 
 	pthread_mutex_unlock(&(p->promise_lock));
 
 	// else if the result was ready then we call the callback right away
 	if(is_result_ready)
-		call_callback(&cb, p->output_result);
+		push_sync_queue_blocking(promise_completed_queue, p, 0);
 }
 
 void deinitialize_promise(promise* p)
 {
-	deinitialize_callback_queue(&(p->callbacks));
+	p->promise_completed_queue = NULL;
 	p->output_result_ready = 0;
 	p->output_result = NULL;
 	pthread_mutex_destroy(&(p->promise_lock));
