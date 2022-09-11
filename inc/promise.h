@@ -40,8 +40,9 @@ void* get_promised_result(promise* p);
 // to check if a promised result is ready, kind of non blocking way to access a promise
 int is_promised_result_ready(promise* p);
 
+// it sets the promise_completed_queue, if it is not alread set
 // if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
-void set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue);
+int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue);
 
 void deinitialize_promise(promise* p);
 

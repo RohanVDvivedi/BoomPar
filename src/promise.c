@@ -76,21 +76,29 @@ int is_promised_result_ready(promise* p)
 	return is_result_ready;
 }
 
-void set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
+int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
 {
+	int was_promise_completed_queue_set = 0;
+
 	pthread_mutex_lock(&(p->promise_lock));
+
+	// set the promise completed queue
+	if(p->promise_completed_queue == NULL)
+	{
+		p->promise_completed_queue = promise_completed_queue;
+		was_promise_completed_queue_set = 1;
+	}
 
 	int is_result_ready = p->output_result_ready;
 
-	// if the result is not ready then push the callback to the queue
-	if(!is_result_ready)
-		p->promise_completed_queue = promise_completed_queue;
-
 	pthread_mutex_unlock(&(p->promise_lock));
 
-	// else if the result was ready then we call the callback right away
-	if(is_result_ready)
+	// else if the result was ready then we push this promise to the promise_completed_queue
+	if(is_result_ready && was_promise_completed_queue_set)
 		push_sync_queue_blocking(promise_completed_queue, p, 0);
+
+	// return if the promise_completed_queue was set
+	return was_promise_completed_queue_set;
 }
 
 void deinitialize_promise(promise* p)
