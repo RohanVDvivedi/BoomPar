@@ -1,5 +1,5 @@
-PROMISE_DATA
- * think how to destroy a promise, thinks like single callback, callback passing promise instead of its result, fortify concept of what gets passed to callback params, etc, OR in worst case make promise reference counted, mainly make promise deletable right after use.
+PROMISE
+ * write test cases
 
 JOB
  * add WAIT as a job state
