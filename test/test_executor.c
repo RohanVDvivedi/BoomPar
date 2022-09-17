@@ -55,7 +55,7 @@ int main()
 	for(int i=0; i < TEST_JOBs_COUNT;i++)
 	{
 		promise* promised_result = NULL;
-		if(i % 3)
+		if(i % 3 == 0)
 		{
 			promised_result = new_promise();
 			set_promise_completed_queue(promised_result, promise_completed_queue);
