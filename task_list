@@ -1,8 +1,8 @@
-PROMISE
- * write test cases
-
 JOB
  * add WAIT as a job state
+ * add locks to manager job state
+ * add a function to wait until a job is completed
+ * fail delete or deinitialize of a job only if it is completed or is created/queued or is waiting
  * use linux api of user context to allow separate stacks for jobs
 
 SYNC_JOB_STREAM
@@ -16,6 +16,8 @@ WORKER
  * use callbacks in the worker, and pass then from executor
  * reduce the stack size of worker threads saving memory
 
+SMART_POINTER
+ * pointer that deletes what ever it is pointing to after its reference counter reaches 0
+
 FUTURE
- * provide smart_pointer
  * yield(time_period_in_nano_seconds) allows a running job to go on a wait, 0 implies a voluntary relinquish of cpu, we will need a job timer heap
