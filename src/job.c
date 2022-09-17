@@ -130,10 +130,11 @@ int execute(job* job_p)
 
 void deinitialize_job(job* job_p)
 {
-	if(job_p->promise_for_output != NULL && job_p->status != COMPLETED)
-	{
-		set_promised_result(job_p->promise_for_output, NULL);
-	}
+	// a job deinitialized before reaching the state of completion is the one that failed
+	// a failed job sets its promised result to NULL
+	if(job_p->promise_for_output != NULL)
+		set_promised_result(job_p->promise_for_output, NULL); // this function succeeds only if the job hadn't yet submitted its promised result
+
 	job_p->promise_for_output = NULL;
 	job_p->status = get_initial_state_status();
 	job_p->input_p = NULL;
