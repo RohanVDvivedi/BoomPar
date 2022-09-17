@@ -66,6 +66,8 @@ int main()
 	}
 	printf("finished queueing all jobs\n");
 
+	usleep(300);
+
 	printf("Calling shutdown with SHUTDOWN_IMMEDIATELY = %d\n", SHUTDOWN_IMMEDIATELY);
 	shutdown_executor(executor_p, SHUTDOWN_IMMEDIATELY);
 	printf("Shutdown called\n");
