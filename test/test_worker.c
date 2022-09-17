@@ -146,7 +146,7 @@ int main()
 	{
 		promise* promised_result = (promise*) pop_sync_queue_blocking(&promise_completed_queue, 0);
 		int* res = ((int*)get_promised_result(promised_result));
-		printf("promised = %d\n", *res);
+		printf("promised = %d\n", res == NULL ? -1 : *res);
 		delete_promise(promised_result);
 	}
 	printf("\n");

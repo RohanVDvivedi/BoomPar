@@ -44,47 +44,27 @@ int main()
 	// to store the references to all the input integers that we create, for each and every job
 	int jobs_input_param[TEST_JOBs_COUNT];
 
-	// create job parameters
+	// initialize job parameters
 	for(int i = 0; i < TEST_JOBs_COUNT; i++)
-	{
 		jobs_input_param[i] = i;
-	}
 
-	// create a promise to submit a resolvable job
-	int l = 5001;
-	promise test_promised;
-	initialize_promise(&test_promised);
+	// create a promise_completed_queue
+	sync_queue* promise_completed_queue = new_sync_queue(12, 0);
 
 	// submit jobs, one by one
 	for(int i=0; i < TEST_JOBs_COUNT;i++)
 	{
-		if(submit_job(executor_p, my_job_function, &jobs_input_param[i], NULL))
+		promise* promised_result = NULL;
+		if(i % 3)
 		{
-			//printf("Successfully submitted job with input %d\n", i);
-		}
-		else
-		{
-			printf("Job submission failed with input %d\n", i);
+			promised_result = new_promise();
+			set_promise_completed_queue(promised_result, promise_completed_queue);
 		}
 
-		// this is to test the functionality of a job than can return via a promise
-		if(i == (TEST_JOBs_COUNT-1)/12)
-		{
-			submit_job(executor_p, my_job_function, &l, &test_promised);
-		}
+		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result))
+			printf("Job submission failed with input %d\n", i);
 	}
 	printf("finished queueing all jobs\n");
-
-	int* l_p = get_promised_result(&test_promised);
-	if(l_p != NULL)
-	{
-		printf("the result from &test_promised : %d, at address %p, while the address of l was %p\n", *l_p, l_p, &l);
-	}
-	else
-	{
-		printf("test_job_p could not be executed\n");
-	}
-	deinitialize_promise(&test_promised);
 
 	printf("Calling shutdown with SHUTDOWN_IMMEDIATELY = %d\n", SHUTDOWN_IMMEDIATELY);
 	shutdown_executor(executor_p, SHUTDOWN_IMMEDIATELY);
@@ -93,27 +73,28 @@ int main()
 	if(WAIT_FOR_SHUTDOWN)
 	{
 		printf("Going for waiting on the executor threads to finish\n");
-		int wait_error = wait_for_all_threads_to_complete(executor_p);
-		if(wait_error)
-		{
+		if(wait_for_all_threads_to_complete(executor_p))
 			printf("Looks like the executor threads finished\n");
-		}
 		else
-		{
 			printf("Looks like wait function threw error\n");
-		}
 	}
 
 	printf("thread count %u\n", executor_p->active_worker_count);
 
 	if(delete_executor(executor_p))
-	{
 		printf("Deletion of executor succedded\n");
-	}
 	else
-	{
 		printf("Deletion of executor failed\n");
+
+	for(int i = 0; i < TEST_JOBs_COUNT / 3; i++)
+	{
+		promise* promised_result = (promise*) pop_sync_queue_blocking(promise_completed_queue, 0);
+		int* res = ((int*)get_promised_result(promised_result));
+		printf("promised = %d\n", *res);
+		delete_promise(promised_result);
 	}
+
+	delete_sync_queue(promise_completed_queue);
 
 	printf("printing output\n\n");
 	for(int i = 0; i < TEST_JOBs_COUNT; i++)
