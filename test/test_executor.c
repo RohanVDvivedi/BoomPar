@@ -98,9 +98,7 @@ int main()
 
 	printf("printing output\n\n");
 	for(int i = 0; i < TEST_JOBs_COUNT; i++)
-	{
 		printf("OUTPUT[%d] = %d\n", i, jobs_input_param[i]);
-	}
 
 	printf("Test completed\n\n");
 
