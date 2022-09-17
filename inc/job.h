@@ -37,7 +37,7 @@ struct job
 };
 
 // A job can be created/initialized with promise_for_output,
-// in that case other threads can waitt to receive output of the job vy calling get_promised_result in that promise value
+// in that case other threads can wait to receive output of the job by calling get_promised_result in that promise value
 // on the contrary if you do not need the output of the job you can also create job without a promise by
 // passing a NULL for promise_for_output attribute in the get_job/initilialize_job functions,
 // and then you have effectively created a job, for which you do not need to get its output or wait for it to complete
