@@ -53,62 +53,52 @@ static int is_valid_job_status_transition(job_status curr, job_status next)
 	return 0;
 }
 
-/*
-** ABOVE FUNCTIONS are the only ones to be used for manipulating the state of a job status
-*/
-
-job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+job* new_job(void* (*function_p)(void* input_p), void* input_p, size_t stack_size, promise* promise_for_output)
 {
 	job* job_p = ((job*)(malloc(sizeof(job))));
-	initialize_job(job_p, function_p, input_p, promise_for_output);
+	initialize_job(job_p, function_p, input_p, stack_size, promise_for_output);
 	return job_p;
 }
 
-void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, size_t stack_size, promise* promise_for_output)
 {
 	job_p->status = get_initial_state_status();
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
+	job_p->stack_size = stack_size;
 	job_p->promise_for_output = promise_for_output;
 }
 
 int job_status_change(job* job_p, job_status job_new_status)
 {
-	int has_job_status_changed = 0;
-	if(is_valid_job_status_transition(job_p->status, job_new_status))
-	{
+	int job_status_changed = is_valid_job_status_transition(job_p->status, job_new_status);
+	if(job_status_changed)
 		job_p->status = job_new_status;
-		has_job_status_changed = 1;
-	}
-	return has_job_status_changed;
+	return job_status_changed;
 }
 
-static void* execute_wrapper(void* job_v_p)
+static void separate_stack_job_wrapper(job* job_p)
 {
-	job* job_p = ((job*)job_v_p);
-	execute(job_p);
-	return NULL;
-}
+	// job must be in running state
+	if(job_p->status != RUNNING)
+		goto EXIT;
 
-pthread_t execute_async(job* job_p)
-{
-	// update the status of the job to QUEUED
-	if(!job_status_change(job_p, QUEUED))
-		goto ERROR;
+	// execute the job with its input, and result is stored at output
+	void* output_pointer = job_p->function_p(job_p->input_p);
 
-	// the id to the new thread
-	pthread_t thread_id = 0;
+	// update the status of the job to COMPLETED
+	if(!job_status_change(job_p, COMPLETED))
+		goto EXIT;
 
-	// create a new thread that runs, with an executor, executor_p
-	pthread_create(&thread_id, NULL, execute_wrapper, job_p);
+	// fulfill the promised output of the job
+	// result is only set for a COMPLETED job or a job that gets destroyed
+	if(job_p->promise_for_output != NULL)
+		set_promised_result(job_p->promise_for_output, output_pointer);
 
-	if(thread_id != 0)
-		pthread_detach(thread_id);
+	EXIT:;
 
-	return thread_id;
-
-	ERROR :;
-	return 0;
+	// set context to start executing the calling thread context
+	setcontext(&(job_p->thread_context));
 }
 
 int execute(job* job_p)
@@ -117,22 +107,21 @@ int execute(job* job_p)
 	if(!job_status_change(job_p, RUNNING))
 		goto ERROR;
 
-	// execute the job with its input, and result is stored at output
-	void* output_pointer = job_p->function_p(job_p->input_p);
+	// populate job_context of the job
+	job_p->job_context.uc_link = NULL;
+	job_p->job_context.uc_stack.ss_sp = malloc(job_p->stack_size);
+	job_p->job_context.uc_stack.ss_size = job_p->stack_size;
+	makecontext(&(job_p->job_context), separate_stack_job_wrapper, 1, job_p);
 
-	// update the status of the job to COMPLTED
-	if(!job_status_change(job_p, COMPLETED))
+	// swap context to start executing the job
+	// this call will populate the context of this thread in thread_context and load the job_context aswell
+	if(-1 == swapcontext(&(job_p->thread_context), &(job_p->job_context)))
 		goto ERROR;
 
-	// fulfill the promised output of the job
-	// result is only set for a COMPLETED job or a job that gets destroyed
-	if(job_p->promise_for_output != NULL)
-		set_promised_result(job_p->promise_for_output, output_pointer);
-
-	return 0;
+	return 1;
 
 	ERROR :;
-	return 1;
+	return 0;
 }
 
 void deinitialize_job(job* job_p)
