@@ -92,7 +92,7 @@ static void* execute_wrapper(void* job_v_p)
 
 pthread_t execute_async(job* job_p)
 {
-	// suppossed to update the status of the job to RUNNING
+	// update the status of the job to QUEUED
 	if(!job_status_change(job_p, QUEUED))
 		goto ERROR;
 
@@ -113,19 +113,19 @@ pthread_t execute_async(job* job_p)
 
 int execute(job* job_p)
 {
-	// suppossed to update the status of the job to RUNNING
+	// update the status of the job to RUNNING
 	if(!job_status_change(job_p, RUNNING))
 		goto ERROR;
 
 	// execute the job with its input, and result is stored at output
 	void* output_pointer = job_p->function_p(job_p->input_p);
 
-	// suppossed to update the status of the job to COMPLTED, 
-	// so uptill here the job is completed, but the result is not yet set
+	// update the status of the job to COMPLTED
 	if(!job_status_change(job_p, COMPLETED))
 		goto ERROR;
 
 	// fulfill the promised output of the job
+	// result is only set for a COMPLETED job or a job that gets destroyed
 	if(job_p->promise_for_output != NULL)
 		set_promised_result(job_p->promise_for_output, output_pointer);
 
