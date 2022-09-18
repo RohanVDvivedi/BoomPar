@@ -124,6 +124,23 @@ int execute(job* job_p)
 	return 0;
 }
 
+int yield(job* job_p)
+{
+	// update the status of the job to RUNNING
+	if(!job_status_change(job_p, WAITING))
+		goto ERROR;
+
+	// swap context to start executing the job
+	// this call will populate the context of this thread in thread_context and load the job_context aswell
+	if(-1 == swapcontext(&(job_p->job_context), &(job_p->thread_context)))
+		goto ERROR;
+
+	return 1;
+
+	ERROR :;
+	return 0;
+}
+
 void deinitialize_job(job* job_p)
 {
 	// a job deinitialized before reaching the state of completion is the one that failed

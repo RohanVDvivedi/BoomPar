@@ -74,7 +74,12 @@ int job_status_change(job* job_p, job_status job_new_status);
 // returns 1 if the job was executed, else returns 0
 // this function may be called only by a worker
 // after this function returns the job can be completed or waiting
-int execute(job* job);
+int execute(job* job_p);
+
+// this function must be called from inside the job
+// it puts the job in waiting status, and it switches to the thread_context
+// it does returns after the reason to wait is fulfilled
+int yield(job* job_p);
 
 // once deinitialized, a job variable can be reused, by using initialize_job function
 void deinitialize_job(job* job_p);
