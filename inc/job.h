@@ -15,6 +15,8 @@ enum job_status
 	COMPLETED = 4
 };
 
+// A job is not a concurrent object hence all accesses to the job object must be done by only 1 (worker) thread, at a time
+
 // you, the client is suppossed to free the input_p and promise_for_output pointers of any job
 typedef struct job job;
 struct job

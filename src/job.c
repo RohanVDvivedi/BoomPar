@@ -6,33 +6,51 @@
 ** BELOW FUNCTIONS are the only ones to be used for manipulating the stare of a job status
 */
 
-static job_status get_next_status(job_status status);
-
-static void set_to_next_status(job_status* status_p)
-{
-	(*status_p) = get_next_status(*status_p);
-}
-
 static job_status get_initial_state_status()
 {
 	return CREATED;
 }
 
-static job_status get_next_status(job_status status)
+/*
+ * all valid job status transitions
+	CREATED -> QUEUED -> RUNNING -> COMPLETED
+				^			 |
+				|		     |
+				+- WAITING <-+
+*/
+
+static int is_valid_job_status_transition(job_status curr, job_status next)
 {
-	switch(status)
+	switch(curr)
 	{
 		case CREATED :
-			return QUEUED;
+		{
+			if(next == QUEUED)
+				return 1;
+			break;
+		}
 		case QUEUED :
-			return RUNNING;
+		{
+			if(next == RUNNING)
+				return 1;
+			break;
+		}
+		case WAITING :
+		{
+			if(next == QUEUED)
+				return 1;
+			break;
+		}
 		case RUNNING :
-			return COMPLETED;
+		{
+			if(next == WAITING || next == COMPLETED)
+				return 1;
+			break;
+		}
 		case COMPLETED :
-			return COMPLETED;
-		default :
-			return CREATED;
+			return 0;
 	}
+	return 0;
 }
 
 /*
