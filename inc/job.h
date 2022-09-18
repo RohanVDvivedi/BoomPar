@@ -10,8 +10,9 @@ enum job_status
 {
 	CREATED   = 0,
 	QUEUED    = 1,
-	RUNNING   = 2,
-	COMPLETED = 3
+	WAITING   = 2,
+	RUNNING   = 3,
+	COMPLETED = 4
 };
 
 // you, the client is suppossed to free the input_p and promise_for_output pointers of any job
@@ -33,9 +34,6 @@ struct job
 	promise* promise_for_output;
 
 	// the above attributed of job are constant and do not change during the life=time of the job
-
-	// lock to protect transition of job from one status to another
-	pthread_mutex_t job_status_lock;
 
 	// the status of this job
 	job_status status;
