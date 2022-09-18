@@ -75,10 +75,9 @@ void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_
 int job_status_change(job* job_p, job_status job_new_status)
 {
 	int has_job_status_changed = 0;
-	job_status next_allowed_status = get_next_status(job_p->status);
-	if(next_allowed_status == job_new_status)
+	if(is_valid_job_status_transition(job_p->status, job_new_status))
 	{
-		set_to_next_status(&(job_p->status));
+		job_p->status = job_new_status;
 		has_job_status_changed = 1;
 	}
 	return has_job_status_changed;
