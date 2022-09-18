@@ -1,7 +1,6 @@
 JOB
  * add WAIT as a job state
  * add locks to manager job state
- * add a function to wait until a job is completed
  * fail delete or deinitialize of a job only if it is completed or is created/queued or is waiting
  * use linux api of user context to allow separate stacks for jobs
 
