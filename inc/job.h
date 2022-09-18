@@ -33,7 +33,7 @@ struct job
 	// promise has to be provided by the user, creating a job does not implicityly create promise
 	promise* promise_for_output;
 
-	// the above attributed of job are constant and do not change during the life=time of the job
+	// the above attributed of job are constant and do not change during the lifetime of the job
 
 	// the status of this job
 	job_status status;
