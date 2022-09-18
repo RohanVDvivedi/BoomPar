@@ -3,6 +3,7 @@
 
 #include<pthread.h>
 #include<promise.h>
+#include<yield_reason.h>
 
 #include<ucontext.h>
 
@@ -51,6 +52,10 @@ struct job
 
 	// context of the thread that ran this job
 	ucontext_t thread_context;
+
+	// while the job is waiting this pointer suggests why a job is waiting
+	// this pointer is only valid while the job is waiting
+	yield_reason* reason_to_yield;
 };
 
 // A job can be created/initialized with promise_for_output,
@@ -79,7 +84,7 @@ int execute(job* job_p);
 // this function must be called from inside the job
 // it puts the job in waiting status, and it switches to the thread_context
 // it does returns after the reason to wait is fulfilled
-int yield(job* job_p);
+int yield(job* job_p, yield_reason* reason_to_yield);
 
 // once deinitialized, a job variable can be reused, by using initialize_job function
 void deinitialize_job(job* job_p);

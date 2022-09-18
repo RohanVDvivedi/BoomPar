@@ -124,11 +124,14 @@ int execute(job* job_p)
 	return 0;
 }
 
-int yield(job* job_p)
+int yield(job* job_p, yield_reason* reason_to_yield)
 {
 	// update the status of the job to RUNNING
 	if(!job_status_change(job_p, WAITING))
 		goto ERROR;
+
+	// save the reason to yield so that the thread context can check for your fix
+	job_p->reason_to_yield = reason_to_yield;
 
 	// swap context to start executing the job
 	// this call will populate the context of this thread in thread_context and load the job_context aswell

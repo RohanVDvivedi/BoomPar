@@ -22,7 +22,7 @@ struct yield_reason
 		};
 		struct
 		{
-			unsigned long long int nano_seconds_to_wait;
+			unsigned long long int microseconds_to_wait;
 		};
 	};
 };
