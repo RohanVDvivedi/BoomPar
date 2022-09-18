@@ -77,9 +77,7 @@ pthread_t execute_async(job* job_p)
 {
 	// suppossed to update the status of the job to RUNNING
 	if(!job_status_change(job_p, QUEUED))
-	{
 		goto ERROR;
-	}
 
 	// the id to the new thread
 	pthread_t thread_id = 0;
@@ -88,9 +86,7 @@ pthread_t execute_async(job* job_p)
 	pthread_create(&thread_id, NULL, execute_wrapper, job_p);
 
 	if(thread_id != 0)
-	{
 		pthread_detach(thread_id);
-	}
 
 	return thread_id;
 
@@ -102,9 +98,7 @@ int execute(job* job_p)
 {
 	// suppossed to update the status of the job to RUNNING
 	if(!job_status_change(job_p, RUNNING))
-	{
 		goto ERROR;
-	}
 
 	// execute the job with its input, and result is stored at output
 	void* output_pointer = job_p->function_p(job_p->input_p);
@@ -112,15 +106,11 @@ int execute(job* job_p)
 	// suppossed to update the status of the job to COMPLTED, 
 	// so uptill here the job is completed, but the result is not yet set
 	if(!job_status_change(job_p, COMPLETED))
-	{
 		goto ERROR;
-	}
 
 	// fulfill the promised output of the job
 	if(job_p->promise_for_output != NULL)
-	{
 		set_promised_result(job_p->promise_for_output, output_pointer);
-	}
 
 	return 0;
 
@@ -135,6 +125,7 @@ void deinitialize_job(job* job_p)
 	if(job_p->promise_for_output != NULL && job_p->status != COMPLETED)
 		set_promised_result(job_p->promise_for_output, NULL); // this function succeeds only if the job hadn't yet submitted its promised result
 
+	// reset all job attributes
 	job_p->promise_for_output = NULL;
 	job_p->status = get_initial_state_status();
 	job_p->input_p = NULL;
