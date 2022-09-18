@@ -18,9 +18,6 @@ enum job_status
 typedef struct job job;
 struct job
 {
-	// the status of this job
-	job_status status;
-
 	// pointer to the input pramameter pointed to by input_p
 	// that will be provided to the function for execution,
 	// which will in turn produce output pointed to by pointer output_p
@@ -34,6 +31,14 @@ struct job
 	// once the job is executed, the output of the job is set in this promise
 	// promise has to be provided by the user, creating a job does not implicityly create promise
 	promise* promise_for_output;
+
+	// the above attributed of job are constant and do not change during the life=time of the job
+
+	// lock to protect transition of job from one status to another
+	pthread_mutex_t job_status_lock;
+
+	// the status of this job
+	job_status status;
 };
 
 // A job can be created/initialized with promise_for_output,
