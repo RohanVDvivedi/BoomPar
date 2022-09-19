@@ -1,9 +1,19 @@
+SMART_POINTER
+ * pointer that deletes what ever it is pointing to after its reference counter reaches 0
+ * api like: create_data_value, get_data_value, increment_reference_counter and decrement_reference_counter
+ * it stores pointer to synchronous reference counter, pointer to actual value
+ * synchronous reference counter stores an unsigned long long int reference counter, pointer to the allocator (cutlery api) and to a pointer to deinitializer function
+
+SYNC_PIPE
+ * rename dstream of cutlery to dpipe
+ * implement sync_pipe api
+
+SYNC_READER and SYNC_WRITER
+ * providing reader and writer interface functions
+
 JOB
  * add WAIT as a job state
  * use linux api of user context to allow separate stacks for jobs
-
-SYNC_JOB_STREAM
- * implement sync_stream api, using pthread_spin_lock
 
 EXECUTOR
  * create a job waiters hashtable where they can wait in the executor on sync_stream or a timer
@@ -12,9 +22,6 @@ EXECUTOR
 WORKER
  * use callbacks in the worker, and pass then from executor
  * reduce the stack size of worker threads saving memory
-
-SMART_POINTER
- * pointer that deletes what ever it is pointing to after its reference counter reaches 0
 
 FUTURE
  * yield(time_period_in_nano_seconds) allows a running job to go on a wait, 0 implies a voluntary relinquish of cpu, we will need a job timer heap
