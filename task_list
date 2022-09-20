@@ -2,7 +2,6 @@ SYNC_READER and SYNC_WRITER
  * providing reader and writer interface functions
 
 SYNC_PIPE
- * rename dstream of cutlery to dpipe
  * implement sync_pipe api
  * return a sync_reader and sync_writer objects
 
@@ -12,3 +11,6 @@ SMART_POINTER
  * api like: create_data_value, get_data_value, increment_reference_counter and decrement_reference_counter
  * it stores pointer to synchronous reference counter, pointer to actual value
  * synchronous reference counter stores an unsigned long long int reference counter, pointer to the allocator (cutlery api) and to a pointer to deinitializer function
+
+COROUTINE
+ * implement them in new library
