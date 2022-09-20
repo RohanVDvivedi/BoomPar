@@ -14,5 +14,5 @@ SMART_POINTER
 
 COROUTINE
  * SYNC_INTER_COROUTINE_PIPE - a duplicate of sync_pipe
- * COROUTINE_EXECUTOR - a duplicate of executor but to run only coroutines
+ * COROUTINE_EXECUTOR - a duplicate of fixed thread count executor but to run only coroutines
  * COROUTINE - a wrapper for functions with void func(void* param)
