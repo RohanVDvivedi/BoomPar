@@ -30,11 +30,36 @@ typedef struct smart_pointer smart_pointer;
 struct smart_pointer
 {
 	// pointer to actual data value
+	// this must be and must remain the first attribute of the smart_pointer for easy access to it, you will understand why later
 	void* data_p;
 
 	// the below attribute is an internal implementation of the smart_pointer
 	// you may not access it
 	struct smart_pointer_internals* spnt_p;
+
+	// for a NULL smart_pointer both the above attributes will be NULL
 };
+
+// creates a new data using the provided smart_pointer_builder
+smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder);
+
+/* to access data_p you may do the following
+
+	smart_pointer sp;
+
+	if( (( <your_data_type> *)sp) == NULL )
+		printf("smart_pointer sp is NULL\n");
+
+	the above lines are perfectly valid because the data_p, i.e. pointer to your actual data is the first attribute of the smart_pointer
+*/
+
+// create another smart_pointer that points to the same data_p thet (*sp_p) points to, and return that smart_pointer
+// it will increase the reference counter in sp_p->spnt_p and returns (*sp_p)
+smart_pointer duplicate_smart_pointer(const smart_pointer* sp_p);
+
+// destroy returns 1 if this call freed the data at data_p
+// it will always return 0 for a NULL smart_pointer
+// it will decrement the reference counter and if the reference count is 0 then the smart_pointer sp_p is set to NULL (i.e. data_p and spnt_p are made NULL)
+int destroy_smart_pointer(smart_pointer* sp_p);
 
 #endif
