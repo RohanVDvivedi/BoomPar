@@ -1,4 +1,4 @@
-READER and WRITER
+Create default file descriptor streams
  * providing reader and writer interface functions
 
 SYNC_PIPE

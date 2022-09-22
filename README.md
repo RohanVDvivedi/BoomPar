@@ -27,6 +27,8 @@ This is a multi threading library in C, built as an abstraction layer over pthre
    * `#include<promise.h>`
    * `#include<executor.h>`
 
+   * `#include<stream.h>` (an easy to use wrapper over linux file descriptors)
+
    * `#include<worker.h>` and `#include<sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
 
 ## Instructions for uninstalling library
