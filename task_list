@@ -1,4 +1,4 @@
-REFERENCE_COUNTER
+SMART_POINTER
  * pointer that deletes what ever it is pointing to after its reference counter reaches 0
  * api like: create_data_value, get_data_value, increment_reference_counter and decrement_reference_counter
  * it stores pointer to synchronous reference counter, pointer to actual value
