@@ -1,8 +1,8 @@
 SMART_POINTER
  * smart_pointer type stores allocator, initializer and deinitializer functions
  * pointer that deletes what ever it is pointing to after its reference counter reaches 0
- * api like: create_smart_pointer(smart_pointer_type), get_data_value(smart_pointer), duplicate_smart_pointer(smart_pointer) and destroy_smart_pointer(smart_pointer)
- * it stores pointer to concurrent reference counter, pointer to actual value
+ * api like: smart_pointer create_smart_pointer(const smart_pointer_type*), void* get_data_value(const smart_pointer*), smart_pointer duplicate_smart_pointer(const smart_pointer*) and int destroy_smart_pointer(smart_pointer*) /* destroy returns true if this call freed the data value memory */.
+ * it stores pointer to concurrent reference counter and pointer to actual data (a deinitialized/destroyed or a NULL smart_pointer will have both the values NULL)
  * concurrent reference counter stores an a mutex lock, an unsigned long long int reference counter, pointer to the smart_pointer_type
 
 SYNC_COROUTINE_PIPE
