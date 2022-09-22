@@ -1,18 +1,12 @@
-READER and WRITER
- * providing reader and writer interface functions
-
-SYNC_PIPE
- * implement sync_pipe api
- * return a reader and writer objects
-
-
-SMART_POINTER
+REFERENCE_COUNTER
  * pointer that deletes what ever it is pointing to after its reference counter reaches 0
  * api like: create_data_value, get_data_value, increment_reference_counter and decrement_reference_counter
  * it stores pointer to synchronous reference counter, pointer to actual value
  * synchronous reference counter stores an unsigned long long int reference counter, pointer to the allocator (cutlery api) and to a pointer to deinitializer function or a pointer to delete function
 
+SYNC_COROUTINE_PIPE
+ * implement sync_pipe api
+
 COROUTINE
- * SYNC_INTER_COROUTINE_PIPE - a duplicate of sync_pipe
- * COROUTINE_EXECUTOR - a duplicate of fixed thread count executor but to run only coroutines
+ * COROUTINE_EXECUTOR - a duplicate of fixed thread count executor but to run only coroutines, it starts all threads at once
  * COROUTINE - a wrapper for functions with void func(void* param)
