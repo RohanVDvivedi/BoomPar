@@ -5,7 +5,7 @@ SMART_POINTER
  * synchronous reference counter stores an unsigned long long int reference counter, pointer to the allocator (cutlery api) and to a pointer to deinitializer function or a pointer to delete function
 
 SYNC_COROUTINE_PIPE
- * implement sync_pipe api
+ * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
 
 COROUTINE
  * COROUTINE_EXECUTOR - a duplicate of fixed thread count executor but to run only coroutines, it starts all threads at once
