@@ -57,6 +57,8 @@ smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder);
 // it will increase the reference counter in sp_p->spnt_p and returns (*sp_p)
 smart_pointer duplicate_smart_pointer(const smart_pointer* sp_p);
 
+// NOTE:: A SMART_POINTER MUST ONLY BE CREATED THE ABOVE 2 METHODS, AND AFTER USE IT MUST BE DESTROYED BY THE METHOD BELOW
+
 // destroy returns 1 if this call freed the data at data_p
 // it will always return 0 for a NULL smart_pointer
 // it will decrement the reference counter and if the reference count is 0 then the smart_pointer sp_p is set to NULL (i.e. data_p and spnt_p are made NULL)
