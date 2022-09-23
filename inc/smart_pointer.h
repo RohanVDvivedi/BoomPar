@@ -64,14 +64,14 @@ smart_pointer duplicate_smart_pointer(const smart_pointer* sp_p);
 // it will decrement the reference counter and if the reference count is 0 then the smart_pointer sp_p is set to NULL (i.e. data_p and spnt_p are made NULL)
 int destroy_smart_pointer(smart_pointer* sp_p);
 
-// below function can be used to repoint sp_p from its current value of data_p
-// to a new value as found in dup_sp_from_p
-void repoint_smart_pointer(smart_pointer* sp_p, const smart_pointer* dup_sp_from_p);
+// below function can be used to reassign a smart_pointer sp_p from its current value of data_p
+// to a new value of data_p as found in sp_from_p (sp_from_p->data_p)
+void reassign_smart_pointer(smart_pointer* sp_p, const smart_pointer* sp_from_p);
 
-/* this above function is equivalent to floowing calls (in exact order) ::
+/* this above function is equivalent to following calls (in exact same order) ::
 
 		destroy_smart_pointer(sp_p);
-		(*sp_p) = duplicate_smart_pointer(dup_sp_from_p);
+		(*sp_p) = duplicate_smart_pointer(sp_from_p);
 */
 
 #endif
