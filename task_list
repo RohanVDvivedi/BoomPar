@@ -1,5 +1,6 @@
 SMART_POINTER
- * pointer that deletes what ever it is pointing to after its reference counter reaches 0
+ * write testcases for smart_pointer
+ * moving forward make promise pointer into a smart pointer
 
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
