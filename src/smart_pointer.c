@@ -1,6 +1,5 @@
 #include<smart_pointer.h>
 
-#include<stdlib.h>
 #include<pthread.h>
 
 const smart_pointer_builder initialize_smart_pointer_builder(memory_allocator allocator, unsigned int data_size, void (*default_initializer)(void* data_p), void (*deinitializer)(void* data_p))
@@ -14,15 +13,20 @@ const smart_pointer_builder initialize_smart_pointer_builder(memory_allocator al
 
 static void* new_data(smart_pointer_builder const * sp_builder_p)
 {
-	void* data_p = malloc(sp_builder_p->data_size);
+	// allocate data
+	unsigned int data_size = sp_builder_p->data_size;
+	void* data_p = allocate(sp_builder_p->allocator, &(data_size));
+
+	// and run the default initializer
 	sp_builder_p->default_initializer(data_p);
 	return data_p;
 }
 
 static void delete_data(void* data_p, smart_pointer_builder const * sp_builder_p)
 {
+	// deinitialize and deallocate data
 	sp_builder_p->deinitializer(data_p);
-	free(data_p);
+	deallocate(sp_builder_p->allocator, data_p, sp_builder_p->data_size);
 }
 
 typedef struct smart_pointer_internals smart_pointer_internals;
@@ -42,17 +46,22 @@ static const smart_pointer NULL_smart_pointer = {NULL, NULL};
 
 static smart_pointer_internals* new_smart_pointer_internals(smart_pointer_builder const * sp_builder_p)
 {
-	smart_pointer_internals* spnt_p = malloc(sizeof(smart_pointer_internals));
+	// allocate smart_pointer internals
+	unsigned int spnt_size = sizeof(smart_pointer_internals);
+	smart_pointer_internals* spnt_p = allocate(sp_builder_p->allocator, &spnt_size);
+
+	// initialize its attributes
 	spnt_p->sp_builder_p = sp_builder_p;
 	pthread_mutex_init(&(spnt_p->reference_count_lock), NULL);
 	spnt_p->reference_count = 1;
+
 	return spnt_p;
 }
 
 static void delete_smart_pointer_internals(smart_pointer_internals* spnt_p)
 {
 	pthread_mutex_destroy(&(spnt_p->reference_count_lock));
-	free(spnt_p);
+	deallocate(spnt_p->sp_builder_p->allocator, spnt_p, spnt_p->sp_builder_p->data_size);
 }
 
 int is_smart_pointer_NULL(const smart_pointer* sp_p)
