@@ -1,8 +1,10 @@
 SMART_POINTER
+ * use spinlock instead of mutex for smart_pointer
  * create a smart_pointer for int as an illustration for implementation of smart_pointer capable type and use it in testcases for smart_pointer, using it as job parameters
 
 FUTURE
- * make job input params, output values and the promise as smart_pointer objects
+ * make job input params, output values and the promise as smart_pointer objects, instead of raw pointers
+ * new job definition => smart_pointer func(smart_pointer input)
 
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
