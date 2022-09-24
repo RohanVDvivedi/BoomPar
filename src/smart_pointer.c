@@ -64,9 +64,17 @@ static void delete_smart_pointer_internals(smart_pointer_internals* spnt_p)
 	deallocate(spnt_p->sp_builder_p->allocator, spnt_p, spnt_p->sp_builder_p->data_size);
 }
 
-int is_smart_pointer_NULL(const smart_pointer* sp_p)
+int is_smart_pointer_NULL(smart_pointer const * sp_p)
 {
 	return (sp_p->data_p == NULL) || (sp_p->spnt_p == NULL);
+}
+
+int is_smart_pointer_of_type(smart_pointer const * sp_p, smart_pointer_builder const * sp_builder_p)
+{
+	if(is_smart_pointer_NULL(sp_p))
+		return 0;
+
+	return sp_p->spnt_p->sp_builder_p == sp_builder_p;
 }
 
 smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder_p)
@@ -122,7 +130,7 @@ int destroy_smart_pointer(smart_pointer* sp_p)
 	return 0;
 }
 
-void reassign_smart_pointer(smart_pointer* sp_p, const smart_pointer* sp_from_p)
+void reassign_smart_pointer(smart_pointer* sp_p, smart_pointer const * sp_from_p)
 {
 	destroy_smart_pointer(sp_p);
 	*sp_p = duplicate_smart_pointer(sp_from_p);

@@ -57,11 +57,14 @@ smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder_p);
 */
 
 // checks if the smart_pointeris NULL, you can also check this using the code shown above
-int is_smart_pointer_NULL(const smart_pointer* sp_p);
+int is_smart_pointer_NULL(smart_pointer const * sp_p);
+
+// checks if a smart_pointer is of a given type by checking its spnt_p->sp_builder_p
+int is_smart_pointer_of_type(smart_pointer const * sp_p, smart_pointer_builder const * sp_builder_p);
 
 // create another smart_pointer that points to the same data_p thet (*sp_p) points to, and return that smart_pointer
 // it will increase the reference counter in sp_p->spnt_p and returns (*sp_p)
-smart_pointer duplicate_smart_pointer(const smart_pointer* sp_p);
+smart_pointer duplicate_smart_pointer(smart_pointer const * sp_p);
 
 // NOTE:: A SMART_POINTER MUST ONLY BE CREATED THE ABOVE 3 METHODS, AND AFTER USE IT MUST BE DESTROYED BY THE METHOD BELOW
 
@@ -72,7 +75,7 @@ int destroy_smart_pointer(smart_pointer* sp_p);
 
 // below function can be used to reassign a smart_pointer sp_p from its current value of data_p
 // to a new value of data_p as found in sp_from_p (sp_from_p->data_p)
-void reassign_smart_pointer(smart_pointer* sp_p, const smart_pointer* sp_from_p);
+void reassign_smart_pointer(smart_pointer* sp_p, smart_pointer const * sp_from_p);
 
 /* this above function is equivalent to following calls (in exact same order) ::
 
