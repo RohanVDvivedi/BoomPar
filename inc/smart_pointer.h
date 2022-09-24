@@ -20,8 +20,11 @@ struct smart_pointer_builder
 
 	// the function that can be used to deinitialize the data (do not free the memory here, only destroy its members)
 	void (*deinitializer)(void* data_p);
+
+	// NOTE:: default_initializer and deinitializer may be NULL, in which case they will not be used
 };
 
+// default_initializer and deinitializer may be NULL, in which case they will not be used
 const smart_pointer_builder initialize_smart_pointer_builder(memory_allocator allocator, unsigned int data_size, void (*default_initializer)(void* data_p), void (*deinitializer)(void* data_p));
 
 typedef struct smart_pointer_internals smart_pointer_internals;
@@ -41,7 +44,7 @@ struct smart_pointer
 };
 
 // creates a new data using the provided smart_pointer_builder
-smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder);
+smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder_p);
 
 /* to access data_p you may do the following
 
@@ -52,6 +55,9 @@ smart_pointer create_smart_pointer(smart_pointer_builder const * sp_builder);
 
 	the above lines are perfectly valid because the data_p, i.e. pointer to your actual data is the first attribute of the smart_pointer
 */
+
+// checks if the smart_pointeris NULL, you can also check this using the code shown above
+int is_smart_pointer_NULL(const smart_pointer* sp_p);
 
 // create another smart_pointer that points to the same data_p thet (*sp_p) points to, and return that smart_pointer
 // it will increase the reference counter in sp_p->spnt_p and returns (*sp_p)
