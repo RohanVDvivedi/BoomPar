@@ -32,8 +32,6 @@ struct promise
 
 promise* new_promise();
 
-void initialize_promise(promise* p);
-
 // set_result must be called only once after the promise has been initialized or newly created with get_promise function
 // it will fail with a 0, if the promised result was already set
 int set_promised_result(promise* p, void* res);
@@ -47,8 +45,6 @@ int is_promised_result_ready(promise* p);
 // it sets the promise_completed_queue, if it is not alread set
 // if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
 int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue);
-
-void deinitialize_promise(promise* p);
 
 void delete_promise(promise* p);
 

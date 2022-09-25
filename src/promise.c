@@ -8,7 +8,7 @@ promise* new_promise()
 	return p;
 }
 
-void initialize_promise(promise* p)
+static void initialize_promise(promise* p)
 {
 	p->output_result_ready = 0;
 	p->output_result = NULL;
@@ -110,7 +110,7 @@ int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
 	return was_promise_completed_queue_set;
 }
 
-void deinitialize_promise(promise* p)
+static void deinitialize_promise(promise* p)
 {
 	p->promise_completed_queue = NULL;
 	p->output_result_ready = 0;
