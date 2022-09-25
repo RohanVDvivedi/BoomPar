@@ -1,9 +1,9 @@
-EMBEDDED_REFERENCE_COUNTER
- * make promise reference counted
-
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
 
 COROUTINE
  * COROUTINE_EXECUTOR - a duplicate of fixed thread count executor but to run only coroutines, it starts all threads at once
  * COROUTINE - a wrapper for functions with void func(void* param)
+
+EMBEDDED_REFERENCE_COUNTER OR SMART_POINTER
+ * make promise reference counted
