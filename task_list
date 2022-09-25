@@ -1,5 +1,4 @@
 SMART_POINTER
- * use spinlock instead of mutex for smart_pointer
  * create a smart_pointer for int as an illustration for implementation of smart_pointer capable type and use it in testcases for smart_pointer, using it as job parameters
 
 FUTURE
