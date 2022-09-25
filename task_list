@@ -1,5 +1,5 @@
 SMART_POINTER
- * create a smart_pointer for int as an illustration for implementation of smart_pointer capable type and use it in testcases for smart_pointer, using it as job parameters
+ * use smart_pointed_int in testcases for smart_pointer, using it as job parameters
 
 FUTURE
  * make job input params, output values and the promise as smart_pointer objects, instead of raw pointers
