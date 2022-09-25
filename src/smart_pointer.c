@@ -35,7 +35,7 @@ struct smart_pointer_internals
 	const smart_pointer_builder* sp_builder_p;
 
 	// this lock is only for the reference counter
-	pthread_mutex_t reference_count_lock;
+	pthread_spinlock_t reference_count_lock;
 
 	// the actual reference counter of this pointer
 	// it indicates the number of smart_pointers that point to data_p at any point in time
@@ -52,7 +52,7 @@ static smart_pointer_internals* new_smart_pointer_internals(smart_pointer_builde
 
 	// initialize its attributes
 	spnt_p->sp_builder_p = sp_builder_p;
-	pthread_mutex_init(&(spnt_p->reference_count_lock), NULL);
+	pthread_spin_init(&(spnt_p->reference_count_lock), PTHREAD_PROCESS_PRIVATE);
 	spnt_p->reference_count = 1;
 
 	return spnt_p;
@@ -60,7 +60,7 @@ static smart_pointer_internals* new_smart_pointer_internals(smart_pointer_builde
 
 static void delete_smart_pointer_internals(smart_pointer_internals* spnt_p)
 {
-	pthread_mutex_destroy(&(spnt_p->reference_count_lock));
+	pthread_spin_destroy(&(spnt_p->reference_count_lock));
 	deallocate(spnt_p->sp_builder_p->allocator, spnt_p, spnt_p->sp_builder_p->data_size);
 }
 
@@ -96,9 +96,9 @@ smart_pointer duplicate_smart_pointer(smart_pointer const * sp_p)
 		return NULL_smart_pointer;
 
 	// increment the reference counter
-	pthread_mutex_lock(&(sp_p->spnt_p->reference_count_lock));
+	pthread_spin_lock(&(sp_p->spnt_p->reference_count_lock));
 	sp_p->spnt_p->reference_count++;
-	pthread_mutex_unlock(&(sp_p->spnt_p->reference_count_lock));
+	pthread_spin_unlock(&(sp_p->spnt_p->reference_count_lock));
 
 	return *sp_p;
 }
@@ -109,9 +109,9 @@ int destroy_smart_pointer(smart_pointer* sp_p)
 		return 0;
 
 	// decrement the reference counter, and cache the new value
-	pthread_mutex_lock(&(sp_p->spnt_p->reference_count_lock));
+	pthread_spin_lock(&(sp_p->spnt_p->reference_count_lock));
 	unsigned int reference_count = --sp_p->spnt_p->reference_count;
-	pthread_mutex_unlock(&(sp_p->spnt_p->reference_count_lock));
+	pthread_spin_unlock(&(sp_p->spnt_p->reference_count_lock));
 
 	// use the cache value to check if you are the one that made the reference count 0
 	if(reference_count == 0)
