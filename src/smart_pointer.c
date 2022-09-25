@@ -17,15 +17,19 @@ static void* new_data(smart_pointer_builder const * sp_builder_p)
 	unsigned int data_size = sp_builder_p->data_size;
 	void* data_p = allocate(sp_builder_p->allocator, &(data_size));
 
-	// and run the default initializer
-	sp_builder_p->default_initializer(data_p);
+	// and run the default initializer, if it exists
+	if(sp_builder_p->default_initializer)
+		sp_builder_p->default_initializer(data_p);
 	return data_p;
 }
 
 static void delete_data(void* data_p, smart_pointer_builder const * sp_builder_p)
 {
-	// deinitialize and deallocate data
-	sp_builder_p->deinitializer(data_p);
+	// deinitialize, if deinitializer exists
+	if(sp_builder_p->deinitializer)
+		sp_builder_p->deinitializer(data_p);
+
+	// and deallocate data
 	deallocate(sp_builder_p->allocator, data_p, sp_builder_p->data_size);
 }
 
