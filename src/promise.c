@@ -45,7 +45,11 @@ int set_promised_result(promise* p, void* res)
 
 	// push the promise object if it was completed and the promise_completed_queue exists
 	if(push_promise_to)
-		push_sync_queue_blocking(push_promise_to, p, 0);
+	{
+		void* p_copy = get_shareable_reference_copy(p);
+		if(!push_sync_queue_blocking(push_promise_to, p_copy, 0))
+			delete_promise(p_copy);
+	}
 
 	return was_promised_result_set;
 }
@@ -96,7 +100,11 @@ int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
 
 	// else if the result was ready then we push this promise to the promise_completed_queue
 	if(is_result_ready && was_promise_completed_queue_set)
-		push_sync_queue_blocking(promise_completed_queue, p, 0);
+	{
+		void* p_copy = get_shareable_reference_copy(p);
+		if(!push_sync_queue_blocking(promise_completed_queue, p_copy, 0))
+			delete_promise(p_copy);
+	}
 
 	// return if the promise_completed_queue was set
 	return was_promise_completed_queue_set;
