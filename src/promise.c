@@ -1,13 +1,5 @@
 #include<promise.h>
 
-promise* new_promise()
-{
-	promise* p = malloc(sizeof(promise));
-	initialize_reference_counter(p);
-	initialize_promise(p);
-	return p;
-}
-
 static void initialize_promise(promise* p)
 {
 	p->output_result_ready = 0;
@@ -15,6 +7,14 @@ static void initialize_promise(promise* p)
 	pthread_mutex_init(&(p->promise_lock), NULL);
 	pthread_cond_init(&(p->promise_wait), NULL);
 	p->promise_completed_queue = NULL;
+}
+
+promise* new_promise()
+{
+	promise* p = malloc(sizeof(promise));
+	initialize_reference_counter(p);
+	initialize_promise(p);
+	return p;
 }
 
 int set_promised_result(promise* p, void* res)
