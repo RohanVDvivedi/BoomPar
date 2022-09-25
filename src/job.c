@@ -1,5 +1,7 @@
 #include<job.h>
 
+#include<embedded_reference_counter.h>
+
 #include<stdlib.h>
 
 /*
@@ -51,7 +53,7 @@ void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_
 	job_p->status = get_initial_state_status();
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
-	job_p->promise_for_output = promise_for_output;
+	job_p->promise_for_output = get_shareable_reference_copy(promise_for_output);
 }
 
 int job_status_change(job* job_p, job_status job_new_status)
@@ -132,9 +134,10 @@ void deinitialize_job(job* job_p)
 {
 	// a job deinitialized before reaching the state of completion is the one that failed
 	// a failed job sets its promised result to NULL
-	if(job_p->promise_for_output != NULL && job_p->status != COMPLETED)
+	if(job_p->promise_for_output != NULL)
 		set_promised_result(job_p->promise_for_output, NULL); // this function succeeds only if the job hadn't yet submitted its promised result
 
+	delete_promise(job_p->promise_for_output);
 	job_p->promise_for_output = NULL;
 	job_p->status = get_initial_state_status();
 	job_p->input_p = NULL;
