@@ -3,6 +3,7 @@
 promise* new_promise()
 {
 	promise* p = malloc(sizeof(promise));
+	initialize_reference_counter(p);
 	initialize_promise(p);
 	return p;
 }
@@ -112,6 +113,8 @@ void deinitialize_promise(promise* p)
 
 void delete_promise(promise* p)
 {
+	if(decrement_reference_counter(p))
+		return;
 	deinitialize_promise(p);
 	free(p);
 }

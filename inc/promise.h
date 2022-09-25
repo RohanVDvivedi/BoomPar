@@ -5,10 +5,14 @@
 #include<stdlib.h>
 
 #include<sync_queue.h>
+#include<embedded_reference_counter.h>
 
 typedef struct promise promise;
 struct promise
 {
+	// promise is reference counted
+	reference_counter embed_ref_cntr;
+
 	// signifies whether output result is set by the producer threads
 	// this value is initialized as 0 and can only be fliped from 0 -> 1
 	// IT SHOULD/WILL NOT BE FLIPPED BACK AND FROTH
