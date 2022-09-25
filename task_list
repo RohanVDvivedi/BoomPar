@@ -1,5 +1,4 @@
-SMART_POINTER
- * use smart_pointed_int in testcases for smart_pointer, using it as job parameters
+REFERENCE_COUNTER
 
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access

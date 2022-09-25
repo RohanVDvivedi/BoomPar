@@ -26,7 +26,8 @@ This is a multi threading library in C, built as an abstraction layer over pthre
    * `#include<job.h>`
    * `#include<promise.h>`
    * `#include<executor.h>`
-   * `#include<smart_pointer.h>`
+
+   * `#include<embedded_reference_counter.h>` -> this struct can be used for building your own reference counted type, see promise.h and promise.c for an issultration. i.e. promise is a reference counted type.
 
    * `#include<worker.h>` and `#include<sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
 
