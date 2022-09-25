@@ -1,4 +1,4 @@
-REFERENCE_COUNTER
+EMBEDDED_REFERENCE_COUNTER
 
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
