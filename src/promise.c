@@ -1,20 +1,19 @@
 #include<promise.h>
 
-static void initialize_promise(promise* p)
+promise* new_promise()
+{
+	promise* p = malloc(sizeof(promise));
+	initialize_promise(p);
+	return p;
+}
+
+void initialize_promise(promise* p)
 {
 	p->output_result_ready = 0;
 	p->output_result = NULL;
 	pthread_mutex_init(&(p->promise_lock), NULL);
 	pthread_cond_init(&(p->promise_wait), NULL);
 	p->promise_completed_queue = NULL;
-}
-
-promise* new_promise()
-{
-	promise* p = malloc(sizeof(promise));
-	initialize_reference_counter(p);
-	initialize_promise(p);
-	return p;
 }
 
 int set_promised_result(promise* p, void* res)
@@ -45,11 +44,7 @@ int set_promised_result(promise* p, void* res)
 
 	// push the promise object if it was completed and the promise_completed_queue exists
 	if(push_promise_to)
-	{
-		void* p_copy = get_shareable_reference_copy(p);
-		if(!push_sync_queue_blocking(push_promise_to, p_copy, 0))
-			delete_promise(p_copy);
-	}
+		push_sync_queue_blocking(push_promise_to, p, 0);
 
 	return was_promised_result_set;
 }
@@ -100,17 +95,13 @@ int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue)
 
 	// else if the result was ready then we push this promise to the promise_completed_queue
 	if(is_result_ready && was_promise_completed_queue_set)
-	{
-		void* p_copy = get_shareable_reference_copy(p);
-		if(!push_sync_queue_blocking(promise_completed_queue, p_copy, 0))
-			delete_promise(p_copy);
-	}
+		push_sync_queue_blocking(promise_completed_queue, p, 0);
 
 	// return if the promise_completed_queue was set
 	return was_promise_completed_queue_set;
 }
 
-static void deinitialize_promise(promise* p)
+void deinitialize_promise(promise* p)
 {
 	p->promise_completed_queue = NULL;
 	p->output_result_ready = 0;
@@ -121,8 +112,6 @@ static void deinitialize_promise(promise* p)
 
 void delete_promise(promise* p)
 {
-	if(decrement_reference_counter(p))
-		return;
 	deinitialize_promise(p);
 	free(p);
 }
