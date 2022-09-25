@@ -1,4 +1,5 @@
 EMBEDDED_REFERENCE_COUNTER
+ * make promise reference counted
 
 SYNC_COROUTINE_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
