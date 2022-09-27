@@ -29,6 +29,8 @@ void worker_finish(void* args)
 
 #define TEST_JOBs_COUNT 120
 
+#define MAX_JOB_QUEUE_CAPACITY  (TEST_JOBs_COUNT / 4)
+
 // wait time out on empty job = 3 secs, 50 milli seconds
 #define SECONDS 	3
 #define MILLIS 		50
@@ -39,7 +41,7 @@ int main()
 {
 	printf("Main thread : %d\n", (int)pthread_self());
 
-	executor* executor_p = new_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
+	executor* executor_p = new_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
 
 	// to store the references to all the input integers that we create, for each and every job
 	int jobs_input_param[TEST_JOBs_COUNT];
@@ -49,7 +51,7 @@ int main()
 		jobs_input_param[i] = i;
 
 	// create a promise_completed_queue
-	sync_queue* promise_completed_queue = new_sync_queue(12, 0);
+	sync_queue* promise_completed_queue = new_sync_queue(12, (TEST_JOBs_COUNT / 3) + 16);
 
 	// submit jobs, one by one
 	for(int i=0; i < TEST_JOBs_COUNT;i++)
