@@ -63,7 +63,7 @@ int main()
 			set_promise_completed_queue(promised_result, promise_completed_queue);
 		}
 
-		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result))
+		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result, 0))
 			printf("Job submission failed with input %d\n", i);
 	}
 	printf("finished queueing all jobs\n");
