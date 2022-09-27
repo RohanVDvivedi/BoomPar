@@ -52,7 +52,7 @@ pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_e
 	return thread_id;
 }
 
-int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds)
 {
 	int was_job_queued = 0;
 
@@ -63,7 +63,7 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	// if this update of job status is successfull, then only we go forward and queue the job
 	if(job_status_change(job_p, QUEUED))
 	{
-		was_job_queued = push_sync_queue_non_blocking(job_queue, job_p);
+		was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
 	}
 
 	if(was_job_queued == 0)
@@ -74,9 +74,9 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	return was_job_queued;
 }
 
-int submit_stop_worker(sync_queue* job_queue)
+int submit_stop_worker(sync_queue* job_queue, unsigned long long int submission_timeout_in_microseconds)
 {
-	return push_sync_queue_blocking(job_queue, NULL, 0);
+	return push_sync_queue_blocking(job_queue, NULL, submission_timeout_in_microseconds);
 }
 
 void discard_leftover_jobs(sync_queue* job_queue)

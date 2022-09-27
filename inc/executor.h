@@ -72,7 +72,7 @@ executor* new_executor(executor_type type, unsigned int maximum_threads, unsigne
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // job submission fails if any of the thread has called, shutdown_executor() on this executor
 // if the promise_for_output may be NULL, if you do not wish to wait for completion of the job
-int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
+int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds);
 
 // the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue

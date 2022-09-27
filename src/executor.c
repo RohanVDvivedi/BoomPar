@@ -118,14 +118,14 @@ executor* new_executor(executor_type type, unsigned int maximum_threads, unsigne
 	return executor_p;
 }
 
-int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds)
 {
 	if(is_shutdown_called(executor_p))
 	{
 		return 0;
 	}
 
-	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output);
+	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output, submission_timeout_in_microseconds);
 
 	if(was_job_queued && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
 	{
@@ -151,7 +151,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 
 	for(unsigned int i = 0; i < executor_p->active_worker_count;i++)
 	{
-		submit_stop_worker(&(executor_p->job_queue));
+		submit_stop_worker(&(executor_p->job_queue), 0);
 	}
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));

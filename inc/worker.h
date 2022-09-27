@@ -24,14 +24,13 @@ pthread_t start_worker(
 // * optional parameters to the function
 
 // create and submit job (with/without promise), returns 1 if the job was successfully submitted to the worker
-// this push will be non_blocking, this ensures that we don't over work the system, hence choose the max_capacity of the sync_queue wisely
 // function fails and returns 0 if, the job_queue is blocking and it is full
-int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output);
+int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds);
 
-// The function below will submit a NULL in the job_queue (it will block indefinitely (if the queue is full), until stop is pushed)
+// The function below will submit a NULL in the job_queue
 // and this will kill any one worker that dequeues this NULL job
-// It returns 1, if NULL was pushed, else it will return NULL
-int submit_stop_worker(sync_queue* job_queue);
+// It returns 1, if NULL was pushed, else it will return 0
+int submit_stop_worker(sync_queue* job_queue, unsigned long long int submission_timeout_in_microseconds);
 
 // to discard jobs that are still remaining, in the job queue, even after the worker thread has been killed
 // there would not be any jobs remaining in the queue after this call
