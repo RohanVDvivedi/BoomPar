@@ -28,10 +28,7 @@ struct executor
 
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
-
-	// the maximum and minimum worker count allowed by the executor
-	unsigned int maximum_worker_count;
-	unsigned int minimum_worker_count;
+	unsigned int worker_count_limit;
 
 	// keeps the current count of threads created by executor
 	unsigned int active_worker_count;
@@ -65,7 +62,7 @@ struct executor
 };
 
 // creates a new executor, for the client
-executor* new_executor(executor_type type, unsigned int maximum_threads, unsigned int max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
+executor* new_executor(executor_type type, unsigned int worker_count_limit, unsigned int max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
 // this function creates a job to execute function_p on input_p and set promise_for_output with the output of the job
 // and enqueues this job  in the job_queue of the executor

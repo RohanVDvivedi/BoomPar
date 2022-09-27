@@ -52,7 +52,7 @@ static int create_worker(executor* executor_p)
 	pthread_mutex_lock(&(executor_p->worker_count_mutex));
 
 	// create a new thread for the executor, only if we are not exceeding the maximum thread count for the executor
-	if(executor_p->active_worker_count < executor_p->maximum_worker_count)
+	if(executor_p->active_worker_count < executor_p->worker_count_limit)
 	{
 		pthread_t thread_id = start_worker(&(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
 
@@ -68,32 +68,30 @@ static int create_worker(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* new_executor(executor_type type, unsigned int maximum_threads, unsigned int max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
+executor* new_executor(executor_type type, unsigned int worker_count_limit, unsigned int max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
 	executor* executor_p = ((executor*)(malloc(sizeof(executor))));
 	executor_p->type = type;
-	executor_p->maximum_worker_count = maximum_threads;
+	executor_p->worker_count_limit = worker_count_limit;
 
 	switch(executor_p->type)
 	{
 		// for a FIXED_THREAD_COUNT_EXECUTOR, the min and max count of thread is same
 		case FIXED_THREAD_COUNT_EXECUTOR :
 		{
-			executor_p->minimum_worker_count = executor_p->maximum_worker_count;
 			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = 0;
 			break;
 		}
 		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 0 thread, initially, and keeps on increasing with load
 		case CACHED_THREAD_POOL_EXECUTOR :
 		{
-			executor_p->minimum_worker_count = 0;
 			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = empty_job_queue_wait_time_out_in_micro_seconds;
 			break;
 		}
 	}
 
 	// use unbounded sync queue for thread safety
-	initialize_sync_queue(&(executor_p->job_queue), maximum_threads, max_job_queue_capacity);
+	initialize_sync_queue(&(executor_p->job_queue), worker_count_limit, worker_count_limit + max_job_queue_capacity);
 
 	executor_p->active_worker_count = 0;
 
@@ -110,9 +108,10 @@ executor* new_executor(executor_type type, unsigned int maximum_threads, unsigne
 	executor_p->call_back_params = call_back_params;
 
 	// create the minimum number of threads required for functioning
-	for(unsigned long long int i = 0; i < executor_p->minimum_worker_count; i++)
+	if(executor_p->type == FIXED_THREAD_COUNT_EXECUTOR)
 	{
-		create_worker(executor_p);
+		for(unsigned int i = 0; i < executor_p->worker_count_limit; i++)
+			create_worker(executor_p);
 	}
 
 	return executor_p;
@@ -127,7 +126,8 @@ int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* i
 
 	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output, submission_timeout_in_microseconds);
 
-	if(was_job_queued && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
+	// attempt to create new worker only for a CACHED_THREAD_POOL_EXECUTOR
+	if(was_job_queued && executor_p->type == CACHED_THREAD_POOL_EXECUTOR && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
 	{
 		create_worker(executor_p);
 	}
