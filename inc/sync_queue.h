@@ -5,6 +5,8 @@
 
 #include<queue.h>
 
+#define UNBOUNDED UINT_MAX
+
 typedef struct sync_queue sync_queue;
 struct sync_queue
 {
@@ -23,8 +25,9 @@ struct sync_queue
 	// this is the number of threads waiting on the q_full_wait
 	unsigned int q_full_wait_thread_count;
 
-	// queue is bounded in size or not
-	int is_bounded;
+	// this value suggests the maximum capacity of this queue
+	// if this value is equal to UNBOUNDED, then the queue is UNBOUNDED
+	unsigned int max_capacity;
 
 	// queue for storing the push/pop ed variables
 	queue qp;
@@ -37,13 +40,23 @@ struct sync_queue
 */
 // size must be > 0, if the provided size is equal to 0, the queue is initialized with initial size of 1
 
-sync_queue* new_sync_queue(unsigned int size, int is_bounded);
+sync_queue* new_sync_queue(unsigned int initial_capacity, unsigned int max_capacity);
 
-void initialize_sync_queue(sync_queue* sq, unsigned int size, int is_bounded);
+void initialize_sync_queue(sync_queue* sq, unsigned int initial_capacity, unsigned int max_capacity);
 
 void deinitialize_sync_queue(sync_queue* sq);
 
 void delete_sync_queue(sync_queue* sq);
+
+
+
+/*
+*	GET, UPDATE MAX_CAPACITY OF THE SYNC QUEUE
+*/
+
+unsigned int get_max_capacity_sync_queue(sync_queue* sq);
+
+void update_max_capacity_sync_queue(sync_queue* sq, unsigned int new_max_capacity);
 
 
 
