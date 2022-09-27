@@ -76,7 +76,7 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 
 int submit_stop_worker(sync_queue* job_queue)
 {
-	return push_sync_queue_non_blocking(job_queue, NULL);
+	return push_sync_queue_blocking(job_queue, NULL, 0);
 }
 
 void discard_leftover_jobs(sync_queue* job_queue)
