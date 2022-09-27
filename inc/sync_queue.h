@@ -25,6 +25,7 @@ struct sync_queue
 
 	// this value suggests the maximum capacity of this queue
 	// this value if provided to be lesser than 8, then it is made 8
+	// NOTE: this value is just a suggestion, there is no mechanism to enforce a strict max_capacity
 	unsigned int max_capacity;
 
 	// queue for storing the push/pop ed variables
