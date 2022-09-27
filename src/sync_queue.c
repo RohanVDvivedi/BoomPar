@@ -6,7 +6,7 @@
 sync_queue* new_sync_queue(unsigned int initial_capacity, unsigned int max_capacity)
 {
 	sync_queue* sq = (sync_queue*) malloc(sizeof(sync_queue));
-	initialize_sync_queue(sq, size, initial_capacity, max_capacity);
+	initialize_sync_queue(sq, initial_capacity, max_capacity);
 	return sq;
 }
 
@@ -17,6 +17,14 @@ void initialize_sync_queue(sync_queue* sq, unsigned int initial_capacity, unsign
 	pthread_cond_init(&(sq->q_full_wait), NULL);
 	sq->q_empty_wait_thread_count = 0;
 	sq->q_full_wait_thread_count = 0;
+
+	// max_capacity is atleast 8
+	if(max_capacity < 8)
+		max_capacity = 8;
+
+	if(initial_capacity > max_capacity)
+		initial_capacity = max_capacity;
+
 	sq->max_capacity = max_capacity;
 	initialize_queue(&(sq->qp), initial_capacity);
 }
@@ -46,9 +54,12 @@ unsigned int get_max_capacity_sync_queue(sync_queue* sq)
 void update_max_capacity_sync_queue(sync_queue* sq, unsigned int new_max_capacity)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		q->max_capacity = max_capacity;
-		// wake up some threads based on whether a push was possible
-		// TODO
+
+		// if the queue is full, and the max_capacity is being increased, then wake up all the threads wait on full queue
+		if(is_full_queue(&(sq->qp)) && sq->max_capacity < new_max_capacity)
+			pthread_cond_broadcast(&(sq->q_full_wait));
+
+		sq->max_capacity = new_max_capacity;
 	pthread_mutex_unlock(&(sq->q_lock));
 }
 
@@ -70,14 +81,13 @@ int is_empty_sync_queue(sync_queue* sq)
 
 int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 {
-	int is_pushed = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// if an unbounded queue is full, expand it
-		if(!sq->is_bounded && is_full_queue(&(sq->qp)))
+		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
+		if(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) < sq->max_capacity)
 			expand_queue(&(sq->qp));
 
-		is_pushed = push_to_queue(&(sq->qp), data_p);
+		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
 		// signal other threads if an element was pushed
 		if(is_pushed)
@@ -89,19 +99,17 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 
 const void* pop_sync_queue_non_blocking(sync_queue* sq)
 {
-	const void* data_p = NULL;
-	int is_popped = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
-		data_p = get_top_of_queue(&(sq->qp));
-		is_popped = pop_from_queue(&(sq->qp));
+		const void* data_p = get_top_of_queue(&(sq->qp));
+		int is_popped = pop_from_queue(&(sq->qp));
 
 		// signal other threads, if an element was popped
 		if(is_popped)
 			pthread_cond_signal(&(sq->q_full_wait));
 
-		// if an unbounded queue, occupies more than thrice the needed space, shrink it
-		if(!sq->is_bounded && (get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+		// if the queue, occupies more than thrice the needed space, attempt to shrink it
+		if(get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp)))
 			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -112,7 +120,7 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 {
 	int return_val = 0;
 
-	// if == 0, we will block indefinitely, on the condition variable
+	// if timeout == 0, we will block indefinitely, on the condition variable
 	if(wait_time_out_in_microseconds == 0)
 	{
 		return_val = pthread_cond_wait(cond_wait_p, mutex_p);
@@ -137,25 +145,24 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds)
 {
-	int is_pushed = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
 		int wait_error = 0;
 
-		// keep on looping while the bounded queue is full and there is no wait_error
+		// keep on looping while the bounded queue is full and has reached its max_capacity and there is no wait_error
 		// note : timeout is also a wait error
-		while(sq->is_bounded && is_full_queue(&(sq->qp)) && !wait_error)
+		while(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) >= sq->max_capacity && !wait_error)
 		{
 			sq->q_full_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 			sq->q_full_wait_thread_count--;
 		}
 
-		// if an unbounded queue is full, expand it
-		if(!sq->is_bounded && is_full_queue(&(sq->qp)))
+		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
+		if(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) < sq->max_capacity)
 			expand_queue(&(sq->qp));
 
-		is_pushed = push_to_queue(&(sq->qp), data_p);
+		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
 		// signal other threads if an element was pushed
 		if(is_pushed)
@@ -167,8 +174,6 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 
 const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
 {
-	const void* data_p = NULL;
-	int is_popped = 0;
 	pthread_mutex_lock(&(sq->q_lock));
 
 		int wait_error = 0;
@@ -183,15 +188,15 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 		}
 
 		// if queue, is not empty, pop the top element
-		data_p = get_top_of_queue(&(sq->qp));
-		is_popped = pop_from_queue(&(sq->qp));
+		const void* data_p = get_top_of_queue(&(sq->qp));
+		int is_popped = pop_from_queue(&(sq->qp));
 
 		// signal other threads, if an element was popped
 		if(is_popped)
 			pthread_cond_signal(&(sq->q_full_wait));
 
-		// if an unbounded queue, occupies more than thrice the needed space, shrink it
-		if(!sq->is_bounded && (get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp))))
+		// if the queue, occupies more than thrice the needed space, then attempt to shrink it
+		if(get_capacity_queue(&(sq->qp)) > 3 * get_element_count_queue(&(sq->qp)))
 			shrink_queue(&(sq->qp));
 
 	pthread_mutex_unlock(&(sq->q_lock));

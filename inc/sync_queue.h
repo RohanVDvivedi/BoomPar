@@ -5,8 +5,6 @@
 
 #include<queue.h>
 
-#define UNBOUNDED UINT_MAX
-
 typedef struct sync_queue sync_queue;
 struct sync_queue
 {
@@ -26,7 +24,7 @@ struct sync_queue
 	unsigned int q_full_wait_thread_count;
 
 	// this value suggests the maximum capacity of this queue
-	// if this value is equal to UNBOUNDED, then the queue is UNBOUNDED
+	// this value if provided to be lesser than 8, then it is made 8
 	unsigned int max_capacity;
 
 	// queue for storing the push/pop ed variables
