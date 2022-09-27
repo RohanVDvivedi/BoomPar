@@ -1,6 +1,3 @@
-SYNC_QUEUE mods
- * make sync_queue accept max capacity (instead of being bounded or not), and make it bounded to that capacity if it is reached OR shrink if it is less than twice its size, this size can be updated in runtime
-
 SYNC_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
  * don't make it bounded, make it like sync queue above
