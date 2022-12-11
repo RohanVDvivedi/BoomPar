@@ -14,7 +14,7 @@
 
 pthread_t start_worker(
 							sync_queue* job_queue, 							// ** the worker thread uses this sync_queue to receive jobs to finish
-							unsigned long long int job_queue_empty_timeout_in_microseconds, // ** timeout for the job_queue while we blockingly wait on it 
+							unsigned long long int job_queue_empty_timeout_in_microseconds, // ** timeout for the job_queue while we blockingly wait on it, (0 implies waiting indefinitely until the worker could dequeue a job)
 							void(*start_up)(void* additional_params), 		// * start_up function is called by the thread on start up 
 							void(*clean_up)(void* additional_params), 		// * clean_up function is called by the thread before returning
 							void* additional_params							// * this parameters will be passed to the start_up and clean_up functions
@@ -22,6 +22,9 @@ pthread_t start_worker(
 // note
 // ** mandatory parameters to the function
 // * optional parameters to the function
+
+// For the below submit_ job/stop _worker functions, the timeout is the time you intend to wait until submission is successfull
+// a timeout of 0, implies waiting indefinitely until the task is completed
 
 // create and submit job (with/without promise), returns 1 if the job was successfully submitted to the worker
 // function fails and returns 0 if, the job_queue is blocking and it is full

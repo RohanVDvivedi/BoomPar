@@ -76,13 +76,12 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, unsi
 
 	switch(executor_p->type)
 	{
-		// for a FIXED_THREAD_COUNT_EXECUTOR, the min and max count of thread is same
+		// for a FIXED_THREAD_COUNT_EXECUTOR, the worker must wait indefinitely until it could dequeue a job, hence the 0 timeout
 		case FIXED_THREAD_COUNT_EXECUTOR :
 		{
 			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = 0;
 			break;
 		}
-		// while a CACHED_THREAD_POOL_EXECUTOR, starts with 0 thread, initially, and keeps on increasing with load
 		case CACHED_THREAD_POOL_EXECUTOR :
 		{
 			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = empty_job_queue_wait_time_out_in_micro_seconds;

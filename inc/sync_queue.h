@@ -83,8 +83,8 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq);
 
 /*
 *	BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
-*	HERE wait_time_out_in_microseconds IS A MANDATORY PARAMETER, IF YOU PROVIDE 0,
-*	YOU WOULD BLOCK INDEFINITELY ON THE CALL
+*	HERE wait_time_out_in_microseconds IS A MANDATORY PARAMETER, 
+*   IF YOU PROVIDE 0, THEN YOU WOULD BLOCK INDEFINITELY ON THE CALL UNTIL YOU SUCCEED
 */
 
 // it will block for atmost wait_time_out_in_microseconds, for someone to make space in the sync_queue, if it is bounded and full

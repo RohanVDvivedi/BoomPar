@@ -68,7 +68,9 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, unsi
 // and enqueues this job  in the job_queue of the executor
 // it returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // job submission fails if any of the thread has called, shutdown_executor() on this executor
-// if the promise_for_output may be NULL, if you do not wish to wait for completion of the job
+// the promise_for_output may be NULL, if you do not wish to wait for completion of the job
+// submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue have a slot for this job
+// timeout = 0, implies waiting indefinitely
 int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds);
 
 // the executor is asked to shutdown using this function,
