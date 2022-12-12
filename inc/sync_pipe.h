@@ -34,4 +34,8 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 // returns number of bytes read into data (always < data_size)
 unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_size);
 
+// close sync_pipe
+// a closed sync pipe, can be read from, but can't be written to
+void close_sync_pipe(sync_pipe* spyp);
+
 #endif

@@ -87,3 +87,19 @@ unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_
 
 	return bytes_read;
 }
+
+void close_sync_pipe(sync_pipe* spyp)
+{
+	pthread_mutex_lock(&(spyp->sync_pipe_lock));
+
+	// if the dpipe is not already closed then close it and wake up any writers
+	if(!is_dpipe_closed(&(spyp->pyp)))
+	{
+		close_dpipe(&(spyp->pyp));
+
+		// writers will only wait for sync pipe full, so we wake up all writers to let them know about the close state of the pyp
+		pthread_cond_broadcast(&(spyp->sync_pipe_full));
+	}
+
+	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
+}
