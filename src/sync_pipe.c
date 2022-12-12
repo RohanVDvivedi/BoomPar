@@ -54,6 +54,10 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 	// perform write to pyp
 	unsigned int bytes_written = write_to_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
 
+	// broadcast to all the threads (waiting on empty pyp) that there is atleast bytes_written number of bytes still to be read
+	if(bytes_written > 0)
+		pthread_cond_broadcast(&(spyp->sync_pipe_empty));
+
 	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
 
 	return bytes_written;
@@ -74,6 +78,10 @@ unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_
 	// shrink the pyp if the capacity is 4 times or more larger than required
 	if(get_capacity_dpipe(&(spyp->pyp)) >= 4 * get_bytes_readable_in_dpipe(&(spyp->pyp)))
 		resize_dpipe(&(spyp->pyp), get_bytes_readable_in_dpipe(&(spyp->pyp)));
+
+	// broadcast to all the threads (waiting on full pyp) that the pyp is now not full and has atleast bytes_read amount of space
+	if(bytes_read > 0)
+		pthread_cond_broadcast(&(spyp->sync_pipe_full));
 
 	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
 
