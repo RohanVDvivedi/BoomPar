@@ -40,8 +40,8 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 {
 	pthread_mutex_lock(&(spyp->sync_pipe_lock));
 
-	// wait while pyp is full and its capacity is max_capacity
-	while(is_full_dpipe(&(spyp->pyp)) && get_capacity_dpipe(&(spyp->pyp)) == spyp->max_capacity)
+	// wait while pyp is full and its capacity is max_capacity and is not closed
+	while(!is_dpipe_closed(&(spyp->pyp)) && is_full_dpipe(&(spyp->pyp)) && get_capacity_dpipe(&(spyp->pyp)) == spyp->max_capacity)
 		pthread_cond_wait(&(spyp->sync_pipe_full), &(spyp->sync_pipe_lock));
 
 	// expand to a new higher capacity, if the capacity is lesser than max_capacity and there are more bytes to write than the space available in the pyp
@@ -56,7 +56,7 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 	unsigned int bytes_written = write_to_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
 
 	// broadcast to all the threads (waiting on empty pyp) that there is atleast bytes_written number of bytes still to be read
-	if(bytes_written > 0)
+	if(!is_dpipe_closed(&(spyp->pyp)) && bytes_written > 0)
 		pthread_cond_broadcast(&(spyp->sync_pipe_empty));
 
 	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
@@ -69,8 +69,8 @@ unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_
 {
 	pthread_mutex_lock(&(spyp->sync_pipe_lock));
 
-	// wait while the pyp is empty
-	while(is_empty_dpipe(&(spyp->pyp)))
+	// wait while the pyp is empty and is not closed
+	while(!is_dpipe_closed(&(spyp->pyp)) && is_empty_dpipe(&(spyp->pyp)))
 		pthread_cond_wait(&(spyp->sync_pipe_empty), &(spyp->sync_pipe_lock));
 
 	// perform read from the pyp
@@ -81,7 +81,7 @@ unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_
 		resize_dpipe(&(spyp->pyp), get_bytes_readable_in_dpipe(&(spyp->pyp)));
 
 	// broadcast to all the threads (waiting on full pyp) that the pyp is now not full and has atleast bytes_read amount of space
-	if(bytes_read > 0)
+	if(!is_dpipe_closed(&(spyp->pyp)) && bytes_read > 0)
 		pthread_cond_broadcast(&(spyp->sync_pipe_full));
 
 	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
