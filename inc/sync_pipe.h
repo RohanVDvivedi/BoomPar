@@ -1,6 +1,10 @@
 #ifndef SYNC_PIPE_H
 #define SYNC_PIPE_H
 
+#include<dpipe.h>
+
+#include<pthread.h>
+
 typedef struct sync_pipe sync_pipe;
 struct sync_pipe
 {
@@ -18,7 +22,7 @@ struct sync_pipe
 
 sync_pipe* new_sync_pipe(unsigned int max_capacity);
 
-void initialize_sync_pipe(sync_pipe* spyp);
+void initialize_sync_pipe(sync_pipe* spyp, unsigned int max_capacity);
 
 void deinitialize_sync_pipe(sync_pipe* spyp);
 
