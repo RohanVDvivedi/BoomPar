@@ -45,7 +45,8 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 		pthread_cond_wait(&(spyp->sync_pipe_full), &(spyp->sync_pipe_lock));
 
 	// expand to a new higher capacity, if the capacity is lesser than max_capacity and there are more bytes to write than the space available in the pyp
-	if(get_capacity_dpipe(&(spyp->pyp)) < spyp->max_capacity && get_bytes_writable_in_dpipe(&(spyp->pyp)) < data_size)
+	// you may expand pyp only if it is not yet closed, since after closing dpipe, all writes are suppossed to fail
+	if(!is_dpipe_closed(&(spyp->pyp)) && get_capacity_dpipe(&(spyp->pyp)) < spyp->max_capacity && get_bytes_writable_in_dpipe(&(spyp->pyp)) < data_size)
 	{
 		unsigned int new_capacity = min(spyp->max_capacity, get_capacity_dpipe(&(spyp->pyp)) + (2 * data_size) - get_bytes_writable_in_dpipe(&(spyp->pyp)));
 		resize_dpipe(&(spyp->pyp), new_capacity);
@@ -97,8 +98,9 @@ void close_sync_pipe(sync_pipe* spyp)
 	{
 		close_dpipe(&(spyp->pyp));
 
-		// writers will only wait for sync pipe full, so we wake up all writers to let them know about the close state of the pyp
+		// wake up all threads to let them know about the close state of the pyp
 		pthread_cond_broadcast(&(spyp->sync_pipe_full));
+		pthread_cond_broadcast(&(spyp->sync_pipe_empty));
 	}
 
 	pthread_mutex_unlock(&(spyp->sync_pipe_lock));
