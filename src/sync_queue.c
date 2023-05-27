@@ -3,14 +3,14 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-sync_queue* new_sync_queue(unsigned int initial_capacity, unsigned int max_capacity)
+sync_queue* new_sync_queue(cy_uint initial_capacity, cy_uint max_capacity)
 {
 	sync_queue* sq = (sync_queue*) malloc(sizeof(sync_queue));
 	initialize_sync_queue(sq, initial_capacity, max_capacity);
 	return sq;
 }
 
-void initialize_sync_queue(sync_queue* sq, unsigned int initial_capacity, unsigned int max_capacity)
+void initialize_sync_queue(sync_queue* sq, cy_uint initial_capacity, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(sq->q_lock), NULL);
 	pthread_cond_init(&(sq->q_empty_wait), NULL);
@@ -43,7 +43,7 @@ void delete_sync_queue(sync_queue* sq)
 	free(sq);
 }
 
-unsigned int get_max_capacity_sync_queue(sync_queue* sq)
+cy_uint get_max_capacity_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 		unsigned int max_capacity = sq->max_capacity;
@@ -51,7 +51,7 @@ unsigned int get_max_capacity_sync_queue(sync_queue* sq)
 	return max_capacity;
 }
 
-void update_max_capacity_sync_queue(sync_queue* sq, unsigned int new_max_capacity)
+void update_max_capacity_sync_queue(sync_queue* sq, cy_uint new_max_capacity)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 

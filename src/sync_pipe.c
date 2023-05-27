@@ -4,14 +4,14 @@
 
 #include<cutlery_math.h>
 
-sync_pipe* new_sync_pipe(unsigned int max_capacity)
+sync_pipe* new_sync_pipe(cy_uint max_capacity)
 {
 	sync_pipe* spyp = malloc(sizeof(sync_pipe));
 	initialize_sync_pipe(spyp, max_capacity);
 	return spyp;
 }
 
-void initialize_sync_pipe(sync_pipe* spyp, unsigned int max_capacity)
+void initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(spyp->sync_pipe_lock), NULL);
 	pthread_cond_init(&(spyp->sync_pipe_empty), NULL);
@@ -36,7 +36,7 @@ void delete_sync_pipe(sync_pipe* spyp)
 }
 
 // returns number of bytes written from data (always < data_size)
-unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int data_size)
+cy_uint write_to_sync_pipe(sync_pipe* spyp, const void* data, cy_uint data_size)
 {
 	pthread_mutex_lock(&(spyp->sync_pipe_lock));
 
@@ -48,12 +48,12 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 	// you may expand pyp only if it is not yet closed, since after closing dpipe, all writes are suppossed to fail
 	if(!is_dpipe_closed(&(spyp->pyp)) && get_capacity_dpipe(&(spyp->pyp)) < spyp->max_capacity && get_bytes_writable_in_dpipe(&(spyp->pyp)) < data_size)
 	{
-		unsigned int new_capacity = min(spyp->max_capacity, get_capacity_dpipe(&(spyp->pyp)) + (2 * data_size) - get_bytes_writable_in_dpipe(&(spyp->pyp)));
+		cy_uint new_capacity = min(spyp->max_capacity, get_capacity_dpipe(&(spyp->pyp)) + (2 * data_size) - get_bytes_writable_in_dpipe(&(spyp->pyp)));
 		resize_dpipe(&(spyp->pyp), new_capacity);
 	}
 
 	// perform write to pyp
-	unsigned int bytes_written = write_to_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
+	cy_uint bytes_written = write_to_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
 
 	// broadcast to all the threads (waiting on empty pyp) that there is atleast bytes_written number of bytes still to be read
 	if(!is_dpipe_closed(&(spyp->pyp)) && bytes_written > 0)
@@ -65,7 +65,7 @@ unsigned int write_to_sync_pipe(sync_pipe* spyp, const void* data, unsigned int 
 }
 
 // returns number of bytes read into data (always < data_size)
-unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_size)
+cy_uint read_from_sync_pipe(sync_pipe* spyp, void* data, cy_uint data_size)
 {
 	pthread_mutex_lock(&(spyp->sync_pipe_lock));
 
@@ -74,7 +74,7 @@ unsigned int read_from_sync_pipe(sync_pipe* spyp, void* data, unsigned int data_
 		pthread_cond_wait(&(spyp->sync_pipe_empty), &(spyp->sync_pipe_lock));
 
 	// perform read from the pyp
-	unsigned int bytes_read = read_from_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
+	cy_uint bytes_read = read_from_dpipe(&(spyp->pyp), data, data_size, PARTIAL_ALLOWED);
 
 	// shrink the pyp if the capacity is 4 times or more larger than required
 	if(get_capacity_dpipe(&(spyp->pyp)) >= 4 * get_bytes_readable_in_dpipe(&(spyp->pyp)))

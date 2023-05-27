@@ -27,7 +27,7 @@ struct sync_queue
 	// this value if provided to be lesser than 8, then it is made 8
 	// NOTE: this value is just a suggestion, there is no mechanism to enforce a strict max_capacity
 	// NOTE: setting max_capacity to UINT_MAX makes this queue theoretically UNBOUNDED but we know that all computer memory is bounded
-	unsigned int max_capacity;
+	cy_uint max_capacity;
 
 	// queue for storing the push/pop ed variables
 	queue qp;
@@ -40,9 +40,9 @@ struct sync_queue
 */
 // size must be > 0, if the provided size is equal to 0, the queue is initialized with initial size of 1
 
-sync_queue* new_sync_queue(unsigned int initial_capacity, unsigned int max_capacity);
+sync_queue* new_sync_queue(cy_uint initial_capacity, cy_uint max_capacity);
 
-void initialize_sync_queue(sync_queue* sq, unsigned int initial_capacity, unsigned int max_capacity);
+void initialize_sync_queue(sync_queue* sq, cy_uint initial_capacity, cy_uint max_capacity);
 
 void deinitialize_sync_queue(sync_queue* sq);
 
@@ -54,9 +54,9 @@ void delete_sync_queue(sync_queue* sq);
 *	GET, UPDATE MAX_CAPACITY OF THE SYNC QUEUE
 */
 
-unsigned int get_max_capacity_sync_queue(sync_queue* sq);
+cy_uint get_max_capacity_sync_queue(sync_queue* sq);
 
-void update_max_capacity_sync_queue(sync_queue* sq, unsigned int new_max_capacity);
+void update_max_capacity_sync_queue(sync_queue* sq, cy_uint new_max_capacity);
 
 
 
