@@ -2,5 +2,8 @@ SYNC_PIPE
  * implement sync_coroutine_pipe api like the sync_queue without non_blocking access
  * don't make it bounded, make it like sync queue above
 
+JOB feature
+ * added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
+
 EMBEDDED_REFERENCE_COUNTER OR SMART_POINTER
  * make promise reference counted
