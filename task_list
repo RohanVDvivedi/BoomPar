@@ -1,4 +1,5 @@
  * fail when malloc fails
+ * remove redundant type casting before malloc and realloc calls
 
 JOB feature
  * added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
