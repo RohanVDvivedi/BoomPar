@@ -58,7 +58,7 @@ int main()
 	#elif defined WAIT_USING_PROMISE_QUEUE
 
 		sync_queue promise_completed_queue;
-		initialize_sync_queue(&promise_completed_queue, 1, 1);
+		initialize_sync_queue(&promise_completed_queue, 1);
 		set_promise_completed_queue(simple_promise_p, &promise_completed_queue);
 		simple_promise_p = (promise*) pop_sync_queue_blocking(&promise_completed_queue, 0);
 		deinitialize_sync_queue(&promise_completed_queue);

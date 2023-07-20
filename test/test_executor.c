@@ -51,7 +51,7 @@ int main()
 		jobs_input_param[i] = i;
 
 	// create a promise_completed_queue
-	sync_queue* promise_completed_queue = new_sync_queue(12, (TEST_JOBs_COUNT / 3) + 16);
+	sync_queue* promise_completed_queue = new_sync_queue((TEST_JOBs_COUNT / 3) + 16);
 
 	// submit jobs, one by one
 	for(int i=0; i < TEST_JOBs_COUNT;i++)

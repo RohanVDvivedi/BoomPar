@@ -42,11 +42,11 @@ int main()
 
 	printf("Initializing job queue\n\n");
 	sync_queue job_queue;
-	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE, WORKER_QUEUE_SIZE);
+	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE);
 
 	printf("Initializing promise_completed queue\n\n");
 	sync_queue promise_completed_queue;
-	initialize_sync_queue(&promise_completed_queue, JOBs_COUNT, JOBs_COUNT);
+	initialize_sync_queue(&promise_completed_queue, JOBs_COUNT);
 
 	printf("Submitting initial 6 set of the jobs\n");
 	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted++)
@@ -74,7 +74,8 @@ int main()
 	printf("Submitted %d jobs to worker\n", total_jobs_submitted);
 
 	printf("Starting worker\n\n");
-	pthread_t thread_id = start_worker(&job_queue, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
+	pthread_t thread_id;
+	start_worker(&thread_id, &job_queue, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
 
 	printf("Main thread id : %lu\n\n", thread_id);
 
