@@ -54,9 +54,10 @@ static int create_worker(executor* executor_p)
 	// create a new thread for the executor, only if we are not exceeding the maximum thread count for the executor
 	if(executor_p->active_worker_count < executor_p->worker_count_limit)
 	{
-		pthread_t thread_id = start_worker(&(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
+		pthread_t thread_id;
+		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
 
-		if(thread_id != 0)
+		if(!error_worker_creation)
 		{
 			executor_p->active_worker_count++;
 			is_thread_added = 1;
