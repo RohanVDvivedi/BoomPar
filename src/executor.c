@@ -117,17 +117,13 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds)
 {
 	if(is_shutdown_called(executor_p))
-	{
 		return 0;
-	}
 
 	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output, submission_timeout_in_microseconds);
 
 	// attempt to create new worker only for a CACHED_THREAD_POOL_EXECUTOR
 	if(was_job_queued && executor_p->type == CACHED_THREAD_POOL_EXECUTOR && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
-	{
 		create_worker(executor_p);
-	}
 
 	return was_job_queued;
 }
