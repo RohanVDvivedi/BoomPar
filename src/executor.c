@@ -90,7 +90,7 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 	}
 
 	// use unbounded sync queue for thread safety
-	initialize_sync_queue(&(executor_p->job_queue), worker_count_limit, worker_count_limit + max_job_queue_capacity);
+	initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity);
 
 	executor_p->active_worker_count = 0;
 

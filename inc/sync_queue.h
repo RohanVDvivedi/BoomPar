@@ -40,9 +40,9 @@ struct sync_queue
 */
 // size must be > 0, if the provided size is equal to 0, the queue is initialized with initial size of 1
 
-sync_queue* new_sync_queue(cy_uint initial_capacity, cy_uint max_capacity);
+sync_queue* new_sync_queue(cy_uint max_capacity);
 
-void initialize_sync_queue(sync_queue* sq, cy_uint initial_capacity, cy_uint max_capacity);
+void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity);
 
 void deinitialize_sync_queue(sync_queue* sq);
 

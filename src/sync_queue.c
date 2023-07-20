@@ -3,30 +3,23 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-sync_queue* new_sync_queue(cy_uint initial_capacity, cy_uint max_capacity)
+sync_queue* new_sync_queue(cy_uint max_capacity)
 {
-	sync_queue* sq = (sync_queue*) malloc(sizeof(sync_queue));
-	initialize_sync_queue(sq, initial_capacity, max_capacity);
+	sync_queue* sq = malloc(sizeof(sync_queue));
+	if(sq != NULL)
+		initialize_sync_queue(sq, max_capacity);
 	return sq;
 }
 
-void initialize_sync_queue(sync_queue* sq, cy_uint initial_capacity, cy_uint max_capacity)
+void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(sq->q_lock), NULL);
 	pthread_cond_init(&(sq->q_empty_wait), NULL);
 	pthread_cond_init(&(sq->q_full_wait), NULL);
 	sq->q_empty_wait_thread_count = 0;
 	sq->q_full_wait_thread_count = 0;
-
-	// max_capacity is atleast 8
-	if(max_capacity < 8)
-		max_capacity = 8;
-
-	if(initial_capacity > max_capacity)
-		initial_capacity = max_capacity;
-
 	sq->max_capacity = max_capacity;
-	initialize_queue(&(sq->qp), initial_capacity);
+	initialize_queue(&(sq->qp), 0);
 }
 
 void deinitialize_sync_queue(sync_queue* sq)
