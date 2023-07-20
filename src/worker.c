@@ -59,17 +59,17 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	// create a new job with the given parameters
 	job* job_p = new_job(function_p, input_p, promise_for_output);
 
+	// if a job couldn't be created, then fail
+	if(job_p == NULL)
+		return 0;
+
 	// update job status, from CREATED to QUEUED
 	// if this update of job status is successfull, then only we go forward and queue the job
 	if(job_status_change(job_p, QUEUED))
-	{
 		was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
-	}
 
-	if(was_job_queued == 0)
-	{
+	if(!was_job_queued)
 		delete_job(job_p);
-	}
 
 	return was_job_queued;
 }
@@ -84,11 +84,8 @@ void discard_leftover_jobs(sync_queue* job_queue)
 	while(!is_empty_sync_queue(job_queue))
 	{
 		job* job_p = (job*) pop_sync_queue_non_blocking(job_queue);
-
 		if(job_p != NULL)
-		{
 			delete_job(job_p);
-		}
 	}
 }
 
@@ -100,16 +97,12 @@ static void* worker_function(void* args)
 	free(args);
 
 	if(wtp.job_queue == NULL)
-	{
 		return NULL;
-	}
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	if(wtp.start_up != NULL)
-	{
 		wtp.start_up(wtp.additional_params);
-	}
 
 	while(1)
 	{
@@ -137,9 +130,7 @@ static void* worker_function(void* args)
 	}
 
 	if(wtp.clean_up != NULL)
-	{
 		wtp.clean_up(wtp.additional_params);
-	}
 
 	return NULL;
 }
