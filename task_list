@@ -1,6 +1,3 @@
-OPTIMIZATION
- * create worker in executor without the executor's lock
-
 FIX
  * limit expansion of the sync queue by the max_capacity striuctly
 
