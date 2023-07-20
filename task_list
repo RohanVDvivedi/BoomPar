@@ -1,10 +1,10 @@
 FIX
- * limit expansion of the sync queue by the max_capacity strictly
+ *1 limit expansion of the sync queue by the max_capacity strictly
 
 JOB feature
- * added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
+ *3 added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
    * this will help the job to clean up the input parameter even if it does not get executed, for instance on executor shutdown immediately
- * queued state is redundant, discard it
+ *2 queued state is redundant, discard it
 
 BUG FIX
- * fix race conditon in executor
+ *4 fix race conditon in executor
