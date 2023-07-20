@@ -31,9 +31,7 @@ static void clean_up(void* args)
 
 		executor_p->active_worker_count--;
 		if(executor_p->active_worker_count == 0)
-		{
 			pthread_cond_broadcast(&(executor_p->worker_count_until_zero_wait));
-		}
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
 }
