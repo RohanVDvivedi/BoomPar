@@ -21,7 +21,7 @@ void clean_up(void* additional_params)
 }
 
 #define JOBs_COUNT				20
-#define WORKER_QUEUE_SIZE 		3
+#define WORKER_QUEUE_SIZE 		8
 #define WORKER_QUEUE_TIMEOUT	0 //1000000
 
 #define SET_1_JOBS	6
