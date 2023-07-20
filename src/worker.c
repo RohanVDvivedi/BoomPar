@@ -2,6 +2,7 @@
 
 #include<stdlib.h>
 #include<stdio.h>
+#include<errno.h>
 
 typedef struct worker_thread_params worker_thread_params;
 struct worker_thread_params
@@ -38,23 +39,25 @@ worker_thread_params* get_worker_thread_params(sync_queue* job_queue, unsigned l
 
 static void* worker_function(void* args);
 
-pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+int start_worker(pthread_t* thread_id, sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
-	pthread_t thread_id = 0;
+	// default return value is the insufficient resources to create a thread
+	int return_val = EAGAIN;
+
 	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	if(wtp == NULL)
-		return thread_id;
-	int return_val = pthread_create(&thread_id, NULL, worker_function, wtp);
+		return return_val;
+
+	return_val = pthread_create(thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
 		printf("Error starting worker : %d\n", return_val);
 		free(wtp);
+		return return_val;
 	}
-	else
-	{
-		pthread_detach(thread_id);
-	}
-	return thread_id;
+	
+	pthread_detach(*thread_id);
+	return return_val;
 }
 
 int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds)

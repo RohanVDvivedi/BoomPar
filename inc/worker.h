@@ -12,13 +12,16 @@
 // or memory leaks from unfinished, unreleased job memory
 // please use submit_stop_worker to asynchronously stopping the worker
 
-pthread_t start_worker(
-							sync_queue* job_queue, 							// ** the worker thread uses this sync_queue to receive jobs to finish
-							unsigned long long int job_queue_empty_timeout_in_microseconds, // ** timeout for the job_queue while we blockingly wait on it, (0 implies waiting indefinitely until the worker could dequeue a job)
-							void(*start_up)(void* additional_params), 		// * start_up function is called by the thread on start up 
-							void(*clean_up)(void* additional_params), 		// * clean_up function is called by the thread before returning
-							void* additional_params							// * this parameters will be passed to the start_up and clean_up functions
-						);
+// returns error code returned by pthread_create
+// 0 return value is a success
+int start_worker(
+					pthread_t* thread_id,							// ** thread_id returned on success
+					sync_queue* job_queue, 							// ** the worker thread uses this sync_queue to receive jobs to finish
+					unsigned long long int job_queue_empty_timeout_in_microseconds, // ** timeout for the job_queue while we blockingly wait on it, (0 implies waiting indefinitely until the worker could dequeue a job)
+					void(*start_up)(void* additional_params), 		// * start_up function is called by the thread on start up 
+					void(*clean_up)(void* additional_params), 		// * clean_up function is called by the thread before returning
+					void* additional_params							// * this parameters will be passed to the start_up and clean_up functions
+				);
 // note
 // ** mandatory parameters to the function
 // * optional parameters to the function
