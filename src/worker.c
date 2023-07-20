@@ -24,12 +24,15 @@ struct worker_thread_params
 
 worker_thread_params* get_worker_thread_params(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
-	worker_thread_params* wtp = (worker_thread_params*) malloc(sizeof(worker_thread_params));
-	wtp->start_up = start_up;
-	wtp->job_queue = job_queue;
-	wtp->job_queue_empty_timeout_in_microseconds = job_queue_empty_timeout_in_microseconds;
-	wtp->clean_up = clean_up;
-	wtp->additional_params = additional_params;
+	worker_thread_params* wtp = malloc(sizeof(worker_thread_params));
+	if(wtp != NULL)
+	{
+		wtp->start_up = start_up;
+		wtp->job_queue = job_queue;
+		wtp->job_queue_empty_timeout_in_microseconds = job_queue_empty_timeout_in_microseconds;
+		wtp->clean_up = clean_up;
+		wtp->additional_params = additional_params;
+	}
 	return wtp;
 }
 
@@ -39,6 +42,8 @@ pthread_t start_worker(sync_queue* job_queue, unsigned long long int job_queue_e
 {
 	pthread_t thread_id = 0;
 	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
+	if(wtp == NULL)
+		return thread_id;
 	int return_val = pthread_create(&thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
