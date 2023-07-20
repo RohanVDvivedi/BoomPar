@@ -48,8 +48,8 @@ void update_max_capacity_sync_queue(sync_queue* sq, cy_uint new_max_capacity)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// if the queue is full, and the max_capacity is being increased, then wake up all the threads wait on full queue
-		if(is_full_queue(&(sq->qp)) && sq->max_capacity < new_max_capacity)
+		// if the queue is full with threads waiting for a full sync_queue, and the max_capacity is being increased, then wake up all the threads wait on full queue
+		if(is_full_queue(&(sq->qp)) && sq->q_full_wait_thread_count > 0 && sq->max_capacity < new_max_capacity)
 			pthread_cond_broadcast(&(sq->q_full_wait));
 
 		sq->max_capacity = new_max_capacity;
