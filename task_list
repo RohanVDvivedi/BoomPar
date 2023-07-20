@@ -1,6 +1,9 @@
 OPTIMIZATION
  * create worker in executor without the executor's lock
 
+FIX
+ * limit expansion of the sync queue by the max_capacity striuctly
+
 JOB feature
  * added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
    * this will help the job to clean up the input parameter even if it does not get executed, for instance on executor shutdown immediately
