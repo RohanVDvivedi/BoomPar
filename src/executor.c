@@ -144,12 +144,11 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 		executor_p->requested_to_stop_after_queue_is_empty = 1;
 	}
 
+	// lock is taken to ensure that the active_worker_count does not change while we submit stop worker
 	pthread_mutex_lock(&(executor_p->worker_count_mutex));
 
 	for(unsigned int i = 0; i < executor_p->active_worker_count;i++)
-	{
 		submit_stop_worker(&(executor_p->job_queue), 0);
-	}
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
 }
@@ -160,16 +159,12 @@ int wait_for_all_threads_to_complete(executor* executor_p)
 {
 	// return if the waiting for complettion of thread is not allowed
 	if(!is_shutdown_called(executor_p))
-	{
 		return 0;
-	}
 
 	pthread_mutex_lock(&(executor_p->worker_count_mutex));
 
 	while(executor_p->active_worker_count > 0)
-	{
-		pthread_cond_wait(&(executor_p->worker_count_until_zero_wait), &(executor_p->worker_count_mutex));	
-	}
+		pthread_cond_wait(&(executor_p->worker_count_until_zero_wait), &(executor_p->worker_count_mutex));
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
 
