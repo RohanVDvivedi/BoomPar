@@ -16,11 +16,7 @@ static void start_up(void* args)
 
 	// call the callback before anything else
 	if(executor_p->worker_startup != NULL)
-	{
 		executor_p->worker_startup(executor_p->call_back_params);
-	}
-
-	// everything else goes here
 }
 
 static void clean_up(void* args)
@@ -29,9 +25,7 @@ static void clean_up(void* args)
 
 	// call the callback before decrementing the active_worker_count of the executor
 	if(executor_p->worker_finish != NULL)
-	{
 		executor_p->worker_finish(executor_p->call_back_params);
-	}
 
 	pthread_mutex_lock(&(executor_p->worker_count_mutex));
 
