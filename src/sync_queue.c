@@ -83,7 +83,7 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
 		// signal other threads if an element was pushed
-		if(is_pushed)
+		if(is_pushed && sq->q_empty_wait_thread_count > 0)
 			pthread_cond_signal(&(sq->q_empty_wait));
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -98,7 +98,7 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 		int is_popped = pop_from_queue(&(sq->qp));
 
 		// signal other threads, if an element was popped
-		if(is_popped)
+		if(is_popped && sq->q_full_wait_thread_count > 0)
 			pthread_cond_signal(&(sq->q_full_wait));
 
 		// if the queue, occupies more than thrice the needed space, attempt to shrink it
@@ -158,7 +158,7 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
 		// signal other threads if an element was pushed
-		if(is_pushed)
+		if(is_pushed && sq->q_empty_wait_thread_count > 0)
 			pthread_cond_signal(&(sq->q_empty_wait));
 
 	pthread_mutex_unlock(&(sq->q_lock));
@@ -185,7 +185,7 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 		int is_popped = pop_from_queue(&(sq->qp));
 
 		// signal other threads, if an element was popped
-		if(is_popped)
+		if(is_popped && sq->q_full_wait_thread_count > 0)
 			pthread_cond_signal(&(sq->q_full_wait));
 
 		// if the queue, occupies more than thrice the needed space, then attempt to shrink it
