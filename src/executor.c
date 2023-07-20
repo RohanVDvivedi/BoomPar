@@ -71,7 +71,13 @@ static int create_worker(executor* executor_p)
 
 executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
+	if(worker_count_limit == 0 || max_job_queue_capacity == 0)
+		return NULL;
+
 	executor* executor_p = malloc(sizeof(executor));
+	if(executor_p == NULL)
+		return NULL;
+
 	executor_p->type = type;
 	executor_p->worker_count_limit = worker_count_limit;
 
@@ -90,7 +96,6 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 		}
 	}
 
-	// use unbounded sync queue for thread safety
 	initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity);
 
 	executor_p->active_worker_count = 0;
