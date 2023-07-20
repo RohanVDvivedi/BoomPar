@@ -3,7 +3,8 @@
 promise* new_promise()
 {
 	promise* p = malloc(sizeof(promise));
-	initialize_promise(p);
+	if(p != NULL)
+		initialize_promise(p);
 	return p;
 }
 

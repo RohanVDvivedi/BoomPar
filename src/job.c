@@ -41,8 +41,9 @@ static job_status get_next_status(job_status status)
 
 job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
 {
-	job* job_p = ((job*)(malloc(sizeof(job))));
-	initialize_job(job_p, function_p, input_p, promise_for_output);
+	job* job_p = malloc(sizeof(job));
+	if(job_p != NULL)
+		initialize_job(job_p, function_p, input_p, promise_for_output);
 	return job_p;
 }
 
