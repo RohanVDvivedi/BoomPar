@@ -7,7 +7,8 @@
 sync_pipe* new_sync_pipe(cy_uint max_capacity)
 {
 	sync_pipe* spyp = malloc(sizeof(sync_pipe));
-	initialize_sync_pipe(spyp, max_capacity);
+	if(spyp != NULL)
+		initialize_sync_pipe(spyp, max_capacity);
 	return spyp;
 }
 
