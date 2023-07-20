@@ -29,6 +29,7 @@ static void clean_up(void* args)
 
 	pthread_mutex_lock(&(executor_p->worker_count_mutex));
 
+		// we decrement the active_worker_count and wake up any thread that could be waiting for the active_worker_count to reach 0
 		executor_p->active_worker_count--;
 		if(executor_p->active_worker_count == 0)
 			pthread_cond_broadcast(&(executor_p->worker_count_until_zero_wait));
@@ -46,14 +47,29 @@ static int create_worker(executor* executor_p)
 	// create a new thread for the executor, only if we are not exceeding the maximum thread count for the executor
 	if(executor_p->active_worker_count < executor_p->worker_count_limit)
 	{
+		// increment the active worker count, suggesting that we will now create a worker thread
+		// logically active_worker_count is the sum of actual active worker threads and the threads that are in creation
+		executor_p->active_worker_count++;
+
+		// release the mutex and then create a worker
+		pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+
 		pthread_t thread_id;
 		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
 
-		if(!error_worker_creation)
+		pthread_mutex_lock(&(executor_p->worker_count_mutex));
+
+		// now we can take lock and reevaluate based on the return value of the start_worker function's error
+
+		if(error_worker_creation) // error starting a worker
 		{
-			executor_p->active_worker_count++;
-			is_thread_added = 1;
+			// we decrement the active_worker_count and wake up any thread that could be waiting for the active_worker_count to reach 0
+			executor_p->active_worker_count--;
+			if(executor_p->active_worker_count == 0)
+				pthread_cond_broadcast(&(executor_p->worker_count_until_zero_wait));
 		}
+		else
+			is_thread_added = 1;
 	}
 
 	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
