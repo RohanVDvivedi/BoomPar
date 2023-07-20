@@ -1,4 +1,5 @@
-
+OPTIMIZATION
+ * create worker in executor without the executor's lock
 
 JOB feature
  * added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
