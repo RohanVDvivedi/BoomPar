@@ -78,7 +78,16 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 
 		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
 		if(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) < sq->max_capacity)
-			expand_queue(&(sq->qp));
+		{
+			// compute the new capacity it will expand to
+			cy_uint new_capacity = get_new_expansion_capacity_for_array(get_capacity_queue(&(sq->qp)));
+
+			// expand only if the new capacity is lesser than the max_capacity, else reserve for max_capacity
+			if(new_capacity < sq->max_capacity)
+				expand_queue(&(sq->qp));
+			else
+				reserve_capacity_for_queue(&(sq->qp), sq->max_capacity);
+		}
 
 		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
@@ -153,7 +162,16 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 
 		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
 		if(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) < sq->max_capacity)
-			expand_queue(&(sq->qp));
+		{
+			// compute the new capacity it will expand to
+			cy_uint new_capacity = get_new_expansion_capacity_for_array(get_capacity_queue(&(sq->qp)));
+
+			// expand only if the new capacity is lesser than the max_capacity, else reserve for max_capacity
+			if(new_capacity < sq->max_capacity)
+				expand_queue(&(sq->qp));
+			else
+				reserve_capacity_for_queue(&(sq->qp), sq->max_capacity);
+		}
 
 		int is_pushed = push_to_queue(&(sq->qp), data_p);
 
