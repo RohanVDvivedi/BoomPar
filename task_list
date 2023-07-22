@@ -1,5 +1,5 @@
 BUG FIX
- *2 fix race conditon in executor by
+ *1 fix race conditon in executor by
     * implement close for pushing to sync queue, waking up all the threads waiting for a push, and failing them.
     * protect shutdown using lock and a reference counter to count number of submitters at any instance. and a condition variable to wait for all submitters to exit.
 
