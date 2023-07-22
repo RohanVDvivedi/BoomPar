@@ -28,7 +28,7 @@ static void* execute_wrapper(void* job_v_p)
 	return NULL;
 }
 
-int execute_async(job* job_p, pthread_t* thread_id)
+int execute_job_async(job* job_p, pthread_t* thread_id)
 {
 	// make sure that the job is in right state to start with execution
 	if(job_p->state != CREATED)
