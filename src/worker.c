@@ -107,37 +107,34 @@ static void* worker_function(void* args)
 	worker_thread_params wtp = *((worker_thread_params*)(args));
 	free(args);
 
-	if(wtp.job_queue == NULL)
-		return NULL;
-
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	if(wtp.start_up != NULL)
 		wtp.start_up(wtp.additional_params);
 
-	while(1)
+	if(wtp.job_queue != NULL)
 	{
-		// A worker thread can not be cancelled while the worker is dequeuing and executing a job
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-
-		// pop a job from the queue blockingly with predertmined timeout
-		job* job_p = (job*) pop_sync_queue_blocking(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
-
-		if(job_p != NULL)
+		while(1)
 		{
+			// A worker thread can not be cancelled while the worker is dequeuing and executing a job
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
+			// pop a job from the queue blockingly with predertmined timeout
+			job* job_p = (job*) pop_sync_queue_blocking(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
+
+			// a NULL job implies a stop worker was submitted
+			if(job_p == NULL)
+				break;
+
 			// execute the job that has been popped
 			execute_job(job_p);
 
 			// once the job is executed we delete the job
 			delete_job(job_p);
-		}
-		else
-		{
-			break;
-		}
 
-		// Turn on cancelation of the worker thread once the job has been executed and deleted
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			// Turn on cancelation of the worker thread once the job has been executed and deleted
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		}
 	}
 
 	if(wtp.clean_up != NULL)
