@@ -71,7 +71,7 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 // the promise_for_output may be NULL, if you do not wish to wait for completion of the job
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue have a slot for this job
 // timeout = 0, implies waiting indefinitely
-int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds);
+int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
 // the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
