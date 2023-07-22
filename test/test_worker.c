@@ -53,7 +53,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -62,7 +62,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promise_completed_queue(promised_result, &promise_completed_queue);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -87,7 +87,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -96,7 +96,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promise_completed_queue(promised_result, &promise_completed_queue);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -114,7 +114,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -123,7 +123,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promise_completed_queue(promised_result, &promise_completed_queue);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}

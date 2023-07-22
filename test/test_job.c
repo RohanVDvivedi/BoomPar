@@ -32,7 +32,7 @@ int main()
 
 	int input = 5054;
 	promise simple_promise;	initialize_promise(&simple_promise);
-	job simple_job;			initialize_job(&simple_job, my_job_function_simple, &input, &simple_promise);
+	job simple_job;			initialize_job(&simple_job, my_job_function_simple, &input, &simple_promise, NULL);
 
 	promise* simple_promise_p = &simple_promise;
 	job* simple_job_p = &simple_job;
@@ -42,14 +42,14 @@ int main()
 	job waiting_jobs[WATING_JOB_COUNT];
 	for(int i = 0; i < WATING_JOB_COUNT; i++)
 	{
-		initialize_job(&(waiting_jobs[i]), job_waiting, simple_promise_p, NULL);
+		initialize_job(&(waiting_jobs[i]), job_waiting, simple_promise_p, NULL, NULL);
 		pthread_t thread_id;
-		if(execute_async(&(waiting_jobs[i]), &thread_id))
+		if(execute_job_async(&(waiting_jobs[i]), &thread_id))
 			exit(-1);
 	}
 
 	pthread_t thread_id;
-	if(execute_async(simple_job_p, &thread_id))
+	if(execute_job_async(simple_job_p, &thread_id))
 		exit(-1);
 
 
