@@ -24,9 +24,6 @@ struct sync_queue
 	unsigned int q_full_wait_thread_count;
 
 	// this value suggests the maximum capacity of this queue
-	// this value if provided to be lesser than 8, then it is made 8
-	// NOTE: this value is just a suggestion, there is no mechanism to enforce a strict max_capacity
-	// NOTE: setting max_capacity to UINT_MAX makes this queue theoretically UNBOUNDED but we know that all computer memory is bounded
 	cy_uint max_capacity;
 
 	// queue for storing the push/pop ed variables
