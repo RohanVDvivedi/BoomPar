@@ -1,7 +1,8 @@
 BUG FIX
- *1 fix race conditon in executor by
-    * implement close for pushing to sync queue, waking up all the threads waiting for a push, and failing them.
-    * protect shutdown using lock and a reference counter to count number of submitters at any instance. and a condition variable to wait for all submitters to exit.
+ *1 implement a callback that allows you to do anything with the resolved promise, and a call back handle api like: void on_promise_resolved_callback(void* callback_param, promise* promise_resolved);
+ *2 implement close functionalitu for sync_queue, to allow to close it. i.e. after which all pushes will fail
+ *3 add mutex to make shutdown thread safe, use a single boolean variable to check for shutdown, and a condition variable that allows the studown called to wait until all submitters have exited
+ *4 build default callbacks to push a promise into a promised queue, upon promise being resolved, and self destruct if the push fails
 
 FEATURE
  * build a generic api for a reference counter that creates an object with reference count 1, and deletes an object if its reference count reaches 0, and has a node based api, allowing to convert any object into a reference counted - shared pointer like pointer
