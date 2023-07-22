@@ -1,7 +1,8 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include<pthread.h>
+#include<limits.h>
+
 #include<promise.h>
 
 // a job can be in any of the following states
@@ -63,26 +64,29 @@ struct job
 // It can be used to free up resources reserved by input_p, in case a job does not get called
 // It is an optional paramater and can be NULL
 
-job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p));
+job* new_job(void* (*job_function)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p));
 
-void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p));
+void initialize_job(job* job_p, void* (*job_function)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p));
 
 // executes the given job, in async, on a new thread (job must be in CREATED state)
-// returns error code returned by the pthread_create, 0 for success
+// on failure, it returns error code returned by the pthread_create OR INVALID_JOB_STATE
+// else returns 0 for success
+#define INVALID_JOB_STATE INT_MIN
 int execute_job_async(job* job_p, pthread_t* thread_id);
 
 // executes the given job on the same thread (job must be in CREATED state)
-// returns 0 if the job was executed, else returns -1 for failure
+// returns 0 on failure
 int execute_job(job* job_p);
 
 // cancels a CREATED job
-// 0 implies success, -1 is failure
+// returns 0 on failure
 int cancel_job(job* job_p);
 
 // to deinitialize or delete a job it must be in CANCELLED or COMPLETED state
+// they return 0 on failure
 
-void deinitialize_job(job* job_p);
+int deinitialize_job(job* job_p);
 
-void delete_job(job* job_p);
+int delete_job(job* job_p);
 
 #endif 
