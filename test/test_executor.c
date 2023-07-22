@@ -16,6 +16,12 @@ void* my_job_function(void* my_int)
 	return my_int;
 }
 
+void my_job_on_cancellation(void* my_int)
+{
+	int i = (*((int*)my_int));
+	printf("job with input %d cancelled\n", i);
+}
+
 void worker_finish(void* args)
 {
 	printf("Worker at thread_id = %d FINISHED\n", (int)pthread_self());
@@ -63,7 +69,7 @@ int main()
 			set_promise_completed_queue(promised_result, promise_completed_queue);
 		}
 
-		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result, NULL, 0))
+		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result, my_job_on_cancellation, 0))
 			printf("Job submission failed with input %d\n", i);
 	}
 	printf("finished queueing all jobs\n");
