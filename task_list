@@ -1,8 +1,11 @@
 JOB feature
- *1 added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
-   * this will help the job to clean up the input parameter even if it does not get executed, for instance on executor shutdown immediately
+ *1 add a callback in job to be called on cancellation of a job, canceling a job calls this call back instead of the job function.
+    * add job cancel function, that works only with a CREATED or COMPLETED job, if created it pushed NULL to the pormise and calls the call back, if completed it does nothing, use a mutex if necessary to do this. make sure a job can not be run multiple times, use a condition variable to wait until a job is completed
 
 BUG FIX
  *2 fix race conditon in executor by
     * implement close for pushing to sync queue, waking up all the threads waiting for a push, and failing them.
     * protect shutdown using lock and a reference counter to count number of submitters at any instance. and a condition variable to wait for all submitters to exit.
+
+FEATURE
+ * build a generic api for a reference counter that creates an object with reference count 1, and deletes an object if its reference count reaches 0, and has a node based api, allowing to convert any object into a reference counted - shared pointer like pointer
