@@ -2,24 +2,21 @@
 
 #include<stdlib.h>
 
-/*
-** ABOVE FUNCTIONS are the only ones to be used for manipulating the state of a job status
-*/
-
-job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+job* new_job(void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p))
 {
 	job* job_p = malloc(sizeof(job));
 	if(job_p != NULL)
-		initialize_job(job_p, function_p, input_p, promise_for_output);
+		initialize_job(job_p, function_p, input_p, promise_for_output, cancellation_callback);
 	return job_p;
 }
 
-void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output)
+void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p))
 {
-	job_p->status = CREATED;
+	job_p->state = CREATED;
 	job_p->input_p = input_p;
 	job_p->function_p = function_p;
 	job_p->promise_for_output = promise_for_output;
+	job_p->cancellation_callback = cancellation_callback;
 }
 
 static void* execute_wrapper(void* job_v_p)
