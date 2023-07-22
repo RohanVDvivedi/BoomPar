@@ -59,12 +59,12 @@ int start_worker(pthread_t* thread_id, sync_queue* job_queue, unsigned long long
 	return return_val;
 }
 
-int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, unsigned long long int submission_timeout_in_microseconds)
+int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds)
 {
 	int was_job_queued = 0;
 
 	// create a new job with the given parameters
-	job* job_p = new_job(function_p, input_p, promise_for_output);
+	job* job_p = new_job(function_p, input_p, promise_for_output, cancellation_callback);
 
 	// if a job couldn't be created, then fail
 	if(job_p == NULL)
@@ -74,7 +74,10 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
 
 	if(!was_job_queued)
+	{
+		cancel_job(job_p);
 		delete_job(job_p);
+	}
 
 	return was_job_queued;
 }
@@ -90,7 +93,10 @@ void discard_leftover_jobs(sync_queue* job_queue)
 	{
 		job* job_p = (job*) pop_sync_queue_non_blocking(job_queue);
 		if(job_p != NULL)
+		{
+			cancel_job(job_p);
 			delete_job(job_p);
+		}
 	}
 }
 
@@ -120,7 +126,7 @@ static void* worker_function(void* args)
 		if(job_p != NULL)
 		{
 			// execute the job that has been popped
-			execute(job_p);
+			execute_job(job_p);
 
 			// once the job is executed we delete the job
 			delete_job(job_p);
