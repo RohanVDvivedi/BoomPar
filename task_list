@@ -1,8 +1,8 @@
 JOB feature
- *2 added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
+ *1 added a function to clean up the input parameter, this is done immediately after the job is either completed or deinitialized which ever happens first
    * this will help the job to clean up the input parameter even if it does not get executed, for instance on executor shutdown immediately
 
 BUG FIX
- *3 fix race conditon in executor by
+ *2 fix race conditon in executor by
     * implement close for pushing to sync queue, waking up all the threads waiting for a push, and failing them.
     * protect shutdown using lock and a reference counter to count number of submitters at any instance. and a condition variable to wait for all submitters to exit.
