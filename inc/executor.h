@@ -64,27 +64,21 @@ struct executor
 // creates a new executor, for the client
 executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
-// this function creates a job to execute function_p on input_p and set promise_for_output with the output of the job
-// and enqueues this job  in the job_queue of the executor
-// it returns 0, if the job was not submitted, and 1 if the job submission succeeded
+// returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // job submission fails if any of the thread has called, shutdown_executor() on this executor
-// the promise_for_output may be NULL, if you do not wish to wait for completion of the job
-// submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue have a slot for this job
+// submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job
 // timeout = 0, implies waiting indefinitely
 int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
-// the executor is asked to shutdown using this function,
 // if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
 // else executor will exit after completing all jobs in the queue
 void shutdown_executor(executor* executor_p, int shutdown_immediately);
 
 // this function, makes the calling thread to go in to wait state, untill all the threads are completed and destroyed
-// after calling this function, in the current thread we are sure that, before the execution of the new line, all the threads of executor have been completed
-// and that is basically means,that no new job will now be dequeued, retuns 1 if the thread_count of the gioven executor is 0 now
 int wait_for_all_threads_to_complete(executor* executor_p);
 
 // deletes the executor,
-// can not and must not be called without, calling shutdown
+// This function must not be called without, calling shutdown
 // returns 1 if the executor was deleted
 int delete_executor(executor* executor_p);
 
