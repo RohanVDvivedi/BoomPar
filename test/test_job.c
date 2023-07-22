@@ -43,10 +43,15 @@ int main()
 	for(int i = 0; i < WATING_JOB_COUNT; i++)
 	{
 		initialize_job(&(waiting_jobs[i]), job_waiting, simple_promise_p, NULL);
-		execute_async(&(waiting_jobs[i]));
+		pthread_t thread_id;
+		if(execute_async(&(waiting_jobs[i]), &thread_id))
+			exit(-1);
 	}
 
-	execute_async(simple_job_p);
+	pthread_t thread_id;
+	if(execute_async(simple_job_p, &thread_id))
+		exit(-1);
+
 
 	#if defined WAIT_ANXIOUSLY
 
