@@ -8,10 +8,9 @@
 typedef enum job_status job_status;
 enum job_status
 {
-	CREATED   = 0,
-	QUEUED    = 1,
-	RUNNING   = 2,
-	COMPLETED = 3
+	CREATED,
+	RUNNING,
+	COMPLETED
 };
 
 // you, the client is suppossed to free the input_p and promise_for_output pointers of any job
@@ -52,8 +51,8 @@ void initialize_job(job* job_p, void* (*function_p)(void* input_p), void* input_
 int job_status_change(job* job_p, job_status job_new_status);
 
 // executes the given job, in async, on a new thread
-// returns pthread_t, the thread on which the job will be executed, on error returns 0
-pthread_t execute_async(job* job_p);
+// returns error code returned by the pthread_create
+int execute_async(job* job_p, pthread_t* thread_id);
 
 // executes the given job 
 // returns 0 if the job was executed, else returns 1

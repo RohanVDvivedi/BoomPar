@@ -51,7 +51,6 @@ int start_worker(pthread_t* thread_id, sync_queue* job_queue, unsigned long long
 	return_val = pthread_create(thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
-		printf("Error starting worker : %d\n", return_val);
 		free(wtp);
 		return return_val;
 	}
@@ -71,10 +70,8 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	if(job_p == NULL)
 		return 0;
 
-	// update job status, from CREATED to QUEUED
-	// if this update of job status is successfull, then only we go forward and queue the job
-	if(job_status_change(job_p, QUEUED))
-		was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
+	// forward and queue the job
+	was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
 
 	if(!was_job_queued)
 		delete_job(job_p);
