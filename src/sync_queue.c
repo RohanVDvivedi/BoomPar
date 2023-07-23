@@ -20,6 +20,7 @@ void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
 	sq->q_full_wait_thread_count = 0;
 	sq->max_capacity = max_capacity;
 	initialize_queue(&(sq->qp), 0);
+	sq->is_closed = 0;
 }
 
 void deinitialize_sync_queue(sync_queue* sq)
