@@ -4,8 +4,6 @@
 #include<pthread.h>
 #include<stdlib.h>
 
-#include<sync_queue.h>
-
 typedef struct promise promise;
 
 typedef struct promise_completed_callback promise_completed_callback;
