@@ -159,13 +159,20 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 
 		int wait_error = 0;
 
-		// keep on looping while the bounded queue is full and has reached its max_capacity and there is no wait_error
+		// keep on looping while the bounded queue is not closed AND is full AND has reached its max_capacity AND there is no wait_error
 		// note : timeout is also a wait error
-		while(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) >= sq->max_capacity && !wait_error)
+		while(!sq->is_closed && is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) >= sq->max_capacity && !wait_error)
 		{
 			sq->q_full_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_full_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 			sq->q_full_wait_thread_count--;
+		}
+
+		// if the sync queue is closed, we fail to push
+		if(sq->is_closed)
+		{
+			pthread_mutex_unlock(&(sq->q_lock));
+			return 0;
 		}
 
 		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
