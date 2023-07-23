@@ -22,14 +22,14 @@ static void clean_up(void* args)
 	if(executor_p->worker_finish != NULL)
 		executor_p->worker_finish(executor_p->call_back_params);
 
-	pthread_mutex_lock(&(executor_p->worker_count_mutex));
+	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
 		// we decrement the active_worker_count and wake up any thread that could be waiting for the active_worker_count to reach 0
 		executor_p->active_worker_count--;
 		if(executor_p->active_worker_count == 0)
-			pthread_cond_broadcast(&(executor_p->worker_count_until_zero_wait));
+			pthread_cond_broadcast(&(executor_p->active_worker_count_until_zero_wait));
 
-	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 }
 
 // returns 1 if a new thread is created and added to the executor
@@ -37,7 +37,7 @@ static int create_worker(executor* executor_p)
 {
 	int is_thread_added = 0;
 
-	pthread_mutex_lock(&(executor_p->worker_count_mutex));
+	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
 	// create a new thread for the executor, only if we are not exceeding the maximum thread count for the executor
 	if(executor_p->active_worker_count < executor_p->worker_count_limit)
@@ -47,12 +47,12 @@ static int create_worker(executor* executor_p)
 		executor_p->active_worker_count++;
 
 		// release the mutex and then create a worker
-		pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+		pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
 		pthread_t thread_id;
 		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
 
-		pthread_mutex_lock(&(executor_p->worker_count_mutex));
+		pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
 		// now we can take lock and reevaluate based on the return value of the start_worker function's error
 
@@ -61,13 +61,13 @@ static int create_worker(executor* executor_p)
 			// we decrement the active_worker_count and wake up any thread that could be waiting for the active_worker_count to reach 0
 			executor_p->active_worker_count--;
 			if(executor_p->active_worker_count == 0)
-				pthread_cond_broadcast(&(executor_p->worker_count_until_zero_wait));
+				pthread_cond_broadcast(&(executor_p->active_worker_count_until_zero_wait));
 		}
 		else
 			is_thread_added = 1;
 	}
 
-	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
 	return is_thread_added;
 }
@@ -152,12 +152,12 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 	}
 
 	// lock is taken to ensure that the active_worker_count does not change while we submit stop worker
-	pthread_mutex_lock(&(executor_p->worker_count_mutex));
+	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
 	for(unsigned int i = 0; i < executor_p->active_worker_count;i++)
 		submit_stop_worker(&(executor_p->job_queue), 0);
 
-	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 }
 
 // returns 1, if all the threads completed
@@ -168,12 +168,12 @@ int wait_for_all_threads_to_complete(executor* executor_p)
 	if(!is_shutdown_called(executor_p))
 		return 0;
 
-	pthread_mutex_lock(&(executor_p->worker_count_mutex));
+	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
 	while(executor_p->active_worker_count > 0)
-		pthread_cond_wait(&(executor_p->worker_count_until_zero_wait), &(executor_p->worker_count_mutex));
+		pthread_cond_wait(&(executor_p->active_worker_count_until_zero_wait), &(executor_p->active_worker_count_mutex));
 
-	pthread_mutex_unlock(&(executor_p->worker_count_mutex));
+	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
 	return 1;
 }
