@@ -115,7 +115,7 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 		int is_popped = pop_from_queue(&(sq->qp));
 
 		// signal other threads, if an element was popped
-		if(is_popped && sq->q_full_wait_thread_count > 0)
+		if(!sq->is_closed && is_popped && sq->q_full_wait_thread_count > 0)
 			pthread_cond_signal(&(sq->q_full_wait));
 
 		// if the queue, occupies more than thrice the needed space, attempt to shrink it
