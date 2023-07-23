@@ -191,14 +191,22 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 // you must call the thread shutdown, before calling this function
 int wait_for_all_threads_to_complete(executor* executor_p)
 {
-	// return failure, if shutdown was not requested
-	if(!executor_p->shutdown_requested)
-		return 0;
+	pthread_mutex_lock(&(executor_p->shutdown_mutex));
+
+		// return failure, if shutdown was not requested
+		if(!executor_p->shutdown_requested)
+		{
+			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
+			return 0;
+		}
+
+	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
 	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
-	while(executor_p->active_worker_count > 0)
-		pthread_cond_wait(&(executor_p->active_worker_count_until_zero_wait), &(executor_p->active_worker_count_mutex));
+		// wait for active worker count to reach 0
+		while(executor_p->active_worker_count > 0)
+			pthread_cond_wait(&(executor_p->active_worker_count_until_zero_wait), &(executor_p->active_worker_count_mutex));
 
 	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
@@ -207,9 +215,16 @@ int wait_for_all_threads_to_complete(executor* executor_p)
 
 int delete_executor(executor* executor_p)
 {
-	// return failure, if shutdown was not requested
-	if(!executor_p->shutdown_requested)
-		return 0;
+	pthread_mutex_lock(&(executor_p->shutdown_mutex));
+
+		// return failure, if shutdown was not requested
+		if(!executor_p->shutdown_requested)
+		{
+			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
+			return 0;
+		}
+
+	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
 	// executor can not be deleted if "wait for threads to complete" fails
 	if(!wait_for_all_threads_to_complete(executor_p))
