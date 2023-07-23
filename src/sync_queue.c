@@ -216,7 +216,7 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 
 void close_sync_queue(sync_queue* sq)
 {
-
+	// TODO
 }
 
 unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
