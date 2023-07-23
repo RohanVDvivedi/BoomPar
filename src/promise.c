@@ -23,8 +23,8 @@ int set_promised_result(promise* p, void* res)
 
 	pthread_mutex_lock(&(p->promise_lock));
 
-	// push this promise to this queue, if the promise is completed
-	sync_queue* push_promise_to = NULL;
+	// run this callback if it exists, without the lock of the promise
+	promise_completed_callback* pcc_to_execute = NULL;
 
 	if(!p->output_result_ready)
 	{
@@ -37,15 +37,15 @@ int set_promised_result(promise* p, void* res)
 		p->output_result_ready = 1;
 		pthread_cond_broadcast(&(p->promise_wait));
 
-		// push this promise to this queue, if the promise is completed
-		push_promise_to = p->promise_completed_queue;
+		// if the output is set, then also set the promise_completion_callback that we will have to run
+		pcc_to_execute = p->promise_completion_callback;
 	}
 
 	pthread_mutex_unlock(&(p->promise_lock));
 
-	// push the promise object if it was completed and the promise_completed_queue exists
-	if(push_promise_to)
-		push_sync_queue_blocking(push_promise_to, p, 0);
+	// we run the callback after releasing the lock
+	if(pcc_to_execute && was_promised_result_set)
+		pcc_to_execute->callback_function(p, pcc_to_execute->callback_param);
 
 	return was_promised_result_set;
 }
@@ -95,6 +95,7 @@ int set_promise_completion_callback(promise* p, promise_completed_callback* prom
 	pthread_mutex_unlock(&(p->promise_lock));
 
 	// if the result was ready and the promise completion callback was set, then call that callback
+	// we must run the callback only after we have release the lock
 	if(is_result_ready && was_promise_completion_callback_set)
 		promise_completion_callback->callback_function(p, promise_completion_callback->callback_param);
 
