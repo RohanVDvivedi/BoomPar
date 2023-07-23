@@ -1,6 +1,5 @@
 #include<sync_queue.h>
 
-#include<stdio.h>
 #include<stdlib.h>
 
 sync_queue* new_sync_queue(cy_uint max_capacity)

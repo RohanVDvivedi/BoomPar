@@ -2,7 +2,6 @@
 
 #include<worker.h>
 
-#include<stdio.h>
 #include<stdlib.h>
 
 static void start_up(void* args)

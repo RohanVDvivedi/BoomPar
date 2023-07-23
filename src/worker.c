@@ -1,7 +1,6 @@
 #include<worker.h>
 
 #include<stdlib.h>
-#include<stdio.h>
 #include<errno.h>
 
 typedef struct worker_thread_params worker_thread_params;
