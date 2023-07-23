@@ -129,7 +129,7 @@ int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p)
 {
 	pthread_mutex_lock(&(executor_p->shutdown_mutex));
 		// take the shudown_mutex lock to check if the shutdown was requested or not
-		if(!executor_p->shutdown_requested)
+		if(executor_p->shutdown_requested)
 		{
 			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 			return 0;
@@ -215,17 +215,6 @@ int wait_for_all_executor_workers_to_complete(executor* executor_p)
 
 int delete_executor(executor* executor_p)
 {
-	pthread_mutex_lock(&(executor_p->shutdown_mutex));
-
-		// return failure, if shutdown was not requested
-		if(!executor_p->shutdown_requested)
-		{
-			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
-			return 0;
-		}
-
-	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
-
 	// executor can not be deleted if "wait for threads to complete" fails
 	if(!wait_for_all_executor_workers_to_complete(executor_p))
 		return 0;
