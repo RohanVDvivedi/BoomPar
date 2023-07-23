@@ -216,7 +216,15 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 
 void close_sync_queue(sync_queue* sq)
 {
-	// TODO
+	pthread_mutex_lock(&(sq->q_lock));
+		// only if the queue was previously closed and there are threads waiting on a full queue to push,
+		// we have to wake all of them up, since the queue is now closed and they won't be allowed to push
+		if(!sq->is_closed && sq->q_full_wait_thread_count > 0)
+			pthread_cond_broadcast(&(sq->q_full_wait));
+
+		// mark the queue as closed, no push calls will succeed after this point
+		sq->is_closed = 1;
+	pthread_mutex_unlock(&(sq->q_lock));
 }
 
 unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
