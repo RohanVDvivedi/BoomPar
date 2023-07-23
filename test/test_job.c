@@ -4,6 +4,8 @@
 #include<job.h>
 #include<sync_queue.h>
 
+#include<promise_completion_default_callbacks.h>
+
 void* my_job_function_simple(void* my_int)
 {
 	int i = (*((int*)my_int));
@@ -64,7 +66,8 @@ int main()
 
 		sync_queue promise_completed_queue;
 		initialize_sync_queue(&promise_completed_queue, 1);
-		set_promise_completed_queue(simple_promise_p, &promise_completed_queue);
+		promise_completed_callback promise_completed_queue_callback = push_to_sync_queue_on_promise_completion(&promise_completed_queue);
+		set_promise_completion_callback(simple_promise_p, &promise_completed_queue_callback);
 		simple_promise_p = (promise*) pop_sync_queue_blocking(&promise_completed_queue, 0);
 		deinitialize_sync_queue(&promise_completed_queue);
 		printf("Awaited for promised to be completed using sync queue\n");
