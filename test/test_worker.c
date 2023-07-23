@@ -49,7 +49,7 @@ int main()
 	printf("Initializing promise_completed queue\n\n");
 	sync_queue promise_completed_queue;
 	initialize_sync_queue(&promise_completed_queue, JOBs_COUNT);
-	promise_completed_callback promise_completed_queue_callback = push_to_sync_queue_on_promise_completion(&promise_completed_queue);
+	promise_completion_callback promise_completion_queue_callback = push_to_sync_queue_on_promise_completion_callback(&promise_completed_queue);
 
 	printf("Submitting initial 6 set of the jobs\n");
 	for(int i = 0; i < SET_1_JOBS; i++, total_jobs_submitted++)
@@ -64,7 +64,7 @@ int main()
 		else
 		{
 			promise* promised_result = new_promise();
-			set_promise_completion_callback(promised_result, &promise_completed_queue_callback);
+			set_promised_callback(promised_result, &promise_completion_queue_callback);
 			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
@@ -98,7 +98,7 @@ int main()
 		else
 		{
 			promise* promised_result = new_promise();
-			set_promise_completion_callback(promised_result, &promise_completed_queue_callback);
+			set_promised_callback(promised_result, &promise_completion_queue_callback);
 			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
@@ -125,7 +125,7 @@ int main()
 		else
 		{
 			promise* promised_result = new_promise();
-			set_promise_completion_callback(promised_result, &promise_completed_queue_callback);
+			set_promised_callback(promised_result, &promise_completion_queue_callback);
 			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);

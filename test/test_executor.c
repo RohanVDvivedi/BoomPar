@@ -60,7 +60,7 @@ int main()
 
 	// create a promise_completed_queue
 	sync_queue* promise_completed_queue = new_sync_queue((TEST_JOBs_COUNT / 3) + 16);
-	promise_completed_callback promise_completed_queue_callback = push_to_sync_queue_on_promise_completion(promise_completed_queue);
+	promise_completion_callback promise_completion_queue_callback = push_to_sync_queue_on_promise_completion_callback(promise_completed_queue);
 
 	// submit jobs, one by one
 	for(int i=0; i < TEST_JOBs_COUNT;i++)
@@ -69,7 +69,7 @@ int main()
 		if(i % 3 == 0)
 		{
 			promised_result = new_promise();
-			set_promise_completion_callback(promised_result, &promise_completed_queue_callback);
+			set_promised_callback(promised_result, &promise_completion_queue_callback);
 		}
 
 		if(!submit_job(executor_p, my_job_function, &jobs_input_param[i], promised_result, my_job_on_cancellation, 0))
