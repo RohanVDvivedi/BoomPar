@@ -5,11 +5,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-static int is_shutdown_called(executor* executor_p)
-{
-	return executor_p->requested_to_stop_after_current_job || executor_p->requested_to_stop_after_queue_is_empty;
-}
-
 static void start_up(void* args)
 {
 	executor* executor_p = ((executor*)(args));
@@ -107,25 +102,25 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 	initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity);
 
 	executor_p->active_worker_count = 0;
+	pthread_cond_init(&(executor_p->active_worker_count_until_zero_wait), NULL);
+	pthread_mutex_init(&(executor_p->active_worker_count_mutex), NULL);
 
-	pthread_mutex_init(&(executor_p->worker_count_mutex), NULL);
-	pthread_cond_init(&(executor_p->worker_count_until_zero_wait), NULL);
+	executor_p->submitters_count = 0;
+	pthread_cond_init(&(executor_p->submitters_count_until_zero_wait), NULL);
 
-	// unset the stop variables, just to be sure :p
-	executor_p->requested_to_stop_after_current_job = 0;
-	executor_p->requested_to_stop_after_queue_is_empty = 0;
+	executor_p->shutdown_requested = 0;
+
+	pthread_mutex_init(&(executor_p->shutdown_mutex), NULL);
 
 	// to allow the threads to callback when they start, exit
 	executor_p->worker_startup = worker_startup;
 	executor_p->worker_finish = worker_finish;
 	executor_p->call_back_params = call_back_params;
 
-	// create the minimum number of threads required for functioning
+	// create all the workers upfront for the FIXED_THREAD_COUNT_EXECUTOR
 	if(executor_p->type == FIXED_THREAD_COUNT_EXECUTOR)
-	{
 		for(unsigned int i = 0; i < executor_p->worker_count_limit; i++)
 			create_worker(executor_p);
-	}
 
 	return executor_p;
 }
@@ -169,7 +164,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 // you must call the thread shutdown, before calling this function
 int wait_for_all_threads_to_complete(executor* executor_p)
 {
-	// return if the waiting for complettion of thread is not allowed
+	// return failure, if shutdown was not called
 	if(!is_shutdown_called(executor_p))
 		return 0;
 
@@ -185,17 +180,23 @@ int wait_for_all_threads_to_complete(executor* executor_p)
 
 int delete_executor(executor* executor_p)
 {
+	// return failure, if shutdown was not called
+	if(!is_shutdown_called(executor_p))
+		return 0;
+
 	// executor can not be deleted if "wait for threads to complete" fails
 	if(!wait_for_all_threads_to_complete(executor_p))
-	{
-		// return that executor not deleted
 		return 0;
-	}
+
+	discard_leftover_jobs(&(executor_p->job_queue));
 
 	deinitialize_sync_queue(&(executor_p->job_queue));
 
-	pthread_mutex_destroy(&(executor_p->worker_count_mutex));
-	pthread_cond_destroy(&(executor_p->worker_count_until_zero_wait));
+	pthread_cond_destroy(&(executor_p->active_worker_count_until_zero_wait));
+	pthread_mutex_destroy(&(executor_p->active_worker_count_mutex));
+
+	pthread_cond_destroy(&(executor_p->submitters_count_until_zero_wait));
+	pthread_mutex_destroy(&(executor_p->shutdown_mutex));
 
 	free(executor_p);
 

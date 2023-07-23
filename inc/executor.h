@@ -20,12 +20,6 @@ typedef struct executor executor;
 struct executor
 {
 	// --------------------------------------------
-	// Main job_queue managed by the executor
-
-	// this is queue for the jobs, that gets submitted by the client
-	sync_queue job_queue;
-
-	// --------------------------------------------
 	// Constants through out the life of the executor
 
 	executor_type type;
@@ -37,6 +31,12 @@ struct executor
 
 	// maximum numbers of workers that this executor is allowed to spawn
 	unsigned int worker_count_limit;
+
+	// --------------------------------------------
+	// Main job_queue managed by the executor
+
+	// this is queue for the jobs, that gets submitted by the client
+	sync_queue job_queue;
 
 	// --------------------------------------------
 
