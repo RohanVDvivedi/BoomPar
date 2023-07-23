@@ -92,7 +92,7 @@ int main()
 			printf("Looks like wait function threw error\n");
 	}
 
-	printf("thread count %u\n", executor_p->active_worker_count);
+	printf("is thread count 0 => %d\n", (executor_p->active_worker_count == 0));
 
 	if(delete_executor(executor_p))
 		printf("Deletion of executor succedded\n");
