@@ -1,6 +1,5 @@
 BUG FIX
  *1 implement a callback that allows you to do anything with the resolved promise, and a call back handle api like: void on_promise_resolved_callback(void* callback_param, promise* promise_resolved);
- *2 implement close functionalitu for sync_queue, to allow to close it. i.e. after which all pushes will fail
  *3 add mutex to make shutdown thread safe, use a single boolean variable to check for shutdown, and a condition variable that allows the studown called to wait until all submitters have exited
  *4 build default callbacks to push a promise into a promised queue, upon promise being resolved, and self destruct if the push fails
 
