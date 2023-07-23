@@ -6,12 +6,17 @@
 
 #include<sync_queue.h>
 
+typedef struct promise_completed_callback promise_completed_callback;
+{
+	void* callback_param;
+	void (*callback_function)(promise* p, void* callback_param);
+};
+
 typedef struct promise promise;
 struct promise
 {
-	// signifies whether output result is set by the producer threads
+	// signifies whether output result, i.e. is set by the producer thread
 	// this value is initialized as 0 and can only be fliped from 0 -> 1
-	// IT SHOULD/WILL NOT BE FLIPPED BACK AND FROTH
 	int output_result_ready:1;
 
 	void* output_result;
@@ -21,9 +26,8 @@ struct promise
 	// threads wait on this conditional variable until promise value could be obtained
 	pthread_cond_t promise_wait;
 
-	// push this promise to the below sync_queue, after it is completed
-	// this is not set by default, it is an optional parameter
-	sync_queue* promise_completed_queue;
+	// callback to be executed upon completion of the promise
+	promise_completed_callback* promise_completion_callback;
 };
 
 promise* new_promise();
@@ -40,9 +44,9 @@ void* get_promised_result(promise* p);
 // to check if a promised result is ready, kind of non blocking way to access a promise
 int is_promised_result_ready(promise* p);
 
-// it sets the promise_completed_queue, if it is not alread set
-// if the result is fulfilled then it calls the callback right away, else it queues the callback to callbacks_requested queue
-int set_promise_completed_queue(promise* p, sync_queue* promise_completed_queue);
+// it sets the promise_completion_callback, if it is not alread set
+// this can be done before or after the promise has been resolved
+int set_promise_completion_callback(promise* p, promise_completed_callback* promise_completion_callback);
 
 void deinitialize_promise(promise* p);
 
