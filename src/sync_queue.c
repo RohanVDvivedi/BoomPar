@@ -214,6 +214,11 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 	return is_popped ? data_p : NULL;
 }
 
+void close_sync_queue(sync_queue* sq)
+{
+
+}
+
 unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));

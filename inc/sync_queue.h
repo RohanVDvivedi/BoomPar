@@ -28,6 +28,10 @@ struct sync_queue
 
 	// queue for storing the push/pop ed variables
 	queue qp;
+
+	// this attribute tells us if the queue is closed
+	// you can only pop from a closed queue, all push calls after a close will fail
+	int is_closed;
 };
 
 
@@ -90,6 +94,19 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 
 // it will block for atmost wait_time_out_in_microseconds
 const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds);
+
+
+
+/*
+*	CLOSE FUNCTIONALITY
+*	you can not push to a sync_queue after a close, all push calls after a close_sync_queue will fail
+*	you can still pop from a closed sync queue
+*/
+
+void close_sync_queue(sync_queue* sq)
+{
+	// TODO
+}
 
 
 
