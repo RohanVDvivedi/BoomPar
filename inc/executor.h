@@ -19,33 +19,50 @@ enum executor_type
 typedef struct executor executor;
 struct executor
 {
-	// defines the type of the executor it is
-	executor_type type;
-
+	// --------------------------------------------
+	// Main job_queue managed by the executor
 
 	// this is queue for the jobs, that gets submitted by the client
 	sync_queue job_queue;
 
+	// --------------------------------------------
+	// Constants through out the life of the executor
+
+	executor_type type;
+
+	// only valid for type = CACHED_THREAD_POOL_EXECUTOR
+	// it defines the number of microseconds that a worker will wait for job, before self destructing
+	// a worker never gets killed in a FIXED_THREAD_COUNT_EXECUTOR
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
+	// maximum numbers of workers that this executor is allowed to spawn
 	unsigned int worker_count_limit;
 
-	// keeps the current count of threads created by executor
+	// --------------------------------------------
+
+	// number of active workers in the executor and 
+	// a condition variable to wait for this count to reach 0, after a shutdown is called
 	unsigned int active_worker_count;
+	pthread_cond_t active_worker_count_until_zero_wait;
 
-	// thread_count_mutex is for protection of thread count variable
-	pthread_mutex_t worker_count_mutex;
+	// active_worker_count_mutex is for protection of the thread count variable
+	pthread_mutex_t active_worker_count_mutex;
 
-	// thread_count_wait is for waiting on thread count variable
-	pthread_cond_t worker_count_until_zero_wait;
+	// --------------------------------------------
 
+	// number of threads currently that have called submit_job on thie executor
+	// a condition variable to wait for this count to reach 0, after a shutdown is called
+	unsigned int submitters_count;
+	pthread_cond_t submitters_count_until_zero_wait;
 
-	// self explanatory variable, is set only by shutdown executor method
-	volatile int requested_to_stop_after_queue_is_empty;
+	// will be set if the shutdown gets called
+	int shutdown_requested;
 
-	// self explanatory variable, is set only by shutdown executor method
-	volatile int requested_to_stop_after_current_job;
+	// protects shutdown_requested flag and the submitters_count
+	pthread_mutex_t shutdown_mutex;
 
+	// --------------------------------------------
+	// worker_startup and worker_finish callbacks
 
 	// Functionality to call worker_startup worker_finish with predefined call_back_params
 	// called when a new worker starts in the executor
@@ -61,25 +78,23 @@ struct executor
 	*/
 };
 
-// creates a new executor, for the client
 executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
 // returns 0, if the job was not submitted, and 1 if the job submission succeeded
-// job submission fails if any of the thread has called, shutdown_executor() on this executor
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job
-// timeout = 0, implies waiting indefinitely
-int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
+// submission_timeout_in_microseconds = 0, implies waiting indefinitely
+int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
-// if shutdown_immediately, is set, executor asks all the threads to complete current process and exit, leaving the remaining jobs in the queue
-// else executor will exit after completing all jobs in the queue
+// if shutdown_immediately, is set the shutdown will discard all the queued jobs,
+// the executor's job_queue would be closed regardless
+// this function only returns after the submitter's count has reached 0
 void shutdown_executor(executor* executor_p, int shutdown_immediately);
 
-// this function, makes the calling thread to go in to wait state, untill all the threads are completed and destroyed
-int wait_for_all_threads_to_complete(executor* executor_p);
+// this function, makes the calling thread to go in to wait state, until all the workers have exited
+// fails if the shutdown has not been called
+int wait_for_all_executor_workers_to_complete(executor* executor_p);
 
-// deletes the executor,
-// This function must not be called without, calling shutdown
-// returns 1 if the executor was deleted
+// deletes the executor, fails if the shutdown has not been called
 int delete_executor(executor* executor_p);
 
 #endif
