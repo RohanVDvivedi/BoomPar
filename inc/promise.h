@@ -6,13 +6,15 @@
 
 #include<sync_queue.h>
 
+typedef struct promise promise;
+
 typedef struct promise_completed_callback promise_completed_callback;
+struct promise_completed_callback
 {
 	void* callback_param;
 	void (*callback_function)(promise* p, void* callback_param);
 };
 
-typedef struct promise promise;
 struct promise
 {
 	// signifies whether output result, i.e. is set by the producer thread
