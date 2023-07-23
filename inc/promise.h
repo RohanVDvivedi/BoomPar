@@ -6,8 +6,8 @@
 
 typedef struct promise promise;
 
-typedef struct promise_completed_callback promise_completed_callback;
-struct promise_completed_callback
+typedef struct promise_completion_callback promise_completion_callback;
+struct promise_completion_callback
 {
 	void* callback_param;
 	void (*callback_function)(promise* p, void* callback_param);
@@ -27,7 +27,7 @@ struct promise
 	pthread_cond_t promise_wait;
 
 	// callback to be executed upon completion of the promise
-	promise_completed_callback* promise_completion_callback;
+	promise_completion_callback* promised_callback;
 };
 
 promise* new_promise();
@@ -46,7 +46,7 @@ int is_promised_result_ready(promise* p);
 
 // it sets the promise_completion_callback, if it is not alread set
 // this can be done before or after the promise has been resolved
-int set_promise_completion_callback(promise* p, promise_completed_callback* promise_completion_callback);
+int set_promised_callback(promise* p, promise_completion_callback* promised_callback);
 
 void deinitialize_promise(promise* p);
 

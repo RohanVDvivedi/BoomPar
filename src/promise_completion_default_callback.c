@@ -6,7 +6,7 @@ static void push_to_sync_queue_on_promise_completion_callback_fundtion(promise* 
 	push_sync_queue_blocking(sq, p, 0);
 }
 
-promise_completed_callback push_to_sync_queue_on_promise_completion(sync_queue* sq)
+promise_completion_callback push_to_sync_queue_on_promise_completion_callback(sync_queue* sq)
 {
-	return (promise_completed_callback){.callback_param = sq, .callback_function = push_to_sync_queue_on_promise_completion_callback_fundtion};
+	return (promise_completion_callback){.callback_param = sq, .callback_function = push_to_sync_queue_on_promise_completion_callback_fundtion};
 }
