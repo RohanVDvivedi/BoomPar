@@ -127,14 +127,33 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 
 int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds)
 {
-	if(is_shutdown_called(executor_p))
-		return 0;
+	pthread_mutex_lock(&(executor_p->shutdown_mutex));
+		// take the shudown_mutex lock to check if the shutdown was requested or not
+		if(!executor_p->shutdown_requested)
+		{
+			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
+			return 0;
+		}
+
+		// and if not called, increment the submitters_count, to signify that there is a thread waiting for a job to be pushed to the job_queue
+		executor_p->submitters_count++;
+	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
 	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output, cancellation_callback, submission_timeout_in_microseconds);
 
 	// attempt to create new worker only for a CACHED_THREAD_POOL_EXECUTOR
 	if(was_job_queued && executor_p->type == CACHED_THREAD_POOL_EXECUTOR && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
 		create_worker(executor_p);
+
+	// we again take the lock to decrement the submitter's count,
+	// and wake up any thread that could be waiting for the submitter's count to reach 0
+	pthread_mutex_lock(&(executor_p->shutdown_mutex));
+
+		executor_p->submitters_count--;
+		if(executor_p->submitters_count == 0 && executor_p->shutdown_requested)
+			pthread_cond_broadcast(&(executor_p->submitters_count_until_zero_wait));
+
+	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
 	return was_job_queued;
 }
