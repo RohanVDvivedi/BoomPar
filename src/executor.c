@@ -72,7 +72,7 @@ static int create_worker(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
 	if(worker_count_limit == 0 || max_job_queue_capacity == 0)
 		return NULL;
@@ -119,7 +119,7 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 
 	// create all the workers upfront for the FIXED_THREAD_COUNT_EXECUTOR
 	if(executor_p->type == FIXED_THREAD_COUNT_EXECUTOR)
-		for(unsigned int i = 0; i < executor_p->worker_count_limit; i++)
+		for(uint64_t i = 0; i < executor_p->worker_count_limit; i++)
 			create_worker(executor_p);
 
 	return executor_p;

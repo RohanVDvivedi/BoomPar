@@ -17,7 +17,7 @@ struct promise
 {
 	// signifies whether output result, i.e. is set by the producer thread
 	// this value is initialized as 0 and can only be fliped from 0 -> 1
-	int output_result_ready:1;
+	int output_result_ready;
 
 	void* output_result;
 

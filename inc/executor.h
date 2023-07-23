@@ -1,6 +1,7 @@
 #ifndef EXECUTOR_H
 #define EXECUTOR_H
 
+#include<stdint.h>
 #include<pthread.h>
 
 #include<sync_queue.h>
@@ -30,7 +31,7 @@ struct executor
 	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
 
 	// maximum numbers of workers that this executor is allowed to spawn
-	unsigned int worker_count_limit;
+	uint64_t worker_count_limit;
 
 	// --------------------------------------------
 	// Main job_queue managed by the executor
@@ -42,7 +43,7 @@ struct executor
 
 	// number of active workers in the executor and 
 	// a condition variable to wait for this count to reach 0, after a shutdown is called
-	unsigned int active_worker_count;
+	uint64_t active_worker_count;
 	pthread_cond_t active_worker_count_until_zero_wait;
 
 	// active_worker_count_mutex is for protection of the thread count variable
@@ -52,7 +53,7 @@ struct executor
 
 	// number of threads currently that have called submit_job on thie executor
 	// a condition variable to wait for this count to reach 0, after a shutdown is called
-	unsigned int submitters_count;
+	uint64_t submitters_count;
 	pthread_cond_t submitters_count_until_zero_wait;
 
 	// will be set if the shutdown gets called
@@ -78,7 +79,7 @@ struct executor
 	*/
 };
 
-executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
 // returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job

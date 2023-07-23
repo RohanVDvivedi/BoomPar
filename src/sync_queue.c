@@ -40,7 +40,7 @@ void delete_sync_queue(sync_queue* sq)
 cy_uint get_max_capacity_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		unsigned int max_capacity = sq->max_capacity;
+		cy_uint max_capacity = sq->max_capacity;
 	pthread_mutex_unlock(&(sq->q_lock));
 	return max_capacity;
 }
@@ -248,18 +248,18 @@ void close_sync_queue(sync_queue* sq)
 	pthread_mutex_unlock(&(sq->q_lock));
 }
 
-unsigned int get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
+uint64_t get_threads_waiting_on_empty_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		unsigned int return_val = sq->q_empty_wait_thread_count;
+		uint64_t return_val = sq->q_empty_wait_thread_count;
 	pthread_mutex_unlock(&(sq->q_lock));
 	return return_val;
 }
 
-unsigned int get_threads_waiting_on_full_sync_queue(sync_queue* sq)
+uint64_t get_threads_waiting_on_full_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
-		unsigned int return_val = sq->q_full_wait_thread_count;
+		uint64_t return_val = sq->q_full_wait_thread_count;
 	pthread_mutex_unlock(&(sq->q_lock));
 	return return_val;
 }
