@@ -77,6 +77,13 @@ int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
+		// if the sync queue is closed, then fail the push
+		if(sq->is_closed)
+		{
+			pthread_mutex_unlock(&(sq->q_lock));
+			return 0;
+		}
+
 		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
 		if(is_full_queue(&(sq->qp)) && get_capacity_queue(&(sq->qp)) < sq->max_capacity)
 		{
