@@ -219,8 +219,6 @@ int delete_executor(executor* executor_p)
 	if(!wait_for_all_executor_workers_to_complete(executor_p))
 		return 0;
 
-	discard_leftover_jobs(&(executor_p->job_queue));
-
 	deinitialize_sync_queue(&(executor_p->job_queue));
 
 	pthread_cond_destroy(&(executor_p->active_worker_count_until_zero_wait));
