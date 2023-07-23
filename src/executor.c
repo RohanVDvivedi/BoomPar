@@ -125,7 +125,7 @@ executor* new_executor(executor_type type, unsigned int worker_count_limit, cy_u
 	return executor_p;
 }
 
-int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds)
+int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(executor_p->shutdown_mutex));
 		// take the shudown_mutex lock to check if the shutdown was requested or not
@@ -189,7 +189,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 
 // returns 1, if all the threads completed
 // you must call the thread shutdown, before calling this function
-int wait_for_all_threads_to_complete(executor* executor_p)
+int wait_for_all_executor_workers_to_complete(executor* executor_p)
 {
 	pthread_mutex_lock(&(executor_p->shutdown_mutex));
 
@@ -227,7 +227,7 @@ int delete_executor(executor* executor_p)
 	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
 	// executor can not be deleted if "wait for threads to complete" fails
-	if(!wait_for_all_threads_to_complete(executor_p))
+	if(!wait_for_all_executor_workers_to_complete(executor_p))
 		return 0;
 
 	discard_leftover_jobs(&(executor_p->job_queue));
