@@ -160,23 +160,31 @@ int submit_job(executor* executor_p, void* (*function_p)(void* input_p), void* i
 
 void shutdown_executor(executor* executor_p, int shutdown_immediately)
 {
-	if(shutdown_immediately == 1)
-	{
-		executor_p->requested_to_stop_after_current_job = 1;
+	pthread_mutex_lock(&(executor_p->shutdown_mutex));
+
+		// early return if the shutdown was already requested earlier
+		if(executor_p->shutdown_requested)
+		{
+			pthread_mutex_unlock(&(executor_p->shutdown_mutex));
+			return;
+		}
+
+		// request shutdown
+		executor_p->shutdown_requested = 1;
+
+		// close the job_queue so no more jobs can be pushed
+		// we can do this while shutdown_mutex unlocked, but we don't gain much doing that
+		close_sync_queue(&(executor_p->job_queue));
+
+		// wait for all the submitters to quit
+		while(executor_p->submitters_count > 0)
+			pthread_cond_wait(&(executor_p->submitters_count_until_zero_wait), &(executor_p->shutdown_mutex));
+
+	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
+
+	// if the executor was to shutdown immediately, then discard all the jobs
+	if(shutdown_immediately)
 		discard_leftover_jobs(&(executor_p->job_queue));
-	}
-	else
-	{
-		executor_p->requested_to_stop_after_queue_is_empty = 1;
-	}
-
-	// lock is taken to ensure that the active_worker_count does not change while we submit stop worker
-	pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
-
-	for(unsigned int i = 0; i < executor_p->active_worker_count;i++)
-		submit_stop_worker(&(executor_p->job_queue), 0);
-
-	pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 }
 
 // returns 1, if all the threads completed
