@@ -204,16 +204,16 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 
 		int wait_error = 0;
 
-		// keep on looping while the queue is empty and there is no wait_error
+		// keep on looping while the sync_queue is not closed AND queue is empty AND there is no wait_error
 		// note : timeout is also a wait error
-		while(is_empty_queue(&(sq->qp)) && !wait_error)
+		while(!sq->is_closed && is_empty_queue(&(sq->qp)) && !wait_error)
 		{
 			sq->q_empty_wait_thread_count++;
 			wait_error = timed_conditional_waiting_in_microseconds(&(sq->q_empty_wait), &(sq->q_lock), wait_time_out_in_microseconds);
 			sq->q_empty_wait_thread_count--;
 		}
 
-		// if queue, is not empty, pop the top element
+		// pop the top element
 		const void* data_p = get_top_of_queue(&(sq->qp));
 		int is_popped = pop_from_queue(&(sq->qp));
 
