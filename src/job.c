@@ -80,22 +80,16 @@ int cancel_job(job* job_p)
 	return 1;
 }
 
-int deinitialize_job(job* job_p)
+void deinitialize_job(job* job_p)
 {
-	if(job_p->state != CANCELLED && job_p->state != COMPLETED)
-		return 0;
 	job_p->promise_for_output = NULL;
 	job_p->input_p = NULL;
 	job_p->job_function = NULL;
 	job_p->cancellation_callback = NULL;
-	return 1;
 }
 
-int delete_job(job* job_p)
+void delete_job(job* job_p)
 {
-	if(job_p->state != CANCELLED && job_p->state != COMPLETED)
-		return 0;
 	deinitialize_job(job_p);
 	free(job_p);
-	return 1;
 }

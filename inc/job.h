@@ -18,9 +18,9 @@ enum job_state
 /*
 	State transitions:
 
-	CREATED -> RUNNING -> COMPLETED (can be deleted)
+	CREATED -> RUNNING -> COMPLETED
 	   |
-	   +-----> CANCELLED (can be deleted)
+	   +-----> CANCELLED
 
 	* Only a CREATED job can be cancelled
 */
@@ -82,11 +82,10 @@ int execute_job(job* job_p);
 // returns 0 on failure
 int cancel_job(job* job_p);
 
-// to deinitialize or delete a job it must be in CANCELLED or COMPLETED state
-// they return 0 on failure
+// Note: It is your duty to ensure that the job that you delete is in CANCELLED OR COMPLETED state
 
-int deinitialize_job(job* job_p);
+void deinitialize_job(job* job_p);
 
-int delete_job(job* job_p);
+void delete_job(job* job_p);
 
 #endif 
