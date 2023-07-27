@@ -72,11 +72,13 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	// forward and queue the job
 	was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
 
+	// if the job was not queued, then we just delete the job
+	// the job here is in CREATED state, but since the job was not queued,
+	// any assignment/commitment of the promise and the job is not respected.
+	// i.e. a job not queued to the job_queue, is equivalent to a job that was never created
+	// so we delete it in the CREATED state
 	if(!was_job_queued)
-	{
-		cancel_job(job_p);
 		delete_job(job_p);
-	}
 
 	return was_job_queued;
 }
