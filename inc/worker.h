@@ -31,6 +31,8 @@ int start_worker(
 
 // create and submit job (with/without promise), returns 1 if the job was successfully submitted to the worker
 // function fails and returns 0 if, the job_queue is blocking and it is full
+// if this function fails with a 0, then the corresponding promise (if any) will never be fulfilled, because
+// a return of 0 from this function, implies that a corresponding job with the given parameters never existed
 int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
 // The function below will submit a NULL in the job_queue
@@ -40,6 +42,7 @@ int submit_stop_worker(sync_queue* job_queue, unsigned long long int submission_
 
 // to discard jobs that are still remaining, in the job queue, even after the worker thread has been killed
 // there would not be any jobs remaining in the queue after this call
+// all the jobs will be CANCELLED, i.e. their promises will be fulfilled as NULL
 void discard_leftover_jobs(sync_queue* job_queue);
 
 #endif

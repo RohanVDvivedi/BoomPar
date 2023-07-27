@@ -83,7 +83,9 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 
 // returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job
-// submission_timeout_in_microseconds = 0, implies waiting indefinitely
+// submission_timeout_in_microseconds = 0, implies waiting indefinitely to submit the job in the job_queue
+// if this function fails with a 0, then the corresponding promise (if any) will never be fulfilled, because
+// a return of 0 from this function, implies that a corresponding job with the given parameters never existed
 int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
 // if shutdown_immediately, is set the shutdown will discard all the queued jobs,
