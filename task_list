@@ -1,8 +1,3 @@
- * build golang's defer like functionality, taking in a resource_cleanup(void* resource) and a resource to be cleaned up, using a stack
-   * you can push a clean up task for a resource
-   * or you can run all the cleanup tasks
-   * or destroy all the cleanup tasks
-
 FEATURE
  * build a generic api for a reference counter that creates an object with reference count 1, and deletes an object if its reference count reaches 0, and has a node based api, allowing to convert any object into a reference counted - shared pointer like pointer
  * revamp the executor to use min_worker_count and max_worker_count, and discarding the java's concept for FIXED_THREAD_COUNT_EXECUTOR and CACHED_THREAD_POOL_EXECUTOR
