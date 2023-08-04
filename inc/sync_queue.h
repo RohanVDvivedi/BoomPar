@@ -4,12 +4,12 @@
 #include<stdint.h>
 #include<pthread.h>
 
-#include<queue.h>
+#include<arraylist.h>
 
 typedef struct sync_queue sync_queue;
 struct sync_queue
 {
-	// to access protect queue
+	// to access protected queue
 	pthread_mutex_t q_lock;
 
 	// conditional wait if the queue is empty
@@ -28,7 +28,7 @@ struct sync_queue
 	cy_uint max_capacity;
 
 	// queue for storing the push/pop ed variables
-	queue qp;
+	arraylist qp;
 
 	// this attribute tells us if the queue is closed
 	// you can only pop from a closed queue, all push calls after a close will fail
