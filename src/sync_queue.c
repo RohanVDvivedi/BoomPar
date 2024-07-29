@@ -5,12 +5,17 @@
 sync_queue* new_sync_queue(cy_uint max_capacity)
 {
 	sync_queue* sq = malloc(sizeof(sync_queue));
-	if(sq != NULL)
-		initialize_sync_queue(sq, max_capacity);
+	if(sq == NULL)
+		return NULL;
+	if(!initialize_sync_queue(sq, max_capacity))
+	{
+		free(sq);
+		return NULL;
+	}
 	return sq;
 }
 
-void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
+int initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(sq->q_lock), NULL);
 	pthread_cond_init(&(sq->q_empty_wait), NULL);
@@ -18,8 +23,8 @@ void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
 	sq->q_empty_wait_thread_count = 0;
 	sq->q_full_wait_thread_count = 0;
 	sq->max_capacity = max_capacity;
-	initialize_arraylist(&(sq->qp), 0);
 	sq->is_closed = 0;
+	return initialize_arraylist(&(sq->qp), 0);
 }
 
 void deinitialize_sync_queue(sync_queue* sq)
