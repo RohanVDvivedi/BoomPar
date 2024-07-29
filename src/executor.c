@@ -98,7 +98,11 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 		}
 	}
 
-	initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity);
+	if(!initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity))
+	{
+		free(executor_p);
+		return NULL;
+	}
 
 	executor_p->active_worker_count = 0;
 	pthread_cond_init(&(executor_p->active_worker_count_until_zero_wait), NULL);
