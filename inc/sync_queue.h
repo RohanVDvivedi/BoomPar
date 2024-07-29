@@ -44,7 +44,7 @@ struct sync_queue
 
 sync_queue* new_sync_queue(cy_uint max_capacity);
 
-void initialize_sync_queue(sync_queue* sq, cy_uint max_capacity);
+int initialize_sync_queue(sync_queue* sq, cy_uint max_capacity);
 
 void deinitialize_sync_queue(sync_queue* sq);
 

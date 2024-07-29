@@ -22,7 +22,7 @@ struct sync_pipe
 
 sync_pipe* new_sync_pipe(cy_uint max_capacity);
 
-void initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity);
+int initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity);
 
 void deinitialize_sync_pipe(sync_pipe* spyp);
 
