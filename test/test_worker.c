@@ -138,6 +138,8 @@ int main()
 
 	printf("Submitting stop worker\n\n");
 	submit_stop_worker(&job_queue, 0);
+	// you also call close_sync_queue instead, which will just stop all the workers listening on this job_queue
+	//close_sync_queue(&job_queue);
 
 	printf("Main thread will sleep for 0.5 second\n\n");
 	usleep(500 * 1000);
