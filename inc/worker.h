@@ -35,8 +35,9 @@ int start_worker(
 // a return of 0 from this function, implies that a corresponding job with the given parameters never existed
 int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
 
-// The function below will submit a NULL in the job_queue
+// The function below will submit a NULL in the job_queue, this will stop 1 worker listening on the queue
 // and this will kill any one worker that dequeues this NULL job
+// to stop all the workers listening on this very specific job_queue, then you may instead call close_sync_queue
 // It returns 1, if NULL was pushed, else it will return 0
 int submit_stop_worker(sync_queue* job_queue, unsigned long long int submission_timeout_in_microseconds);
 
