@@ -7,18 +7,23 @@
 sync_pipe* new_sync_pipe(cy_uint max_capacity)
 {
 	sync_pipe* spyp = malloc(sizeof(sync_pipe));
-	if(spyp != NULL)
-		initialize_sync_pipe(spyp, max_capacity);
+	if(spyp == NULL)
+		return NULL;
+	if(!initialize_sync_pipe(spyp, max_capacity))
+	{
+		free(spyp);
+		return NULL;
+	}
 	return spyp;
 }
 
-void initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity)
+int initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(spyp->sync_pipe_lock), NULL);
 	pthread_cond_init(&(spyp->sync_pipe_empty), NULL);
 	pthread_cond_init(&(spyp->sync_pipe_full), NULL);
 	spyp->max_capacity = max_capacity;
-	initialize_dpipe(&(spyp->pyp), 0);
+	return initialize_dpipe(&(spyp->pyp), 0);
 }
 
 void deinitialize_sync_pipe(sync_pipe* spyp)
