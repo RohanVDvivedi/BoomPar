@@ -149,6 +149,10 @@ static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p
 		unsigned long long int nano_secs_extra = (wait_time_out_in_microseconds % 1000000) * 1000;
 
 		struct timespec wait_till = {.tv_sec = (current_time.tv_sec + secs), .tv_nsec = (current_time.tv_nsec + nano_secs_extra)};
+
+		// normalize wait_till
+		wait_till.tv_sec += wait_till.tv_nsec / 1000000000LL;
+		wait_till.tv_nsec = wait_till.tv_nsec % 1000000000LL;
 		
 		// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
 		return_val = pthread_cond_timedwait(cond_wait_p, mutex_p, &wait_till);
