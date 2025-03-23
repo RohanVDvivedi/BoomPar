@@ -1,5 +1,7 @@
 #include<sync_queue.h>
 
+#include<pthread_cond_utils.h>
+
 #include<stdlib.h>
 
 sync_queue* new_sync_queue(cy_uint max_capacity)
@@ -18,8 +20,8 @@ sync_queue* new_sync_queue(cy_uint max_capacity)
 int initialize_sync_queue(sync_queue* sq, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(sq->q_lock), NULL);
-	pthread_cond_init(&(sq->q_empty_wait), NULL);
-	pthread_cond_init(&(sq->q_full_wait), NULL);
+	pthread_cond_init_with_monotonic_clock(&(sq->q_empty_wait));
+	pthread_cond_init_with_monotonic_clock(&(sq->q_full_wait));
 	sq->q_empty_wait_thread_count = 0;
 	sq->q_full_wait_thread_count = 0;
 	sq->max_capacity = max_capacity;

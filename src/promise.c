@@ -1,5 +1,7 @@
 #include<promise.h>
 
+#include<pthread_cond_utils.h>
+
 promise* new_promise()
 {
 	promise* p = malloc(sizeof(promise));
@@ -13,7 +15,7 @@ void initialize_promise(promise* p)
 	p->output_result_ready = 0;
 	p->output_result = NULL;
 	pthread_mutex_init(&(p->promise_lock), NULL);
-	pthread_cond_init(&(p->promise_wait), NULL);
+	pthread_cond_init_with_monotonic_clock(&(p->promise_wait));
 	p->promised_callback = NULL;
 }
 

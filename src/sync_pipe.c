@@ -1,5 +1,7 @@
 #include<sync_pipe.h>
 
+#include<pthread_cond_utils.h>
+
 #include<stdlib.h>
 
 #include<cutlery_math.h>
@@ -20,8 +22,8 @@ sync_pipe* new_sync_pipe(cy_uint max_capacity)
 int initialize_sync_pipe(sync_pipe* spyp, cy_uint max_capacity)
 {
 	pthread_mutex_init(&(spyp->sync_pipe_lock), NULL);
-	pthread_cond_init(&(spyp->sync_pipe_empty), NULL);
-	pthread_cond_init(&(spyp->sync_pipe_full), NULL);
+	pthread_cond_init_with_monotonic_clock(&(spyp->sync_pipe_empty));
+	pthread_cond_init_with_monotonic_clock(&(spyp->sync_pipe_full));
 	spyp->max_capacity = max_capacity;
 	return initialize_dpipe(&(spyp->pyp), 0);
 }

@@ -2,6 +2,8 @@
 
 #include<worker.h>
 
+#include<pthread_cond_utils.h>
+
 #include<stdlib.h>
 
 static void start_up(void* args)
@@ -105,11 +107,11 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 	}
 
 	executor_p->active_worker_count = 0;
-	pthread_cond_init(&(executor_p->active_worker_count_until_zero_wait), NULL);
+	pthread_cond_init_with_monotonic_clock(&(executor_p->active_worker_count_until_zero_wait));
 	pthread_mutex_init(&(executor_p->active_worker_count_mutex), NULL);
 
 	executor_p->submitters_count = 0;
-	pthread_cond_init(&(executor_p->submitters_count_until_zero_wait), NULL);
+	pthread_cond_init_with_monotonic_clock(&(executor_p->submitters_count_until_zero_wait));
 
 	executor_p->shutdown_requested = 0;
 
