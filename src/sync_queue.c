@@ -125,33 +125,14 @@ const void* pop_sync_queue_non_blocking(sync_queue* sq)
 
 static int timed_conditional_waiting_in_microseconds(pthread_cond_t* cond_wait_p, pthread_mutex_t* mutex_p, unsigned long long int wait_time_out_in_microseconds)
 {
-	int return_val = 0;
-
 	// if timeout == 0, we will block indefinitely, on the condition variable
 	if(wait_time_out_in_microseconds == 0)
-	{
-		return_val = pthread_cond_wait(cond_wait_p, mutex_p);
-	}
+		return pthread_cond_wait(cond_wait_p, mutex_p);
 	else
 	{
-		struct timespec current_time;
-		
-		clock_gettime(CLOCK_REALTIME, &current_time);
-
-		unsigned long long int secs = wait_time_out_in_microseconds / 1000000;
-		unsigned long long int nano_secs_extra = (wait_time_out_in_microseconds % 1000000) * 1000;
-
-		struct timespec wait_till = {.tv_sec = (current_time.tv_sec + secs), .tv_nsec = (current_time.tv_nsec + nano_secs_extra)};
-
-		// normalize wait_till
-		wait_till.tv_sec += wait_till.tv_nsec / 1000000000LL;
-		wait_till.tv_nsec = wait_till.tv_nsec % 1000000000LL;
-		
-		// do timedwait on job_queue_empty_wait, while releasing job_queue_mutex, while we wait
-		return_val = pthread_cond_timedwait(cond_wait_p, mutex_p, &wait_till);
+		uint64_t wait_time_out_in_microseconds_temp = wait_time_out_in_microseconds;
+		return pthread_cond_timedwait_for_microseconds(cond_wait_p, mutex_p, &wait_time_out_in_microseconds_temp);
 	}
-
-	return return_val;
 }
 
 int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds)
