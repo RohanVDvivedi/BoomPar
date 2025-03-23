@@ -137,9 +137,9 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 			sq->q_full_wait_thread_count++;
 
 			if(wait_time_out_in_microseconds == 0)
-				wait_error = pthread_cond_wait(cond_wait_p, mutex_p);
+				wait_error = pthread_cond_wait(&(sq->q_full_wait), &(sq->q_lock));
 			else
-				wait_error = pthread_cond_timedwait_for_microseconds(cond_wait_p, mutex_p, &wait_time_out_in_microseconds_LEFT);
+				wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_full_wait), &(sq->q_lock), &wait_time_out_in_microseconds_LEFT);
 
 			sq->q_full_wait_thread_count--;
 		}
@@ -179,9 +179,9 @@ const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_
 			sq->q_empty_wait_thread_count++;
 
 			if(wait_time_out_in_microseconds == 0)
-				wait_error = pthread_cond_wait(cond_wait_p, mutex_p);
+				wait_error = pthread_cond_wait(&(sq->q_empty_wait), &(sq->q_lock));
 			else
-				wait_error = pthread_cond_timedwait_for_microseconds(cond_wait_p, mutex_p, &wait_time_out_in_microseconds_LEFT);
+				wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &wait_time_out_in_microseconds_LEFT);
 
 			sq->q_empty_wait_thread_count--;
 		}
