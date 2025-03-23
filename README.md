@@ -8,6 +8,7 @@ This is a multi threading library in C, built as an abstraction layer over pthre
 ## Setup instructions
 **Install dependencies :**
  * [Cutlery](https://github.com/RohanVDvivedi/Cutlery)
+ * [PosixUtils](https://github.com/RohanVDvivedi/PosixUtils)
 
 **Download source code :**
  * `git clone https://github.com/RohanVDvivedi/BoomPar.git`
