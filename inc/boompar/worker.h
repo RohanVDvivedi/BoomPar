@@ -1,7 +1,7 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include<job.h>
+#include<boompar/job.h>
 #include<boompar/sync_queue.h>
 
 // A worker thread is detached thread

@@ -1,6 +1,6 @@
 #include<boompar/promise.h>
 
-#include<pthread_cond_utils.h>
+#include<posixutils/pthread_cond_utils.h>
 
 promise* new_promise()
 {
