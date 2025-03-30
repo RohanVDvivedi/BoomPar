@@ -1,10 +1,10 @@
 #include<stdio.h>
 //#include<unistd.h> //only for usleep
 
-#include<job.h>
-#include<sync_queue.h>
+#include<boompar/job.h>
+#include<boompar/sync_queue.h>
 
-#include<promise_completion_default_callbacks.h>
+#include<boompar/promise_completion_default_callbacks.h>
 
 void* my_job_function_simple(void* my_int)
 {
