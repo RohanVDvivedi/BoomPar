@@ -1,6 +1,6 @@
-#include<sync_queue.h>
+#include<boompar/sync_queue.h>
 
-#include<pthread_cond_utils.h>
+#include<posixutils/pthread_cond_utils.h>
 
 #include<stdlib.h>
 

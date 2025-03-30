@@ -4,8 +4,8 @@
 #include<stdint.h>
 #include<pthread.h>
 
-#include<sync_queue.h>
-#include<job.h>
+#include<boompar/sync_queue.h>
+#include<boompar/job.h>
 
 typedef enum executor_type executor_type;
 enum executor_type

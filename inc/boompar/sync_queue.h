@@ -4,7 +4,7 @@
 #include<stdint.h>
 #include<pthread.h>
 
-#include<arraylist.h>
+#include<cutlery/arraylist.h>
 
 typedef struct sync_queue sync_queue;
 struct sync_queue

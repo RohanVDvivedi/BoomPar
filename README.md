@@ -24,13 +24,13 @@ This is a multi threading library in C, built as an abstraction layer over pthre
 ## Using The library
  * add `-lboompar -lpthread -lcutlery` linker flag, while compiling your application
  * do not forget to include appropriate public api headers as and when needed. this includes
-   * `#include<job.h>`
-   * `#include<promise.h>`
-   * `#include<executor.h>`
+   * `#include<boompar/job.h>`
+   * `#include<boompar/promise.h>`
+   * `#include<boompar/executor.h>`
 
-   * `#include<sync_pipe.h>` can be used to share data among different jobs running on separate threads.
+   * `#include<boompar/sync_pipe.h>` can be used to share data among different jobs running on separate threads.
 
-   * `#include<worker.h>` and `#include<sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
+   * `#include<boompar/worker.h>` and `#include<boompar/sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
 
 ## Instructions for uninstalling library
 

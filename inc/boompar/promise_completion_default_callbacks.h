@@ -1,8 +1,8 @@
 #ifndef PROMISE_COMPLETION_DEFAULT_CALLBACKS_H
 #define PROMISE_COMPLETION_DEFAULT_CALLBACKS_H
 
-#include<promise.h>
-#include<sync_queue.h>
+#include<boompar/promise.h>
+#include<boompar/sync_queue.h>
 
 // This header and its source (promise_completion_default_callbacks.*) are just an illustration of how callback on the promise completion should be used
 // This sources are for your reference only.

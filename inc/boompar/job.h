@@ -3,7 +3,7 @@
 
 #include<limits.h>
 
-#include<promise.h>
+#include<boompar/promise.h>
 
 // a job can be in any of the following states
 typedef enum job_state job_state;

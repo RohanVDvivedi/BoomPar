@@ -2,7 +2,7 @@
 #define WORKER_H
 
 #include<job.h>
-#include<sync_queue.h>
+#include<boompar/sync_queue.h>
 
 // A worker thread is detached thread
 // It will keep on dequeuing jobs from the job_queue and executing them

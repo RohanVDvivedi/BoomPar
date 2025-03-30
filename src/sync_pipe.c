@@ -1,10 +1,10 @@
-#include<sync_pipe.h>
+#include<boompar/sync_pipe.h>
 
-#include<pthread_cond_utils.h>
+#include<posixutils/pthread_cond_utils.h>
 
 #include<stdlib.h>
 
-#include<cutlery_math.h>
+#include<cutlery/cutlery_math.h>
 
 sync_pipe* new_sync_pipe(cy_uint max_capacity)
 {

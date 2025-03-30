@@ -1,7 +1,7 @@
 #ifndef SYNC_PIPE_H
 #define SYNC_PIPE_H
 
-#include<dpipe.h>
+#include<cutlery/dpipe.h>
 
 #include<pthread.h>
 
