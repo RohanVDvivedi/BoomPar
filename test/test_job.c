@@ -68,7 +68,7 @@ int main()
 		initialize_sync_queue(&promise_completed_queue, 1);
 		promise_completion_callback promise_completion_queue_callback = push_to_sync_queue_on_promise_completion_callback(&promise_completed_queue);
 		set_promised_callback(simple_promise_p, &promise_completion_queue_callback);
-		simple_promise_p = (promise*) pop_sync_queue_blocking(&promise_completed_queue, 0);
+		simple_promise_p = (promise*) pop_sync_queue(&promise_completed_queue, BLOCKING);
 		deinitialize_sync_queue(&promise_completed_queue);
 		printf("Awaited for promised to be completed using sync queue\n");
 

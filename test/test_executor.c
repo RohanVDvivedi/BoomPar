@@ -101,7 +101,7 @@ int main()
 
 	for(int i = 0; i < TEST_JOBs_COUNT / 3; i++)
 	{
-		promise* promised_result = (promise*) pop_sync_queue_blocking(promise_completed_queue, 0);
+		promise* promised_result = (promise*) pop_sync_queue(promise_completed_queue, BLOCKING);
 		int* res = ((int*)get_promised_result(promised_result));
 		printf("promised = %d\n", res == NULL ? -1 : *res);
 		delete_promise(promised_result);
