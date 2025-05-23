@@ -81,10 +81,10 @@ int is_empty_sync_queue(sync_queue* sq);
 */
 
 // returns 1, if the element was pushed, else returns 0
-int push_sync_queue(sync_queue* sq, const void* data_p, unsigned long long int timeout_in_microseconds);
+int push_sync_queue(sync_queue* sq, const void* data_p, uint64_t timeout_in_microseconds);
 
 // return NULL, only if NULL was pushed OR we timedout
-const void* pop_sync_queue(sync_queue* sq, unsigned long long int timeout_in_microseconds);
+const void* pop_sync_queue(sync_queue* sq, uint64_t timeout_in_microseconds);
 
 
 

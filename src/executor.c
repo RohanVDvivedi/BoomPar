@@ -73,7 +73,7 @@ static int create_worker(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
 	if(worker_count_limit == 0 || max_job_queue_capacity == 0)
 		return NULL;
@@ -87,10 +87,10 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 
 	switch(executor_p->type)
 	{
-		// for a FIXED_THREAD_COUNT_EXECUTOR, the worker must wait indefinitely until it could dequeue a job, hence the 0 timeout
+		// for a FIXED_THREAD_COUNT_EXECUTOR, the worker must wait indefinitely until it could dequeue a job, hence the BLOCKING timeout
 		case FIXED_THREAD_COUNT_EXECUTOR :
 		{
-			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = 0;
+			executor_p->empty_job_queue_wait_time_out_in_micro_seconds = BLOCKING;
 			break;
 		}
 		case CACHED_THREAD_POOL_EXECUTOR :
@@ -130,7 +130,7 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 	return executor_p;
 }
 
-int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds)
+int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), uint64_t submission_timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(executor_p->shutdown_mutex));
 		// take the shudown_mutex lock to check if the shutdown was requested or not

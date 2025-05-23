@@ -13,7 +13,7 @@ struct worker_thread_params
 	sync_queue* job_queue;
 
 	// the maximum timeout the thread blocks until while there are no jobs in the job_queue to work on
-	unsigned long long int job_queue_empty_timeout_in_microseconds;
+	uint64_t job_queue_empty_timeout_in_microseconds;
 
 	// this function is called after the last job is executed and deleted, and the thread has decided to kill itself
 	void (*clean_up)(void* additional_params);
@@ -22,7 +22,7 @@ struct worker_thread_params
 	void* additional_params;
 };
 
-worker_thread_params* get_worker_thread_params(sync_queue* job_queue, unsigned long long int job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+worker_thread_params* get_worker_thread_params(sync_queue* job_queue, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	worker_thread_params* wtp = malloc(sizeof(worker_thread_params));
 	if(wtp == NULL)
@@ -42,6 +42,9 @@ int start_worker(pthread_t* thread_id, sync_queue* job_queue, unsigned long long
 {
 	// default return value is the insufficient resources to create a thread
 	int return_val = EAGAIN;
+
+	if(job_queue_empty_timeout_in_microseconds == NON_BLOCKING)
+		return return_val;
 
 	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	if(wtp == NULL)

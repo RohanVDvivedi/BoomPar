@@ -28,7 +28,7 @@ struct executor
 	// only valid for type = CACHED_THREAD_POOL_EXECUTOR
 	// it defines the number of microseconds that a worker will wait for job, before self destructing
 	// a worker never gets killed in a FIXED_THREAD_COUNT_EXECUTOR
-	unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds;
+	uint64_t empty_job_queue_wait_time_out_in_micro_seconds;
 
 	// maximum numbers of workers that this executor is allowed to spawn
 	uint64_t worker_count_limit;
@@ -51,7 +51,7 @@ struct executor
 
 	// --------------------------------------------
 
-	// number of threads currently that have called submit_job on thie executor
+	// number of threads currently that have called submit_job on the executor
 	// a condition variable to wait for this count to reach 0, after a shutdown is called
 	uint64_t submitters_count;
 	pthread_cond_t submitters_count_until_zero_wait;
@@ -79,14 +79,15 @@ struct executor
 	*/
 };
 
-executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, unsigned long long int empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
+// here empty_job_queue_wait_time_out_in_micro_seconds can be any positive value except NON_BLOCKING, it can also be BLOCKING
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
 
 // returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job
-// submission_timeout_in_microseconds = 0, implies waiting indefinitely to submit the job in the job_queue
 // if this function fails with a 0, then the corresponding promise (if any) will never be fulfilled, because
 // a return of 0 from this function, implies that a corresponding job with the given parameters never existed
-int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), unsigned long long int submission_timeout_in_microseconds);
+// the timeout parameter can also be BLOCKING or NON_BLOCKING
+int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), uint64_t submission_timeout_in_microseconds);
 
 // if shutdown_immediately, is set the shutdown will discard all the queued jobs,
 // the executor's job_queue would be closed regardless

@@ -77,7 +77,7 @@ int is_empty_sync_queue(sync_queue* sq)
 	return is_empty;
 }
 
-int push_sync_queue(sync_queue* sq, const void* data_p, unsigned long long int timeout_in_microseconds)
+int push_sync_queue(sync_queue* sq, const void* data_p, uint64_t timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
@@ -122,7 +122,7 @@ int push_sync_queue(sync_queue* sq, const void* data_p, unsigned long long int t
 	return is_pushed;
 }
 
-const void* pop_sync_queue(sync_queue* sq, unsigned long long int timeout_in_microseconds)
+const void* pop_sync_queue(sync_queue* sq, uint64_t timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
