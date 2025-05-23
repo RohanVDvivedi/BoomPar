@@ -72,7 +72,7 @@ int main()
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
 		}
 
-		if(!submit_job_executor(executor_p, my_job_function, &jobs_input_param[i], promised_result, my_job_on_cancellation, 0))
+		if(!submit_job_executor(executor_p, my_job_function, &jobs_input_param[i], promised_result, my_job_on_cancellation, BLOCKING))
 			printf("Job submission failed with input %d\n", i);
 	}
 	printf("finished queueing all jobs\n");

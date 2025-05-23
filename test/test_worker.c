@@ -24,7 +24,7 @@ void clean_up(void* additional_params)
 
 #define JOBs_COUNT				20
 #define WORKER_QUEUE_SIZE 		8
-#define WORKER_QUEUE_TIMEOUT	0 //1000000
+#define WORKER_QUEUE_TIMEOUT	BLOCKING //1000000
 
 #define SET_1_JOBS	6
 #define SET_2_JOBS	6
@@ -56,7 +56,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -65,7 +65,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -90,7 +90,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -99,7 +99,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -117,7 +117,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -126,7 +126,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, 0))
+			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -137,7 +137,7 @@ int main()
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
 	printf("Submitting stop worker\n\n");
-	submit_stop_worker(&job_queue, 0);
+	submit_stop_worker(&job_queue, BLOCKING);
 	// you also call close_sync_queue instead, which will just stop all the workers listening on this job_queue
 	//close_sync_queue(&job_queue);
 
