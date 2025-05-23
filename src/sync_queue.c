@@ -79,69 +79,28 @@ int is_empty_sync_queue(sync_queue* sq)
 	return is_empty;
 }
 
-int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p)
+int push_sync_queue(sync_queue* sq, const void* data_p, unsigned long long int timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// if the sync queue is closed, then fail the push
-		if(sq->is_closed)
+		// attempt to block only if you are allowed to
+		if(timeout_in_microseconds != NON_BLOCKING)
 		{
-			pthread_mutex_unlock(&(sq->q_lock));
-			return 0;
-		}
+			int wait_error = 0;
+			uint64_t timeout_in_microseconds_LEFT = timeout_in_microseconds;
 
-		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
-		if(is_full_arraylist(&(sq->qp)) && get_capacity_arraylist(&(sq->qp)) < sq->max_capacity)
-			expand_arraylist(&(sq->qp));
+			// keep on looping while the bounded queue is not closed AND is full AND has reached its max_capacity AND there is no wait_error
+			while(!sq->is_closed && is_full_arraylist(&(sq->qp)) && get_capacity_arraylist(&(sq->qp)) >= sq->max_capacity && !wait_error)
+			{
+				sq->q_full_wait_thread_count++;
 
-		int is_pushed = push_back_to_arraylist(&(sq->qp), data_p);
+				if(timeout_in_microseconds == BLOCKING)
+					wait_error = pthread_cond_wait(&(sq->q_full_wait), &(sq->q_lock));
+				else
+					wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_full_wait), &(sq->q_lock), &timeout_in_microseconds_LEFT);
 
-		// signal other threads if an element was pushed
-		if(is_pushed && sq->q_empty_wait_thread_count > 0)
-			pthread_cond_signal(&(sq->q_empty_wait));
-
-	pthread_mutex_unlock(&(sq->q_lock));
-	return is_pushed;
-}
-
-const void* pop_sync_queue_non_blocking(sync_queue* sq)
-{
-	pthread_mutex_lock(&(sq->q_lock));
-
-		const void* data_p = get_front_of_arraylist(&(sq->qp));
-		int is_popped = pop_front_from_arraylist(&(sq->qp));
-
-		// signal other threads, if an element was popped
-		if(!sq->is_closed && is_popped && sq->q_full_wait_thread_count > 0)
-			pthread_cond_signal(&(sq->q_full_wait));
-
-		// if the queue, occupies more than thrice the needed space, attempt to shrink it
-		if(get_capacity_arraylist(&(sq->qp)) > 3 * get_element_count_arraylist(&(sq->qp)))
-			shrink_arraylist(&(sq->qp));
-
-	pthread_mutex_unlock(&(sq->q_lock));
-	return is_popped ? data_p : NULL;	// if the data is not popped, we can/must not return it
-}
-
-int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds)
-{
-	pthread_mutex_lock(&(sq->q_lock));
-
-		int wait_error = 0;
-		uint64_t wait_time_out_in_microseconds_LEFT = wait_time_out_in_microseconds;
-
-		// keep on looping while the bounded queue is not closed AND is full AND has reached its max_capacity AND there is no wait_error
-		// note : timeout is also a wait error
-		while(!sq->is_closed && is_full_arraylist(&(sq->qp)) && get_capacity_arraylist(&(sq->qp)) >= sq->max_capacity && !wait_error)
-		{
-			sq->q_full_wait_thread_count++;
-
-			if(wait_time_out_in_microseconds == 0)
-				wait_error = pthread_cond_wait(&(sq->q_full_wait), &(sq->q_lock));
-			else
-				wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_full_wait), &(sq->q_lock), &wait_time_out_in_microseconds_LEFT);
-
-			sq->q_full_wait_thread_count--;
+				sq->q_full_wait_thread_count--;
+			}
 		}
 
 		// if the sync queue is closed, we fail to push
@@ -165,25 +124,28 @@ int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long l
 	return is_pushed;
 }
 
-const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds)
+const void* pop_sync_queue(sync_queue* sq, unsigned long long int timeout_in_microseconds)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
-		int wait_error = 0;
-		uint64_t wait_time_out_in_microseconds_LEFT = wait_time_out_in_microseconds;
-
-		// keep on looping while the sync_queue is not closed AND queue is empty AND there is no wait_error
-		// note : timeout is also a wait error
-		while(!sq->is_closed && is_empty_arraylist(&(sq->qp)) && !wait_error)
+		// attempt to block only if you are allowed to
+		if(timeout_in_microseconds != NON_BLOCKING)
 		{
-			sq->q_empty_wait_thread_count++;
+			int wait_error = 0;
+			uint64_t timeout_in_microseconds_LEFT = timeout_in_microseconds;
 
-			if(wait_time_out_in_microseconds == 0)
-				wait_error = pthread_cond_wait(&(sq->q_empty_wait), &(sq->q_lock));
-			else
-				wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &wait_time_out_in_microseconds_LEFT);
+			// keep on looping while the sync_queue is not closed AND queue is empty AND there is no wait_error
+			while(!sq->is_closed && is_empty_arraylist(&(sq->qp)) && !wait_error)
+			{
+				sq->q_empty_wait_thread_count++;
 
-			sq->q_empty_wait_thread_count--;
+				if(timeout_in_microseconds == BLOCKING)
+					wait_error = pthread_cond_wait(&(sq->q_empty_wait), &(sq->q_lock));
+				else
+					wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &timeout_in_microseconds_LEFT);
+
+				sq->q_empty_wait_thread_count--;
+			}
 		}
 
 		// pop the top element

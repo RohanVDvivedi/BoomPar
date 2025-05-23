@@ -72,29 +72,17 @@ int is_full_sync_queue(sync_queue* sq);
 // returns 1, if the sync queue is empty, else returns 0
 int is_empty_sync_queue(sync_queue* sq);
 
-// it will not block, to wait until there is space in the sync queue to push the element
-// returns 1, if the element was pushed, else returns 0
-// returns 0, if the queue is bounded and it is full
-int push_sync_queue_non_blocking(sync_queue* sq, const void* data_p);
-
-// it will not block, to wait until there is any element in the sync queue to pop
-// returns NULL, if the queue is empty
-const void* pop_sync_queue_non_blocking(sync_queue* sq);
-
-
 
 /*
-*	BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
-*	HERE wait_time_out_in_microseconds IS A MANDATORY PARAMETER, 
-*   IF YOU PROVIDE 0, THEN YOU WOULD BLOCK INDEFINITELY ON THE CALL UNTIL YOU SUCCEED
+*	POSSIBLY BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
+*	HERE wait_time_out_in_microseconds COULD ALSO BE BLOCKING OR NON_BLOCKING
 */
 
-// it will block for atmost wait_time_out_in_microseconds, for someone to make space in the sync_queue, if it is bounded and full
 // returns 1, if the element was pushed, else returns 0
-int push_sync_queue_blocking(sync_queue* sq, const void* data_p, unsigned long long int wait_time_out_in_microseconds);
+int push_sync_queue(sync_queue* sq, const void* data_p, unsigned long long int timeout_in_microseconds);
 
-// it will block for atmost wait_time_out_in_microseconds
-const void* pop_sync_queue_blocking(sync_queue* sq, unsigned long long int wait_time_out_in_microseconds);
+// return NULL, only if NULL was pushed OR we timedout
+const void* pop_sync_queue(sync_queue* sq, unsigned long long int timeout_in_microseconds);
 
 
 
