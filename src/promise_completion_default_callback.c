@@ -3,7 +3,7 @@
 static void push_to_sync_queue_on_promise_completion_callback_function(promise* p, void* callback_param)
 {
 	sync_queue* sq = callback_param;
-	push_sync_queue_blocking(sq, p, 0);
+	push_sync_queue(sq, p, BLOCKING);
 }
 
 promise_completion_callback push_to_sync_queue_on_promise_completion_callback(sync_queue* sq)

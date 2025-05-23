@@ -70,7 +70,7 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 		return 0;
 
 	// forward and queue the job
-	was_job_queued = push_sync_queue_blocking(job_queue, job_p, submission_timeout_in_microseconds);
+	was_job_queued = push_sync_queue(job_queue, job_p, submission_timeout_in_microseconds);
 
 	// if the job was not queued, then we just delete the job
 	// the job here is in CREATED state, but since the job was not queued,
@@ -85,14 +85,14 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 
 int submit_stop_worker(sync_queue* job_queue, unsigned long long int submission_timeout_in_microseconds)
 {
-	return push_sync_queue_blocking(job_queue, NULL, submission_timeout_in_microseconds);
+	return push_sync_queue(job_queue, NULL, submission_timeout_in_microseconds);
 }
 
 void discard_leftover_jobs(sync_queue* job_queue)
 {
 	while(!is_empty_sync_queue(job_queue))
 	{
-		job* job_p = (job*) pop_sync_queue_non_blocking(job_queue);
+		job* job_p = (job*) pop_sync_queue(job_queue, NON_BLOCKING);
 		if(job_p != NULL)
 		{
 			cancel_job(job_p);
@@ -121,7 +121,7 @@ static void* worker_function(void* args)
 			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
 			// pop a job from the queue blockingly with predertmined timeout
-			job* job_p = (job*) pop_sync_queue_blocking(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
+			job* job_p = (job*) pop_sync_queue(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
 
 			// a NULL job implies a stop worker was submitted
 			if(job_p == NULL)

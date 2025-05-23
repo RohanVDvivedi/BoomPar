@@ -6,6 +6,8 @@
 
 #include<cutlery/arraylist.h>
 
+#include<posixutils/pthread_cond_utils.h>
+
 typedef struct sync_queue sync_queue;
 struct sync_queue
 {

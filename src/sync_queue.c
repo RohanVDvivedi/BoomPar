@@ -1,7 +1,5 @@
 #include<boompar/sync_queue.h>
 
-#include<posixutils/pthread_cond_utils.h>
-
 #include<stdlib.h>
 
 sync_queue* new_sync_queue(cy_uint max_capacity)
