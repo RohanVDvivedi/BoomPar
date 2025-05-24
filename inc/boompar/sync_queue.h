@@ -77,7 +77,7 @@ int is_empty_sync_queue(sync_queue* sq);
 
 /*
 *	POSSIBLY BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
-*	HERE wait_time_out_in_microseconds COULD ALSO BE BLOCKING OR NON_BLOCKING
+*	HERE timeout_in_microseconds COULD ALSO BE BLOCKING OR NON_BLOCKING
 */
 
 // returns 1, if the element was pushed, else returns 0
