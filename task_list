@@ -1,4 +1,13 @@
-
-FEATURE
- * build a generic api for a reference counter that creates an object with reference count 1, and deletes an object if its reference count reaches 0, and has a node based api, allowing to convert any object into a reference counted - shared pointer like pointer
- * revamp the executor to use min_worker_count and max_worker_count, and discarding the java's concept for FIXED_THREAD_COUNT_EXECUTOR and CACHED_THREAD_POOL_EXECUTOR
+ * periodic_job
+ * a different kind of job, that keeps executing a function as long as until shutdown is called at a fixed intervals in microseconds uint64_t
+ * this period can not be BLOCKING or NON_BLOCKING
+ * api should support a separate mutex
+ * a condition variable to wait on for periodic waits
+ * a condition variable to wait on for shutdown
+ * a state diagram
+ * shutdown function
+ * a function to wait for shutdown to complete
+ * a function to update the time period_in_microseconds
+ * a function to get the current period_in_microseconds
+ * a function to execute_periodic_job and execute_periodic_job_async
+ * refactor Bufferpool, MinTxEngine and VolatilePageStore for using this job instead
