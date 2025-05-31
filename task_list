@@ -1,3 +1,6 @@
  * periodic_job
- * test
- * refactor Bufferpool, MinTxEngine and VolatilePageStore for using this job instead
+  * test
+  * review code
+  * turn on all test builds in test_compile.sh
+  * merge
+  * refactor Bufferpool, MinTxEngine and VolatilePageStore for using this job instead
