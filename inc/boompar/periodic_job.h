@@ -37,11 +37,18 @@ struct periodic_job
 	void (*periodic_job_function)(void* input_p);
 
 	// event_vector used to pass an event to the state machine, to change the state of the periodic_job
-	// 1 bit each for SHUTDOWN_CALLED, RESUME_CALLED, PAUSE_CALLED and SINGLE_SHOT_CALLED
+	// 1 bit each for SHUTDOWN_CALLED, PAUSE_CALLED, RESUME_CALLED, and SINGLE_SHOT_CALLED
 	int event_vector;
 
 	pthread_cond_t stop_wait; // wait on this condition variable to wait for the job to change state to PAUSED or SHUTDOWN
 };
+
+// below are the events that can be placed in the event_vector, in the priority of their processing
+// this macros are for internal use
+#define SHUTDOWN_CALLED    (1<<0) // can be called on all states except SHUTDOWN itself
+#define PAUSE_CALLED       (1<<1) // can be called on all states except SHUTDOWN and PAUSED
+#define RESUME_CALLED      (1<<2) // can be called on only PAUSED and SINGLE_SHOT_ON_PAUSED states
+#define SINGLE_SHOT_CALLED (1<<3) // can be called on only PAUSED and WAITING states
 
 // for any of the functions below, the period in microseconds can never be BLOCKING or NON_BLOCKING
 // it has to be a fixed positive unsigned integer representing microseconds as the period of the job
