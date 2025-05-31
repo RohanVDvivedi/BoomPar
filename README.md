@@ -1,5 +1,7 @@
 # BoomPar
 This is a multi threading library in C, built as an abstraction layer over pthread (POSIX threads) library.
+It provides 2 user exported constructs an Executor, that can be either FIXED_THREAD_COUNT_EXECUTOR or a CACHED_THREAD_POOL_EXECUTOR, managing variable number of threads.
+Next it provides is a periodic_job, a construct that allows you to control and manage a job that is meant to run at triggers or in a periodic fashion at fixed (but updatable intervals).
 
 ### Features
  * job: A wrapper to submit a task to be done, with a promise for completion.
@@ -27,6 +29,7 @@ This is a multi threading library in C, built as an abstraction layer over pthre
    * `#include<boompar/job.h>`
    * `#include<boompar/promise.h>`
    * `#include<boompar/executor.h>`
+   * `#include<boompar/periodic_job.h>`
 
    * `#include<boompar/sync_pipe.h>` can be used to share data among different jobs running on separate threads.
 
