@@ -49,5 +49,9 @@ int main()
 
 	sleep(5);
 
+	printf("Updating period to 0.3 second at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 300000));
+
+	sleep(6);
+
 	delete_periodic_job(pjob);
 }
