@@ -93,7 +93,10 @@ int shutdown_periodic_job(periodic_job* pjob);
 // for the below 2 functions, do not hold any external lock, that hinders the execution of the periodic job's user provided function
 
 // keeps you waiting forever until the periodic_job does nor reach PAUSED or SHUTDOWN state
-int wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob);
+// 1. you may call this function only after calling shutdown_periodic_job()
+// OR
+// 2. after calling pause_periodic_job(), but do be sure that no one calls resume_periodic_job() after your call to pause_periodic_job()
+void wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob);
 
 // delete explicitly calls shutdown_periodic_job and wait_for_pause_or_shutdown_of_periodic_job, before destroying and freeing the object
 void delete_periodic_job(periodic_job* pjob);
