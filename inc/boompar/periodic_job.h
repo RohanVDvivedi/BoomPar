@@ -8,10 +8,12 @@ typedef enum periodic_job_state periodic_job_state;
 enum periodic_job_state
 {
 	PAUSED, // job is paused and needs to be resumed -> periodic_job starts in this state
+	SINGLE_SHOT_ON_PAUSED, // job is running a single shot after a paused state -> next state would be PAUSED
+
 	RUNNING, // job is running state
 	WAITING, // job is waiting for the period to elapse
 	SINGLE_SHOT_ON_WAITING, // job is running a single shot after a waiting state -> next state would be WAITING
-	SINGLE_SHOT_ON_PAUSED, // job is running a single shot after a paused state -> next state would be PAUSED
+
 	SHUTDOWN, // job is in shutdown states
 };
 
@@ -46,7 +48,7 @@ struct periodic_job
 // below are the events that can be placed in the event_vector, in the priority of their processing
 // this macros are for internal use
 #define SHUTDOWN_CALLED    (1<<0) // can be called on all states except SHUTDOWN itself
-#define PAUSE_CALLED       (1<<1) // can be called on all states except SHUTDOWN and PAUSED
+#define PAUSE_CALLED       (1<<1) // can be called on only RUNNING, WAITING and SINGLE_SHOT_ON_WAITING states
 #define RESUME_CALLED      (1<<2) // can be called on only PAUSED and SINGLE_SHOT_ON_PAUSED states
 #define SINGLE_SHOT_CALLED (1<<3) // can be called on only PAUSED and WAITING states
 
@@ -63,19 +65,29 @@ int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_micros
 // below 4 are the event that you send to the periodic job to make it transition into different states
 // their return value only suggests if the event was sent, not that the requested transition will succeed
 
-// tries to transition the periodic job into a RUNNING <-> WAITING loop
-// may succeed only if the state is PAUSED or SINGLE_SHOT_ON_PAUSED
+/* tries to transition the periodic job 
+	from
+		PAUSED, SINGLE_SHOT_ON_PAUSED,
+	to
+		RUNNING, WAITING, SINGLE_SHOT_ON_WAITING
+*/
+// may succeed only if the state is any of the from states mentioned above
 int resume_periodic_job(periodic_job* pjob);
 
-// tries to put the periodic job in PAUSED state to wait until it is resumed
-// may succeed only if the state is anything but PAUSED
+/* tries to transition the periodic job 
+	from
+		RUNNING, WAITING, SINGLE_SHOT_ON_WAITING
+	to
+		PAUSED, SINGLE_SHOT_ON_PAUSED,
+*/
+// may succeed only if the state is any of the from states mentioned above
 int pause_periodic_job(periodic_job* pjob);
 
 // tries to immediately transition a PAUSED or WAITING periodic job into SINGLE_SHOT_ON_PAUSED or SINGLE_SHOT_ON_WAITING states
 // it allows the periodic job to quit waiting and attempt to run the periodic_job_fucntion jsut once, then it is again transitioned into its prior state
 int single_shot_periodic_job(periodic_job* pjob);
 
-// always succeeds
+// always succeeds, except when the job is in SHUTDOWN state
 int shutdown_periodic_job(periodic_job* pjob);
 
 // for the below 2 functions, do not hold any external lock, that hinders the execution of the periodic job's user provided function

@@ -78,9 +78,12 @@ int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_micros
 
 	pthread_mutex_lock(&(pjob->job_lock));
 
-		pjob->period_in_microseconds = period_in_microseconds;
 		res = 1;
-		pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		if(res)
+		{
+			pjob->period_in_microseconds = period_in_microseconds;
+			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		}
 
 	pthread_mutex_unlock(&(pjob->job_lock));
 
@@ -111,7 +114,7 @@ int pause_periodic_job(periodic_job* pjob)
 
 	pthread_mutex_lock(&(pjob->job_lock));
 
-		res = (pjob->state != SHUTDOWN && pjob->state != PAUSED);
+		res = (pjob->state == RUNNING || pjob->state == WAITING || pjob->state == SINGLE_SHOT_ON_WAITING);
 		if(res)
 		{
 			pjob->event_vector |= PAUSE_CALLED;
@@ -132,7 +135,7 @@ int single_shot_periodic_job(periodic_job* pjob)
 		res = (pjob->state == WAITING || pjob->state == PAUSED);
 		if(res)
 		{
-			pjob->event_vector |= RESUME_CALLED;
+			pjob->event_vector |= SINGLE_SHOT_CALLED;
 			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
 		}
 
