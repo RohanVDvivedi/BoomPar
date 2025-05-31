@@ -161,3 +161,13 @@ int shutdown_periodic_job(periodic_job* pjob)
 
 	return res;
 }
+
+void wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob)
+{
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		while(pjob->state != SHUTDOWN && pjob->state != PAUSED) // keep on waiting while the state is not (SHUTDOWN or PAUSED)
+			pthread_cond_wait(&(pjob->stop_wait), &(pjob->job_lock));
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+}
