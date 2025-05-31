@@ -1,15 +1,3 @@
  * periodic_job
- * a different kind of job, that keeps executing a function as long as until shutdown is called at a fixed intervals in microseconds uint64_t
- * this period can not be BLOCKING or NON_BLOCKING
- * api should support a separate mutex
- * a condition variable to wait on for periodic waits
- * a condition variable to wait on for shutdown
- * a state diagram
- * shutdown function
- * a function to wait for shutdown to complete
- * a function to update the time period_in_microseconds
- * a function to get the current period_in_microseconds
- * a function to execute_periodic_job and execute_periodic_job_async
- * function to pause/play the periodic_job -> setting period to BLOCKING
- * function to run the periodic job immediatly once, if the job is not already running, else this function is a NO-OP, depicting in its return value
+ * test
  * refactor Bufferpool, MinTxEngine and VolatilePageStore for using this job instead
