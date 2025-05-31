@@ -7,10 +7,10 @@
 typedef enum periodic_job_state periodic_job_state;
 enum periodic_job_state
 {
+	PAUSED, // job is paused and needs to be resumed -> periodic_job starts in this state
 	RUNNING, // job is running state
 	WAITING, // job is waiting for the period to elapse
 	SINGLE_SHOT_ON_WAITING, // job is running a single shot after a waiting state -> next state would be WAITING
-	PAUSED, // job is paused and needs to be resumed
 	SINGLE_SHOT_ON_PAUSED, // job is running a single shot after a paused state -> next state would be PAUSED
 	SHUTDOWN, // job is in shutdown states
 };
@@ -41,5 +41,7 @@ struct periodic_job
 
 	pthread_cond_t stop_wait; // wait on this condition variable to wait for the job to change state to PAUSED or SHUTDOWN
 };
+
+
 
 #endif
