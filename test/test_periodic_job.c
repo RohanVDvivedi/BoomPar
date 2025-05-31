@@ -61,7 +61,7 @@ int main()
 
 	sleep(5);
 
-	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), pause_periodic_job(pjob));
+	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), single_shot_periodic_job(pjob));
 	printf("Updating period to 2 seconds at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 2000000));
 
 	sleep(5);
@@ -70,7 +70,7 @@ int main()
 
 	sleep(5);
 
-	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), pause_periodic_job(pjob));
+	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), single_shot_periodic_job(pjob));
 
 	sleep(5);
 
