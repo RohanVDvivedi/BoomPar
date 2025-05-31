@@ -6,7 +6,74 @@
 
 static inline void consume_events_and_update_state(periodic_job* pjob, uint64_t total_time_waited_for)
 {
-	// TODO
+	switch(pjob->state)
+	{
+		case PAUSED :
+		{
+			if(pjob->event_vector & SHUTDOWN_CALLED)
+				pjob->state = SHUTDOWN;
+			else if(pjob->event_vector & RESUME_CALLED)
+				pjob->state = RUNNING;
+			else if(pjob->event_vector & SINGLE_SHOT_CALLED)
+				pjob->state = SINGLE_SHOT_ON_PAUSED;
+			else
+				pjob->state = PAUSED;
+			break;
+		}
+		case SINGLE_SHOT_ON_PAUSED :
+		{
+			if(pjob->event_vector & SHUTDOWN_CALLED)
+				pjob->state = SHUTDOWN;
+			else if(pjob->event_vector & RESUME_CALLED)
+				pjob->state = WAITING;
+			else
+				pjob->state = PAUSED;
+			break;
+		}
+
+		case RUNNING :
+		{
+			if(pjob->event_vector & SHUTDOWN_CALLED)
+				pjob->state = SHUTDOWN;
+			else if(pjob->event_vector & PAUSE_CALLED)
+				pjob->state = PAUSED;
+			else
+				pjob->state = WAITING;
+			break;
+		}
+		case WAITING :
+		{
+			if(pjob->event_vector & SHUTDOWN_CALLED)
+				pjob->state = SHUTDOWN;
+			else if(pjob->event_vector & PAUSE_CALLED)
+				pjob->state = PAUSED;
+			else if(pjob->event_vector & SINGLE_SHOT_CALLED)
+				pjob->state = SINGLE_SHOT_ON_WAITING;
+			else if(total_time_waited_for >= pjob->period_in_microseconds) // if the total time you waited for is greater than or equal to period_in_microseconds, then start running
+				pjob->state = RUNNING;
+			else
+				pjob->state = WAITING;
+			break;
+		}
+		case SINGLE_SHOT_ON_WAITING :
+		{
+			if(pjob->event_vector & SHUTDOWN_CALLED)
+				pjob->state = SHUTDOWN;
+			else if(pjob->event_vector & PAUSE_CALLED)
+				pjob->state = PAUSED;
+			else
+				pjob->state = WAITING;
+			break;
+		}
+
+		case SHUTDOWN : // in shutdown state you accept no events
+		{
+			break;
+		}
+	}
+
+	// zero out the event vector, to avoid rereading the events
+	pjob->event_vector = 0;
 }
 
 // internaly function for the periodic job that gets called to run the user's function at fixed intervals
