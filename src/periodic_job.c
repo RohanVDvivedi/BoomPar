@@ -4,7 +4,7 @@
 
 #include<stdlib.h>
 
-static inline void consume_events_and_update_state(periodic_job* pjob)
+static inline void consume_events_and_update_state(periodic_job* pjob, uint64_t total_time_waited_for)
 {
 	// TODO
 }
@@ -12,7 +12,49 @@ static inline void consume_events_and_update_state(periodic_job* pjob)
 // internaly function for the periodic job that gets called to run the user's function at fixed intervals
 static void* periodic_job_runner(void* pj)
 {
-	// TODO
+	periodic_job* pjob = pj;
+
+	while(1) // keep on looping
+	{
+		pthread_mutex_lock(&(pjob->job_lock));
+
+			uint64_t total_time_waited_for = 0;
+			while(1)
+			{
+				consume_events_and_update_state(pjob, total_time_waited_for);
+
+				if(pjob->state == SHUTDOWN) // exit as quickly as possible
+				{
+					pthread_cond_broadcast(&(pjob->stop_wait)); // broadcast stopping
+					pthread_mutex_unlock(&(pjob->job_lock)); // release lock and return early
+					return NULL;
+				}
+				else if(pjob->state == PAUSED)
+				{
+					pthread_cond_broadcast(&(pjob->stop_wait)); // broadcast stopping
+					pthread_cond_wait(&(pjob->job_wait), &(pjob->job_lock)); // go into a BLOCKING wait
+				}
+				else if(pjob->state == WAITING)
+				{
+					const uint64_t time_to_wait_for = pjob->period_in_microseconds - total_time_waited_for; // this surely is positive, consume_events_and_update_state() ensures that
+					uint64_t time_to_wait_for_FINAL = time_to_wait_for;
+
+					pthread_cond_timedwait_for_microseconds(&(pjob->job_wait), &(pjob->job_lock), &time_to_wait_for_FINAL);
+
+					uint64_t wait_time_elapsed = (time_to_wait_for - time_to_wait_for_FINAL);
+					total_time_waited_for += wait_time_elapsed;
+				}
+				else // this is RUNNING, SINGLE_SHOT_* events and we are meant to now run the periodic_job_function
+				{
+					break;
+				}
+			}
+
+		pthread_mutex_unlock(&(pjob->job_lock));
+
+		pjob->periodic_job_function(pjob->input_p);
+	}
+
 	return NULL;
 }
 
