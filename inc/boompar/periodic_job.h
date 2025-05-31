@@ -57,6 +57,9 @@ struct periodic_job
 // remember the periodid_job starts in PAUSED state, you need to resume it after initialization
 periodic_job* new_periodic_job(void (*periodic_job_function)(void* input_p), void* input_p, uint64_t period_in_microseconds);
 
+// fails if the period_in_microseconds is BLOCKING or NON_BLOCKING
+void update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_microseconds);
+
 // below 4 are the event that you send to the periodic job to make it transition into different states
 // their return value only suggests if the event was sent, not that the requested transition will succeed
 
