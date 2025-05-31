@@ -58,7 +58,7 @@ struct periodic_job
 periodic_job* new_periodic_job(void (*periodic_job_function)(void* input_p), void* input_p, uint64_t period_in_microseconds);
 
 // fails if the period_in_microseconds is BLOCKING or NON_BLOCKING
-void update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_microseconds);
+int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_microseconds);
 
 // below 4 are the event that you send to the periodic job to make it transition into different states
 // their return value only suggests if the event was sent, not that the requested transition will succeed
@@ -77,6 +77,8 @@ int single_shot_periodic_job(periodic_job* pjob);
 
 // always succeeds
 int shutdown_periodic_job(periodic_job* pjob);
+
+// for the below 2 functions, do not hold any external lock, that hinders the execution of the periodic job's user provided function
 
 // keeps you waiting forever until the periodic_job does nor reach PAUSED or SHUTDOWN state
 int wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob);

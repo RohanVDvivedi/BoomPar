@@ -4,7 +4,7 @@
 
 #include<stdlib.h>
 
-static inline consume_events_and_update_state(periodic_job* pjob)
+static inline void consume_events_and_update_state(periodic_job* pjob)
 {
 	// TODO
 }
@@ -67,4 +67,94 @@ void delete_periodic_job(periodic_job* pjob)
 	pthread_cond_destroy(&(pjob->job_wait));
 	pthread_cond_destroy(&(pjob->stop_wait));
 	free(pjob);
+}
+
+int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_microseconds)
+{
+	if(period_in_microseconds == BLOCKING || period_in_microseconds == NON_BLOCKING)
+		return 0;
+
+	int res = 0;
+
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		pjob->period_in_microseconds = period_in_microseconds;
+		res = 1;
+		pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return res;
+}
+
+int resume_periodic_job(periodic_job* pjob)
+{
+	int res = 0;
+
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		res = (pjob->state == PAUSED || pjob->state == SINGLE_SHOT_ON_PAUSED);
+		if(res)
+		{
+			pjob->event_vector |= RESUME_CALLED;
+			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		}
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return res;
+}
+
+int pause_periodic_job(periodic_job* pjob)
+{
+	int res = 0;
+
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		res = (pjob->state != SHUTDOWN && pjob->state != PAUSED);
+		if(res)
+		{
+			pjob->event_vector |= PAUSE_CALLED;
+			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		}
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return res;
+}
+
+int single_shot_periodic_job(periodic_job* pjob)
+{
+	int res = 0;
+
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		res = (pjob->state == WAITING || pjob->state == PAUSED);
+		if(res)
+		{
+			pjob->event_vector |= RESUME_CALLED;
+			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		}
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return res;
+}
+
+int shutdown_periodic_job(periodic_job* pjob)
+{
+	int res = 0;
+
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		res = (pjob->state != SHUTDOWN);
+		if(res)
+		{
+			pjob->event_vector |= SHUTDOWN_CALLED;
+			pthread_cond_signal(&(pjob->job_wait)); // signal the periodic job that the event has come
+		}
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return res;
 }
