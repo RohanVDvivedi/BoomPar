@@ -4,9 +4,15 @@
 
 #include<stdlib.h>
 
+static inline consume_events_and_update_state(periodic_job* pjob)
+{
+	// TODO
+}
+
 // internaly function for the periodic job that gets called to run the user's function at fixed intervals
 static void* periodic_job_runner(void* pj)
 {
+	// TODO
 	return NULL;
 }
 
