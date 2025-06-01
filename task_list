@@ -1,2 +1,2 @@
  * periodic_job
-  * refactor MinTxEngine and VolatilePageStore for using this periodic_job instead
+  * refactor VolatilePageStore for using this periodic_job instead
