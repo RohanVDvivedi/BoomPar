@@ -5,7 +5,7 @@
 #include<pthread.h>
 
 #include<boompar/sync_queue.h>
-#include<boompar/job.h>
+#include<boompar/promise.h>
 
 typedef enum executor_type executor_type;
 enum executor_type
