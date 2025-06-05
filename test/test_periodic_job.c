@@ -30,47 +30,58 @@ int main()
 	millis_begin = millis();
 	printf("Test begins at %"PRIu64" with 0.5 second period\n", millis_begin);
 	periodic_job* pjob = new_periodic_job(periodic_function, NULL, 500000); // start with half a second
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), resume_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), resume_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Updating period to 1 second at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 1000000));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Updating period to 0.3 second at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 300000));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(6);
 
 	printf("Updating period to 1 second at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 1000000));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), single_shot_periodic_job(pjob));
 	printf("Updating period to 2 seconds at %"PRIu64" => %d\n", millis_now(), update_period_for_periodic_job(pjob, 2000000));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), resume_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
 	printf("Single shot periodic job at %"PRIu64" => %d\n", millis_now(), single_shot_periodic_job(pjob));
+	printf("period = %"PRIu64"\n", get_period_for_periodic_job(pjob));
 
 	sleep(5);
 
