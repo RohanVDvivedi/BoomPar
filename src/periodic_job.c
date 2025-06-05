@@ -206,6 +206,17 @@ int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_micros
 	return res;
 }
 
+uint64_t get_period_for_periodic_job(periodic_job* pjob)
+{
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		uint64_t period_in_microseconds = pjob->period_in_microseconds;
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+
+	return period_in_microseconds;
+}
+
 int resume_periodic_job(periodic_job* pjob)
 {
 	int res = 0;

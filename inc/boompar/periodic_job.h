@@ -55,6 +55,9 @@ periodic_job* new_periodic_job(void (*periodic_job_function)(void* input_p), voi
 // fails if the period_in_microseconds is BLOCKING or NON_BLOCKING
 int update_period_for_periodic_job(periodic_job* pjob, uint64_t period_in_microseconds);
 
+// returns instantaneous value period for the period of the periodic_job
+uint64_t get_period_for_periodic_job(periodic_job* pjob);
+
 // below 4 are the event that you send to the periodic job to make it transition into different states
 // their return value only suggests if the event was sent, not that the requested transition will succeed
 
