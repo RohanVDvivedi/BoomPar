@@ -1,5 +1,6 @@
 #include<boompar/alarm_job.h>
 
+#include<posixutils/pthread_cond_utils.h>
 #include<posixutils/timespec_utils.h>
 
 #include<stdio.h>
@@ -35,30 +36,31 @@ int main()
 {
 	millis_begin = millis();
 	printf("Test begins at %"PRIu64" with 0.5 second period\n", millis_begin);
-	alarm_job* ajob = new_periodic_job(alarm_function, NULL);
+	alarm_job* ajob = new_alarm_job(alarm_function, NULL);
 
-	sleep(5);
+	sleep(2);
 
 	printf("Waking up periodic job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
 
-	sleep(5);
+	sleep(2);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(pjob));
-
-	sleep(5);
-
-	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(pjob));
+	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
 
 	sleep(5);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(pjob));
+	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
+
+	sleep(2);
+
+	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(pjob));
+	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
+	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
 
-	delete_periodic_job(pjob);
+	delete_alarm_job(ajob);
 }
