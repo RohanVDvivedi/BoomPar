@@ -1,8 +1,2 @@
 alarm_job
- * like periodic job we need an alarm_job
- * has a function that takes a pointer as input parameter and returns a alarm_period_in_microseconds to wake up later after that period has elapsed
- * has states like AJ_PAUSED (initial state and when funxtion pointer returns BLOCKING), AJ_RUNNING, AJ_WAITING (waiting for finite period to elapse), PJ_SHUTDOWN
- * force_wake_up_alarm_job -> to wake it up from sleep, before the previously mentioned alarm
- * shutdown
- * wait_for_shutdown
- * delete
+ * test
