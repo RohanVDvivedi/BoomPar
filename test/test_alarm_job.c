@@ -27,7 +27,7 @@ uint64_t alarm_function(void* t)
 	printf("Hello from alarm function at %"PRIu64"\n", millis_now());
 	next_run_period += 200000ULL;
 
-	if(next_run_period < 2 * 1000000ULL)
+	if(next_run_period > 2 * 1000000ULL)
 		return BLOCKING;
 	return next_run_period;
 }
