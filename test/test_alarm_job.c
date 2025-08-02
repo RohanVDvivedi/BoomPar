@@ -26,8 +26,8 @@ uint64_t alarm_function(void* t)
 	static uint64_t next_run_period = 0;
 	if(next_run_period != BLOCKING)
 	{
-		next_run_period += 200000ULL;
-		if(next_run_period > 25000000ULL)
+		next_run_period += 50000ULL;
+		if(next_run_period >= 550000ULL)
 			next_run_period = BLOCKING;
 	}
 
@@ -60,6 +60,10 @@ int main()
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
+
+	printf("Waking up alarm job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
+
+	sleep(2);
 
 	printf("Shutdown alarm job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
