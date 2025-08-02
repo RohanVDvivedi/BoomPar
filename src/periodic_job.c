@@ -118,7 +118,7 @@ static void* periodic_job_runner(void* pj)
 					uint64_t wait_time_elapsed = (time_to_wait_for - time_to_wait_for_FINAL);
 					total_time_waited_for += wait_time_elapsed;
 				}
-				else // this is PJ_RUNNING, SINGLE_SHOT_* events and we are meant to now run the periodic_job_function
+				else // this is PJ_RUNNING, SINGLE_SHOT_* states and we are meant to now run the periodic_job_function
 				{
 					break;
 				}
