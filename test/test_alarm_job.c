@@ -35,7 +35,7 @@ uint64_t alarm_function(void* t)
 int main()
 {
 	millis_begin = millis();
-	printf("Test begins at %"PRIu64" with 0.5 second period\n", millis_begin);
+	printf("Test begins at %"PRIu64"\n", millis_begin);
 	alarm_job* ajob = new_alarm_job(alarm_function, NULL);
 
 	sleep(2);
