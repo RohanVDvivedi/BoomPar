@@ -18,20 +18,8 @@ static inline void consume_events_and_update_state(alarm_job* ajob, uint64_t tot
 		{
 			if(ajob->event_vector & SHUTDOWN_CALLED)
 				ajob->state = AJ_SHUTDOWN;
-			else if(ajob->event_vector & RESUME_CALLED)
+			else if(ajob->event_vector & WAKE_UP_CALLED)
 				ajob->state = AJ_RUNNING;
-			else if(ajob->event_vector & SINGLE_SHOT_CALLED)
-				ajob->state = AJ_SINGLE_SHOT_ON_PAUSED;
-			else
-				ajob->state = AJ_PAUSED;
-			break;
-		}
-		case AJ_SINGLE_SHOT_ON_PAUSED :
-		{
-			if(ajob->event_vector & SHUTDOWN_CALLED)
-				ajob->state = AJ_SHUTDOWN;
-			else if(ajob->event_vector & RESUME_CALLED)
-				ajob->state = AJ_WAITING;
 			else
 				ajob->state = AJ_PAUSED;
 			break;
@@ -53,20 +41,10 @@ static inline void consume_events_and_update_state(alarm_job* ajob, uint64_t tot
 				ajob->state = AJ_SHUTDOWN;
 			else if(ajob->event_vector & PAUSE_CALLED)
 				ajob->state = AJ_PAUSED;
-			else if(ajob->event_vector & SINGLE_SHOT_CALLED)
-				ajob->state = AJ_SINGLE_SHOT_ON_WAITING;
+			else if(ajob->event_vector & WAKE_UP_CALLED)
+				ajob->state = AJ_RUNNING;
 			else if(total_time_waited_for >= ajob->period_in_microseconds) // if the total time you waited for is greater than or equal to period_in_microseconds, then start running
 				ajob->state = AJ_RUNNING;
-			else
-				ajob->state = AJ_WAITING;
-			break;
-		}
-		case AJ_SINGLE_SHOT_ON_WAITING :
-		{
-			if(ajob->event_vector & SHUTDOWN_CALLED)
-				ajob->state = AJ_SHUTDOWN;
-			else if(ajob->event_vector & PAUSE_CALLED)
-				ajob->state = AJ_PAUSED;
 			else
 				ajob->state = AJ_WAITING;
 			break;
@@ -117,7 +95,7 @@ static void* alarm_job_runner(void* aj)
 					uint64_t wait_time_elapsed = (time_to_wait_for - time_to_wait_for_FINAL);
 					total_time_waited_for += wait_time_elapsed;
 				}
-				else // this is AJ_RUNNING state and we are meant to now run the periodic_job_function
+				else // this is AJ_RUNNING state and we are meant to now run the alarm_job_function
 				{
 					break;
 				}
@@ -141,7 +119,7 @@ static void* alarm_job_runner(void* aj)
 alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* input_p)
 {
 	// check the input parameters
-	if(periodic_job_function == NULL)
+	if(alarm_job_function == NULL)
 		return NULL;
 
 	// allocate
@@ -161,7 +139,7 @@ alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* in
 
 	// start a detached thread
 	pthread_t thread_id;
-	int error = pthread_create(&thread_id, NULL, periodic_job_runner, ajob);
+	int error = pthread_create(&thread_id, NULL, alarm_job_runner, ajob);
 	if(error)
 	{
 		pthread_mutex_destroy(&(ajob->job_lock));
@@ -175,7 +153,7 @@ alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* in
 	return ajob;
 }
 
-void delete_periodic_job(periodic_job* ajob)
+void delete_alarm_job(alarm_job* ajob)
 {
 	// call shutdown for the alarm job
 	shutdown_alarm_job(ajob);
