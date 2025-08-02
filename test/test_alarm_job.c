@@ -40,24 +40,24 @@ int main()
 
 	sleep(2);
 
-	printf("Waking up periodic job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
+	printf("Waking up alarm job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
 
 	sleep(2);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
+	printf("Pausing alarm job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
 
 	sleep(5);
 
-	printf("Resuming periodic job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
+	printf("Waking up alarm job at %"PRIu64" => %d\n", millis_now(), wake_up_alarm_job(ajob));
 
 	sleep(2);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
+	printf("Pausing alarm job at %"PRIu64" => %d\n", millis_now(), pause_alarm_job(ajob));
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
 
-	printf("Shutdown periodic job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
+	printf("Shutdown alarm job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
