@@ -24,11 +24,15 @@ uint64_t millis_now()
 uint64_t alarm_function(void* t)
 {
 	static uint64_t next_run_period = 0;
-	printf("Hello from alarm function at %"PRIu64"\n", millis_now());
-	next_run_period += 200000ULL;
+	if(next_run_period != BLOCKING)
+	{
+		next_run_period += 200000ULL;
+		if(next_run_period > 25000000ULL)
+			next_run_period = BLOCKING;
+	}
 
-	if(next_run_period > 2 * 1000000ULL)
-		return BLOCKING;
+	printf("Hello from alarm function at %"PRIu64" -> %"PRIu64"\n", millis_now(), next_run_period);
+
 	return next_run_period;
 }
 
