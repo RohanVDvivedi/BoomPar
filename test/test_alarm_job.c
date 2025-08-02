@@ -57,7 +57,7 @@ int main()
 
 	sleep(5);
 
-	printf("Pausing periodic job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
+	printf("Shutdown periodic job at %"PRIu64" => %d\n", millis_now(), shutdown_alarm_job(ajob));
 	wait_for_pause_or_shutdown_of_alarm_job(ajob);
 
 	sleep(5);
