@@ -63,6 +63,6 @@ void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_
 void shutdown_resource_usage_limiter(resource_usage_limiter* rul_p);
 
 // shutdowns the resource_usage_limiter, waits for all the resources to be given back and then shuts down
-void delete_resource_usage_limiter(resource_usage_limiter* rul_p);
+void delete_resource_usage_limiter(resource_usage_limiter* rul_p, int wait_for_resources_to_be_returned);
 
 #endif

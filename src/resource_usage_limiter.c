@@ -104,4 +104,24 @@ void shutdown_resource_usage_limiter(resource_usage_limiter* rul_p)
 	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
 }
 
-void delete_resource_usage_limiter(resource_usage_limiter* rul_p);
+void delete_resource_usage_limiter(resource_usage_limiter* rul_p, int wait_for_resources_to_be_returned)
+{
+	shutdown_resource_usage_limiter(rul_p);
+
+	// if we are required to wait for the resource
+	// we wait until all the resources are returned
+	if(wait_for_resources_to_be_returned)
+	{
+		pthread_mutex_lock(&(rul_p->resource_limiter_lock));
+
+		while(rul_p->resource_granted_count > 0)
+			pthread_mutex_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
+
+		pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
+	}
+
+	pthread_mutex_destroy(&(rul_p->resource_limiter_lock));
+	pthread_cond_destroy(&(rul_p->resource_limiter_wait));
+
+	free(rul_p);
+}
