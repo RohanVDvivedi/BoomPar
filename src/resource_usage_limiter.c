@@ -6,7 +6,7 @@
 
 resource_usage_limiter* new_resource_usage_limiter(uint64_t resource_count)
 {
-	if(resource_count == NULL)
+	if(resource_count == 0)
 		return NULL;
 
 	resource_usage_limiter* rul_p = malloc(sizeof(resource_usage_limiter));
@@ -19,7 +19,7 @@ resource_usage_limiter* new_resource_usage_limiter(uint64_t resource_count)
 	rul_p->resource_granted_count = 0;
 	rul_p->shutdown_requested = 0;
 
-	return rul_p
+	return rul_p;
 }
 
 uint64_t get_resource_count(resource_usage_limiter* rul_p)
@@ -33,7 +33,7 @@ uint64_t get_resource_count(resource_usage_limiter* rul_p)
 	return resource_count;
 }
 
-void set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_count)
+int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_count)
 {
 	// resource_count can never become 0
 	if(new_resource_count == 0)
@@ -42,13 +42,13 @@ void set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_cou
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
 	int res = 0;
-	if(rul_p->shutdown_requested = 1) // fail update if the shutdown was called
+	if(rul_p->shutdown_requested == 1) // fail update if the shutdown was called
 	{
 		// if we end up incrementing the resource_count, then wake up potential requesters
 		if(rul_p->resource_count < new_resource_count)
 			pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
 
-		rul_p->resource_count = resource_count;
+		rul_p->resource_count = new_resource_count;
 		res = 1;
 	}
 

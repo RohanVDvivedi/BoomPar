@@ -31,7 +31,7 @@ uint64_t get_resource_count(resource_usage_limiter* rul_p);
 
 // set the total number of resources managed by the resource_usage_limiter
 // also wakes up all the waiters
-// returns 0 and fails if (new_resource_count == 0) || (shutdown_requested = 1)
+// returns 0 and fails if (new_resource_count == 0) || (shutdown_requested == 1)
 int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_count);
 
 // an int typedef-ed, for the number of resources waiting
