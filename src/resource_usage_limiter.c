@@ -42,7 +42,7 @@ int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_coun
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
 	int res = 0;
-	if(rul_p->shutdown_requested == 1) // fail update if the shutdown was called
+	if(!(rul_p->shutdown_requested)) // fail update if the shutdown was called
 	{
 		// if we end up incrementing the resource_count, then wake up potential requesters
 		if(rul_p->resource_count < new_resource_count)
@@ -74,6 +74,7 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 		return 0;
 
 	// this means no resources have been requested
+	// min_resource_count by definition has to be zero
 	if(0 == max_resource_count)
 		return 0;
 
@@ -101,9 +102,10 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 		// first ensure that no shutdown was requested and there were no calls for us to break out
 		if((!rul_p->shutdown_requested) && ((*break_out) == 0))
 		{
-			if(get_resources_left(rul_p) >= min_resource_count) // then ensure that there are more resources than what we want
+			uint64_t resources_left = get_resources_left(rul_p);
+			if(resources_left >= min_resource_count) // then ensure that there are more resources than what we want
 			{
-				res = max(min(get_resources_left(rul_p), max_resource_count), min_resource_count); // take min with max value and max with min value, to figure out what we would grant this requested
+				res = max(min(resources_left, max_resource_count), min_resource_count); // take min with max value and max with min value, to figure out what we would grant this requested
 				rul_p->resource_granted_count += res;
 			}
 		}
@@ -115,6 +117,10 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 
 int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t granted_resource_count)
 {
+	// this is a NOP call
+	if(granted_resource_count == 0)
+		return 1;
+
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
 	int res = 0;
@@ -123,7 +129,7 @@ int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p,
 		rul_p->resource_granted_count -= granted_resource_count;
 
 		// if there are any resources left, then wake up all waiters
-		if(rul_p->resource_count > rul_p->resource_granted_count)
+		if(rul_p->resource_count > rul_p->resource_granted_count) // this check could fail if the number of resource_count was recently decreased to a lower value
 			pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
 	}
 
