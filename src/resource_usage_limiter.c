@@ -77,7 +77,7 @@ int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p,
 
 	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
 
-	return 0;
+	return res;
 }
 
 void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_resource_waiting* break_out)
@@ -115,7 +115,7 @@ void delete_resource_usage_limiter(resource_usage_limiter* rul_p, int wait_for_r
 		pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
 		while(rul_p->resource_granted_count > 0)
-			pthread_mutex_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
+			pthread_cond_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
 
 		pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
 	}
