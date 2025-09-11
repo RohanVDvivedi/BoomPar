@@ -57,6 +57,16 @@ int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_coun
 	return res;
 }
 
+// simple thread unsafe utility to be used only with the locks held
+static uint64_t get_resources_left(const resource_usage_limiter* rul_p)
+{
+	if(rul_p->resource_count >= rul_p->resource_granted_count)
+		return rul_p->resource_count - rul_p->resource_granted_count;
+
+	// there are more resources granted than the total resources left for some unknown reason, so return 0
+	return 0;
+}
+
 int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
 
 uint64_t request_atmost_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
