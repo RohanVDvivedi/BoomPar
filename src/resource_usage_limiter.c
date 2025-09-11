@@ -63,8 +63,28 @@ uint64_t request_atmost_resources_from_resource_usage_limiter(resource_usage_lim
 
 int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t granted_resource_count);
 
-void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_resource_waiting* break_out);
+void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_resource_waiting* break_out)
+{
+	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
-void shutdown_resource_usage_limiter(resource_usage_limiter* rul_p);
+	if((*break_out) == 0) // if not broken out earlier, only then break_out now
+	{
+		(*break_out) = 1;
+		pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
+	}
+
+	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
+}
+
+void shutdown_resource_usage_limiter(resource_usage_limiter* rul_p)
+{
+	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
+
+	// set shutdown requested and wake up everyone
+	rul_p->shutdown_requested = 1;
+	pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
+
+	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
+}
 
 void delete_resource_usage_limiter(resource_usage_limiter* rul_p);
