@@ -67,7 +67,41 @@ static uint64_t get_resources_left(const resource_usage_limiter* rul_p)
 	return 0;
 }
 
-int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
+int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out)
+{
+	int res = 0;
+
+	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
+
+		// attempt to block only if you are allowed to
+		if(timeout_in_microseconds != NON_BLOCKING)
+		{
+			int wait_error = 0;
+
+			// keep on looping while, there is no shutdown, no break_out requested, lesser resources than what we want and there is no wait_error
+			while((!rul_p->shutdown_requested) && ((*break_out) == 0) && (get_resources_left(rul_p) < requested_resource_count) && !wait_error)
+			{
+				if(timeout_in_microseconds == BLOCKING)
+					wait_error = pthread_cond_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
+				else
+					wait_error = pthread_cond_timedwait_for_microseconds(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock), &timeout_in_microseconds);
+			}
+		}
+
+		// if the sync queue is closed, we fail to push
+		if((!rul_p->shutdown_requested) && ((*break_out) == 0))
+		{
+			if(get_resources_left(rul_p) >= requested_resource_count)
+			{
+				rul_p->resource_granted_count += requested_resource_count;
+				res = 1;
+			}
+		}
+
+	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
+
+	return res;
+}
 
 uint64_t request_atmost_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
 
