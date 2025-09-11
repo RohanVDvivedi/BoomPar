@@ -67,9 +67,17 @@ static uint64_t get_resources_left(const resource_usage_limiter* rul_p)
 	return 0;
 }
 
-int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out)
+uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t min_resource_count, uint64_t max_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out)
 {
-	int res = 0;
+	// make sure that we have a valid range
+	if(min_resource_count > max_resource_count)
+		return 0;
+
+	// this means no resources have been requested
+	if(0 == max_resource_count)
+		return 0;
+
+	uint64_t res = 0;
 
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
@@ -78,8 +86,10 @@ int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p,
 		{
 			int wait_error = 0;
 
-			// keep on looping while, there is no shutdown, no break_out requested, lesser resources than what we want and there is no wait_error
-			while((!rul_p->shutdown_requested) && ((*break_out) == 0) && (get_resources_left(rul_p) < requested_resource_count) && !wait_error)
+			// keep on looping while
+			while((!rul_p->shutdown_requested) && ((*break_out) == 0) &&  // there is no shutdown and no breakout requested
+				(get_resources_left(rul_p) < min_resource_count) && // and as long as there are lesser resources than out minimum requirement
+				!wait_error) // and there is no wait error
 			{
 				if(timeout_in_microseconds == BLOCKING)
 					wait_error = pthread_cond_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
@@ -88,13 +98,13 @@ int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p,
 			}
 		}
 
-		// if the sync queue is closed, we fail to push
+		// first ensure that no shutdown was requested and there were no calls for us to break out
 		if((!rul_p->shutdown_requested) && ((*break_out) == 0))
 		{
-			if(get_resources_left(rul_p) >= requested_resource_count)
+			if(get_resources_left(rul_p) >= min_resource_count) // then ensure that there are more resources than what we want
 			{
-				rul_p->resource_granted_count += requested_resource_count;
-				res = 1;
+				res = max(min(get_resources_left(rul_p), max_resource_count), min_resource_count); // take min with max value and max with min value, to figure out what we would grant this requested
+				rul_p->resource_granted_count += res;
 			}
 		}
 
@@ -102,8 +112,6 @@ int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p,
 
 	return res;
 }
-
-uint64_t request_atmost_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
 
 int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t granted_resource_count)
 {
