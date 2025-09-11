@@ -61,7 +61,24 @@ int request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p,
 
 uint64_t request_atmost_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t requested_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
 
-int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t granted_resource_count);
+int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t granted_resource_count)
+{
+	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
+
+	int res = 0;
+	if(rul_p->resource_granted_count >= granted_resource_count)
+	{
+		rul_p->resource_granted_count -= granted_resource_count;
+
+		// if there are any resources left, then wake up all waiters
+		if(rul_p->resource_count > rul_p->resource_granted_count)
+			pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
+	}
+
+	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
+
+	return 0;
+}
 
 void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_resource_waiting* break_out)
 {
