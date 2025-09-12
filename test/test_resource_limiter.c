@@ -2,6 +2,7 @@
 #include<boompar/job.h>
 
 #include<stdio.h>
+#include<unistd.h>
 #include<inttypes.h>
 
 resource_usage_limiter* rul_p = NULL;
@@ -28,13 +29,17 @@ int give_back_resources(int tid, resource_usage_limiter* rul_p, uint64_t granted
 uint64_t min_resource_count = 3;
 uint64_t max_resource_count = 5;
 
-break_resource_waiting jout1 = INIT_BREAK_OUT;
-break_resource_waiting jout2 = INIT_BREAK_OUT;
-break_resource_waiting jout3 = INIT_BREAK_OUT;
+break_resource_waiting jouts[3] = {INIT_BREAK_OUT, INIT_BREAK_OUT, INIT_BREAK_OUT};
 
 void* job12(void* p)
 {
 	int tid = (long long int)p;
+
+	// part 1
+	usleep((tid+1) * 500);
+	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	give_back_resources(tid, rul_p, res);
+	usleep((3-tid) * 500);
 
 	return NULL;
 }
@@ -42,6 +47,11 @@ void* job12(void* p)
 void* job3_(void* p)
 {
 	int tid = (long long int)p;
+
+	usleep((tid+1) * 500);
+	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	give_back_resources(tid, rul_p, res);
+	usleep((3-tid) * 500);
 
 	return NULL;
 }
