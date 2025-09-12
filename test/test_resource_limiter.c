@@ -31,7 +31,8 @@ int give_back_resources(int tid, resource_usage_limiter* rul_p, uint64_t granted
 uint64_t min_resource_count = 3;
 uint64_t max_resource_count = 5;
 
-break_resource_waiting jouts[3] = {INIT_BREAK_OUT, INIT_BREAK_OUT, INIT_BREAK_OUT};
+// 0 will be the unassigned waiter, 1,2, and 3 will be assigned to corresponding jobs
+break_resource_waiting jouts[4] = {INIT_BREAK_OUT, INIT_BREAK_OUT, INIT_BREAK_OUT, INIT_BREAK_OUT};
 
 void* job12(void* p)
 {
@@ -39,25 +40,39 @@ void* job12(void* p)
 	uint64_t res;
 
 	// part 1
-	usleep((tid+1) * 500);
+	usleep((tid+1) * 1000);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
-	usleep(4 * 500);
+	usleep(5 * 1000);
 	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	usleep((4-tid) * 1000);
 
 	// part 2
-	usleep((tid+1) * 500);
+	usleep((tid+1) * 1000);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
-	usleep(4 * 500);
+	usleep(5 * 1000);
 	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	usleep((4-tid) * 1000);
 
 	// part 3
-	usleep((tid+1) * 500);
+	usleep((tid+1) * 1000);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
-	usleep(4 * 500);
+	usleep(5 * 1000);
 	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	usleep((4-tid) * 1000);
+
+	// part 4
+	usleep((tid+1) * 1000);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
+	usleep(5 * 1000);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 1000);
+
+	// part 5
+	usleep((tid+1) * 1000);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
+	usleep(5 * 1000);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 1000);
 
 	return NULL;
 }
@@ -68,24 +83,38 @@ void* job3_(void* p)
 	uint64_t res;
 
 	// part 1
-	usleep((tid+1) * 500);
+	usleep((tid+1) * 1000);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
-	usleep(4 * 500);
+	usleep(5 * 1000);
 	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	usleep((4-tid) * 1000);
 
 	// part 2
-	usleep((tid+1) * 500);
+	usleep((tid+1) * 1000);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
-	usleep(4 * 500);
+	usleep(5 * 1000);
 	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	usleep((4-tid) * 1000);
 
 	// part 3
-	usleep((tid+1) * 500);
-	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, 2 * 500, jouts+tid);
+	usleep((tid+1) * 1000);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, 2 * 1000, jouts+tid);
 	//give_back_resources(tid, rul_p, res);
-	usleep((4-tid+1) * 500);
+	usleep((4-tid+3) * 1000);
+
+	// part 4
+	usleep((tid+1) * 1000);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
+	usleep(5 * 1000);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 1000);
+
+	// part 5
+	usleep((tid+1) * 1000);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
+	usleep(5 * 1000);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 1000);
 
 	return NULL;
 }
@@ -108,18 +137,29 @@ int main()
 	printf("started all 3 jobs\n");
 
 	printf("\n\nPART 1\n\n");
-	usleep(9 * 500);
+	usleep(10 * 1020);
 
 	printf("\n\nPART 2\n\n");
-	usleep(9 * 500);
+	usleep(10 * 1020);
 
 	printf("\n\nPART 3\n\n");
 	set_resource_count(rul_p, 8);
-	usleep(9 * 500);
+	usleep(10 * 1020);
 
 	printf("\n\nPART 4\n\n");
+	usleep(5 * 1020);
+	set_resource_count(rul_p, 12);
+	usleep(5 * 1020);
 
-	printf("shutting down resource_usage_limiter\n");
+	printf("\n\nPART 5\n\n");
+	set_resource_count(rul_p, 2);
+	usleep(7 * 1020);
+	for(int i = 0; i < 4; i++) // you may breakout from an unassigned break_out and we do not care
+		break_out_from_resource_usage_limiter(rul_p, jouts+i);
+	usleep(3 * 1020);
+
+	usleep(40 * 1020);
+	printf("\n\nshutting down resource_usage_limiter\n");
 	delete_resource_usage_limiter(rul_p, 1);
 
 	return 0;
