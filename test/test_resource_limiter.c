@@ -83,10 +83,9 @@ void* job3_(void* p)
 
 	// part 3
 	usleep((tid+1) * 500);
-	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, 3 * 500, jouts+tid);
-	usleep(1 * 500);
-	give_back_resources(tid, rul_p, res);
-	usleep((4-tid) * 500);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, 2 * 500, jouts+tid);
+	//give_back_resources(tid, rul_p, res);
+	usleep((4-tid+1) * 500);
 
 	return NULL;
 }
