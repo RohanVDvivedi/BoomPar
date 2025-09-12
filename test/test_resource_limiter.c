@@ -36,10 +36,18 @@ break_resource_waiting jouts[3] = {INIT_BREAK_OUT, INIT_BREAK_OUT, INIT_BREAK_OU
 void* job12(void* p)
 {
 	int tid = (long long int)p;
+	uint64_t res;
 
 	// part 1
 	usleep((tid+1) * 500);
-	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	usleep(4 * 500);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 500);
+
+	// part 2
+	usleep((tid+1) * 500);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
 	usleep(4 * 500);
 	give_back_resources(tid, rul_p, res);
 	usleep((4-tid) * 500);
@@ -50,9 +58,18 @@ void* job12(void* p)
 void* job3_(void* p)
 {
 	int tid = (long long int)p;
+	uint64_t res;
 
+	// part 1
 	usleep((tid+1) * 500);
-	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	usleep(4 * 500);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 500);
+
+	// part 2
+	usleep((tid+1) * 500);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
 	usleep(4 * 500);
 	give_back_resources(tid, rul_p, res);
 	usleep((4-tid) * 500);
@@ -81,6 +98,7 @@ int main()
 	usleep(9 * 500);
 
 	printf("\n\nPART 2\n\n");
+	usleep(9 * 500);
 
 	printf("\n\nPART 3\n\n");
 
