@@ -1,2 +1,21 @@
  * resource_usage_limiter
    * write tests
+     * 3 threads, total resources = 14
+       * all grant 3-5 non blockingly, they get 5, 4, 4
+       * then they release all
+       * all grant blockingly with 12 resource count
+       * 2 of then get 5 and 4 and one waits for timeout of 5 seconds
+       * release all
+       * make resource_count = 10
+       * request the same
+       * release the 2 acquired ones and make the third one receive the 5
+       * release all
+       * make the same request
+       * make request_count = 14
+       * see if the third one gets the resources
+       * release all
+       * make the resource_count = 15
+       * make same request and see if all the resources are taken
+       * release all
+       * return from all
+       * shutdown from the main thread
