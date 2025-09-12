@@ -40,8 +40,9 @@ void* job12(void* p)
 	// part 1
 	usleep((tid+1) * 500);
 	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	usleep(4 * 500);
 	give_back_resources(tid, rul_p, res);
-	usleep((3-tid) * 500);
+	usleep((4-tid) * 500);
 
 	return NULL;
 }
@@ -52,8 +53,9 @@ void* job3_(void* p)
 
 	usleep((tid+1) * 500);
 	uint64_t res = request_resources(tid, rul_p, min_resource_count, max_resource_count, NON_BLOCKING, jouts+tid);
+	usleep(4 * 500);
 	give_back_resources(tid, rul_p, res);
-	usleep((3-tid) * 500);
+	usleep((4-tid) * 500);
 
 	return NULL;
 }
@@ -76,7 +78,7 @@ int main()
 	printf("started all 3 jobs\n");
 
 	printf("\n\nPART 1\n\n");
-	usleep(4 * 500);
+	usleep(9 * 500);
 
 	printf("\n\nPART 2\n\n");
 
