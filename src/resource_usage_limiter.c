@@ -88,7 +88,7 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 			int wait_error = 0;
 
 			// keep on looping while
-			while((!rul_p->shutdown_requested) && ((*break_out) == 0) &&  // there is no shutdown and no breakout requested
+			while((!rul_p->shutdown_requested) && (!(*break_out)) &&  // there is no shutdown and no breakout requested
 				(get_resources_left(rul_p) < min_resource_count) && // and as long as there are lesser resources than out minimum requirement
 				!wait_error) // and there is no wait error
 			{
@@ -100,7 +100,7 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 		}
 
 		// first ensure that no shutdown was requested and there were no calls for us to break out
-		if((!rul_p->shutdown_requested) && ((*break_out) == 0))
+		if((!rul_p->shutdown_requested) && (!(*break_out)))
 		{
 			uint64_t resources_left = get_resources_left(rul_p);
 			if(resources_left >= min_resource_count) // then ensure that there are more resources than what we want
@@ -126,10 +126,13 @@ int give_back_resources_to_resource_usage_limiter(resource_usage_limiter* rul_p,
 	int res = 0;
 	if(rul_p->resource_granted_count >= granted_resource_count)
 	{
+		// because we could now successfully give back the granted resources
+		res = 1;
+
 		rul_p->resource_granted_count -= granted_resource_count;
 
 		// if there are any resources left, then wake up all waiters
-		if(rul_p->resource_count > rul_p->resource_granted_count) // this check could fail if the number of resource_count was recently decreased to a lower value
+		if(get_resources_left(rul_p) > 0) // this check could fail if the number of resource_count was recently decreased to a lower value
 			pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
 	}
 
@@ -142,7 +145,7 @@ void break_out_from_resource_usage_limiter(resource_usage_limiter* rul_p, break_
 {
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
-	if((*break_out) == 0) // if not broken out earlier, only then break_out now
+	if(!(*break_out)) // if not broken out earlier, only then break_out now
 	{
 		(*break_out) = 1;
 		pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
