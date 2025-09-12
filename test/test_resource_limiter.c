@@ -6,20 +6,6 @@
 
 resource_usage_limiter* rul_p = NULL;
 
-void* job12(void* p)
-{
-	int tid = (long long int)p;
-
-	return NULL;
-}
-
-void* job3_(void* p)
-{
-	int tid = (long long int)p;
-
-	return NULL;
-}
-
 uint64_t request_resources(int tid, resource_usage_limiter* rul_p, uint64_t min_resource_count, uint64_t max_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out)
 {
 	printf("tid = %d, requesting %"PRIu64"-%"PRIu64" resources\n", tid, min_resource_count, max_resource_count);
@@ -46,6 +32,20 @@ break_resource_waiting jout1 = INIT_BREAK_OUT;
 break_resource_waiting jout2 = INIT_BREAK_OUT;
 break_resource_waiting jout3 = INIT_BREAK_OUT;
 
+void* job12(void* p)
+{
+	int tid = (long long int)p;
+
+	return NULL;
+}
+
+void* job3_(void* p)
+{
+	int tid = (long long int)p;
+
+	return NULL;
+}
+
 int main()
 {
 	rul_p = new_resource_usage_limiter(14);
@@ -63,6 +63,13 @@ int main()
 		exit(-1);
 	printf("started all 3 jobs\n");
 
+	printf("\n\nPART 1\n\n");
+
+	printf("\n\nPART 2\n\n");
+
+	printf("\n\nPART 3\n\n");
+
+	printf("\n\nPART 4\n\n");
 
 	printf("shutting down resource_usage_limiter\n");
 	delete_resource_usage_limiter(rul_p, 1);
