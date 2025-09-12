@@ -36,7 +36,7 @@ int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_coun
 
 // an int typedef-ed, for the number of resources waiting
 typedef int break_resource_waiting;
-#define INIT_BREAK_OUT 0;
+#define INIT_BREAK_OUT 0
 
 /*
 	You generally need to wait for a resource to be available, but there are times when the wake up is needed in cases like when an external user input needs to quit

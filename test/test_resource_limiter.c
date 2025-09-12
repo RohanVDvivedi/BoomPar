@@ -1,6 +1,8 @@
 #include<boompar/resource_usage_limiter.h>
 #include<boompar/job.h>
 
+#include<posixutils/timespec_utils.h>
+
 #include<stdio.h>
 #include<unistd.h>
 #include<inttypes.h>
@@ -74,6 +76,7 @@ int main()
 	printf("started all 3 jobs\n");
 
 	printf("\n\nPART 1\n\n");
+	usleep(4 * 500);
 
 	printf("\n\nPART 2\n\n");
 
