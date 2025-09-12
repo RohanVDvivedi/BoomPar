@@ -52,6 +52,13 @@ void* job12(void* p)
 	give_back_resources(tid, rul_p, res);
 	usleep((4-tid) * 500);
 
+	// part 3
+	usleep((tid+1) * 500);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
+	usleep(4 * 500);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 500);
+
 	return NULL;
 }
 
@@ -71,6 +78,13 @@ void* job3_(void* p)
 	usleep((tid+1) * 500);
 	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, BLOCKING, jouts+tid);
 	usleep(4 * 500);
+	give_back_resources(tid, rul_p, res);
+	usleep((4-tid) * 500);
+
+	// part 3
+	usleep((tid+1) * 500);
+	res = request_resources(tid, rul_p, min_resource_count, max_resource_count, 3 * 500, jouts+tid);
+	usleep(1 * 500);
 	give_back_resources(tid, rul_p, res);
 	usleep((4-tid) * 500);
 
@@ -101,6 +115,8 @@ int main()
 	usleep(9 * 500);
 
 	printf("\n\nPART 3\n\n");
+	set_resource_count(rul_p, 8);
+	usleep(9 * 500);
 
 	printf("\n\nPART 4\n\n");
 
