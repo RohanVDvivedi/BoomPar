@@ -1,7 +1,7 @@
 #include<boompar/resource_usage_limiter.h>
 #include<boompar/job.h>
 
-#include<posixutils/timespec_utils.h>
+#include<posixutils/pthread_cond_utils.h>
 
 #include<stdio.h>
 #include<unistd.h>
