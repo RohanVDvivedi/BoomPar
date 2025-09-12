@@ -7,7 +7,7 @@ DOWNLOAD_DIR:=/usr/local
 # we may download all the public headers
 
 # list of public api headers (only these headers will be installed)
-PUBLIC_HEADERS:=executor.h worker.h sync_queue.h job.h promise.h sync_pipe.h promise_completion_default_callbacks.h periodic_job.h alarm_job.h
+PUBLIC_HEADERS:=executor.h worker.h sync_queue.h job.h promise.h sync_pipe.h promise_completion_default_callbacks.h periodic_job.h alarm_job.h resource_usage_limiter.h
 # the library, which we will create
 LIBRARY:=lib${PROJECT_NAME}.a
 # the binary, which will use the created library
