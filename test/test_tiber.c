@@ -51,6 +51,8 @@ tiber tb4;
 pthread_mutex_t lock;
 tiber_cond wait;
 
+#define WAKEUP tiber_cond_signal // tiber_cond_broadcast
+
 void tb3_func(void* p)
 {
 	while(1)
@@ -62,7 +64,7 @@ void tb3_func(void* p)
 
 		if(curr >= MAX_COUNT)
 		{
-			tiber_cond_signal(&wait);
+			WAKEUP(&wait);
 			pthread_mutex_unlock(&lock);
 			break;
 		}
@@ -70,7 +72,7 @@ void tb3_func(void* p)
 		printf("Printing %d from %p\n", curr, tb3_func);
 		curr++;
 
-		tiber_cond_signal(&wait);
+		WAKEUP(&wait);
 
 		pthread_mutex_unlock(&lock);
 	}
@@ -87,7 +89,7 @@ void tb4_func(void* p)
 
 		if(curr >= MAX_COUNT)
 		{
-			tiber_cond_signal(&wait);
+			WAKEUP(&wait);
 			pthread_mutex_unlock(&lock);
 			break;
 		}
@@ -95,7 +97,7 @@ void tb4_func(void* p)
 		printf("Printing %d from %p\n", curr, tb4_func);
 		curr++;
 
-		tiber_cond_signal(&wait);
+		WAKEUP(&wait);
 
 		pthread_mutex_unlock(&lock);
 	}
