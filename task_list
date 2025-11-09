@@ -1,3 +1,7 @@
 
+ * for tiber support we need
+  * build sync_llqueue (non blocking pushes to the job queue)
+  * design test if a linkedlist based sync queue is any better
+
  * tiber future task
    add timed wait for tiber_cond
