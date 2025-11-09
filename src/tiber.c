@@ -113,7 +113,7 @@ void yield_tiber()
 	// swap the context out
 	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
 	{
-		printf("TIBER BUG: tiber could not context switch into itself\n");
+		printf("TIBER BUG: tiber could not context switch into it's caller for yielding\n");
 		exit(-1);
 	}
 }
@@ -134,7 +134,7 @@ void kill_tiber()
 	// swap the context out
 	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
 	{
-		printf("TIBER BUG: tiber could not context switch into itself\n");
+		printf("TIBER BUG: tiber could not context switch into it's caller for sucide\n");
 		exit(-1);
 	}
 }
@@ -154,7 +154,35 @@ void tiber_cond_init(tiber_cond* tc)
 	initialize_linkedlist(&(tc->tiber_cond_waiters), offsetof(tiber, embed_node_for_tiber_cond_waiters));
 }
 
-void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t* m);
+void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t* m)
+{
+	// put curr_tiber into waiting state
+	pthread_spin_lock(&(tc->lock));
+	pthread_spin_lock(&(curr_tiber->tiber_state_lock));
+	if(curr_tiber->state == TIBER_RUNNING)
+		curr_tiber->state = TIBER_WAITING;
+	else
+	{
+		printf("TIBER BUG: tiber attempted waiting for tiber_cond but not in running state\n");
+		exit(-1);
+	}
+	pthread_spin_unlock(&(curr_tiber->tiber_state_lock));
+	insert_tail_in_linkedlist(&(tc->tiber_cond_waiters), curr_tiber);
+	pthread_spin_unlock(&(tc->lock));
+
+	// unlock the mutex
+	pthread_mutex_unlock(m);
+
+	// swap the context out
+	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
+	{
+		printf("TIBER BUG: tiber could not context switch into it's caller for waiting over tiber_cond\n");
+		exit(-1);
+	}
+
+	// lock it back
+	pthread_mutex_lock(m);
+}
 
 void tiber_cond_signal(tiber_cond* tc)
 {
