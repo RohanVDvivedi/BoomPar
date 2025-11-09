@@ -39,6 +39,7 @@ static void* tiber_execute_wrapper(void* tb_v)
 		printf("TIBER BUG: tiber_caller could not be populated\n");
 		exit(-1);
 	}
+	curr_tiber->tiber_context.uc_link = &(curr_tiber->tiber_caller);
 	if(-1 == swapcontext(&(curr_tiber->tiber_caller), &(curr_tiber->tiber_context)))
 	{
 		printf("TIBER BUG: tiber could not context switch into itself\n");
@@ -66,7 +67,7 @@ int initialize_and_run_tiber(tiber* tb, executor* thread_pool, void (*entry_func
 	tb->tiber_context.uc_stack.ss_sp = tb->stack;
 	tb->tiber_context.uc_stack.ss_size = stack_size;
 	tb->tiber_context.uc_stack.ss_flags = 0;
-	tb->tiber_context.uc_link = &(tb->tiber_caller);\
+	tb->tiber_context.uc_link = &(tb->tiber_caller);
 	makecontext(&(tb->tiber_context), (void(*)(void))entry_func, 1, input_p);
 
 	pthread_spin_init(&(tb->tiber_state_lock), PTHREAD_PROCESS_PRIVATE);
