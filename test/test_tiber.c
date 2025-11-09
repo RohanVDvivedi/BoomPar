@@ -5,7 +5,7 @@
 #include<unistd.h>
 
 #define EXECUTOR_THREADS_COUNT 	2
-#define MAX_JOB_QUEUE_CAPACITY  200
+#define MAX_JOB_QUEUE_CAPACITY  UNBOUNDED_SYNC_QUEUE
 
 tiber tb1;
 tiber tb2;
