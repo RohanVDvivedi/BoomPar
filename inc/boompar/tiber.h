@@ -42,7 +42,7 @@ struct tiber
 
 
 // initializes tiber in queued state
-void initialize_tiber(tiber* tb, void func(void* input_p), void* input_p, uint64_t stack_size);
+int initialize_tiber(tiber* tb, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
 
 /*
 	puts tiber as thread local variale of this thread
