@@ -5,7 +5,7 @@
 #include<unistd.h>
 
 #define EXECUTOR_THREADS_COUNT 	2
-#define MAX_JOB_QUEUE_CAPACITY  2
+#define MAX_JOB_QUEUE_CAPACITY  200
 
 tiber tb1;
 tiber tb2;
@@ -58,10 +58,7 @@ void tb3_func(void* p)
 		pthread_mutex_lock(&lock);
 
 		while(((curr % 2) != 1) && curr < MAX_COUNT)
-		{
-			printf("1 -> waiting because %d %d\n", ((curr % 2) != 1), curr < MAX_COUNT);
 			tiber_cond_wait(&wait, &lock);
-		}
 
 		if(curr >= MAX_COUNT)
 		{
@@ -86,10 +83,7 @@ void tb4_func(void* p)
 		pthread_mutex_lock(&lock);
 
 		while(((curr % 2) != 0) && curr < MAX_COUNT)
-		{
-			printf("2 -> waiting because %d %d\n", ((curr % 2) != 0), curr < MAX_COUNT);
 			tiber_cond_wait(&wait, &lock);
-		}
 
 		if(curr >= MAX_COUNT)
 		{
