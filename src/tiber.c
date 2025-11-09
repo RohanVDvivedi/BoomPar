@@ -147,3 +147,20 @@ void deinitialize_tiber(tiber* tb)
 	pthread_spin_destroy(&(tb->tiber_context_lock));
 	pthread_spin_destroy(&(tb->tiber_state_lock));
 }
+
+void tiber_cond_init(tiber_cond* tc)
+{
+	pthread_spin_init(&(tc->lock), PTHREAD_PROCESS_PRIVATE);
+	initialize_linkedlist(&(tc->tiber_cond_waiters), offsetof(tiber, embed_node_for_tiber_cond_waiters));
+}
+
+void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t m);
+
+void tiber_cond_signal(tiber_cond* tc);
+
+void tiber_cond_broadcast(tiber_cond* tc);
+
+void tiber_cond_destroy(tiber_cond* tc)
+{
+	pthread_spin_destroy(&(tc->lock));
+}
