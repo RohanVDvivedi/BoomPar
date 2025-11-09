@@ -8,6 +8,8 @@
 
 #include<cutlery/linkedlist.h>
 
+#include<boompar/executor.h>
+
 typedef enum tiber_state tiber_state;
 enum tiber_state
 {
@@ -57,7 +59,7 @@ int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* 
 
 	** only this function takes the context_lock of the tiber
 */
-void run_tiber(tiber* tb);
+void enqueue_tiber(tiber* tb);
 
 // must be called from within the tiber
 void yield_tiber();
