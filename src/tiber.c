@@ -203,7 +203,8 @@ void tiber_cond_signal(tiber_cond* tc)
 	pthread_spin_unlock(&(tc->lock));
 
 	// do the actual queueing, pushing it into the thread pool
-	submit_job_executor(twup->thread_pool, tiber_execute_wrapper, twup, NULL, NULL, BLOCKING);
+	if(twup != NULL)
+		submit_job_executor(twup->thread_pool, tiber_execute_wrapper, twup, NULL, NULL, BLOCKING);
 }
 
 void tiber_cond_broadcast(tiber_cond* tc)
