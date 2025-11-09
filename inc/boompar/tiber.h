@@ -19,9 +19,9 @@
 typedef enum tiber_state tiber_state;
 enum tiber_state
 {
-	TIBER_QUEUED,
+	TIBER_QUEUED,	// this is the initial state, with the tiber already pushed into the thread_pool
 	TIBER_RUNNING,
-	TIBER_WAITING,	// this is the initial state
+	TIBER_WAITING,
 	TIBER_KILLED,
 };
 
