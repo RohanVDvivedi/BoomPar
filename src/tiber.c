@@ -83,7 +83,11 @@ int initialize_and_run_tiber(tiber* tb, executor* thread_pool, void (*entry_func
 	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));
 
 	// do the actual queueing, pushing it into the thread pool
-	submit_job_executor(tb->thread_pool, tiber_execute_wrapper, tb, NULL, NULL, BLOCKING);
+	if(0 == submit_job_executor(tb->thread_pool, tiber_execute_wrapper, tb, NULL, NULL, BLOCKING))
+	{
+		printf("TIBER BUG: tiber was initialized but could not be queued\n");
+		exit(-1);
+	}
 
 	return 1;
 }
@@ -102,7 +106,11 @@ void yield_tiber()
 	pthread_spin_unlock(&(curr_tiber->tiber_state_lock));
 
 	// do the actual queueing, pushing it into the thread pool
-	submit_job_executor(curr_tiber->thread_pool, tiber_execute_wrapper, curr_tiber, NULL, NULL, BLOCKING);
+	if(0 == submit_job_executor(curr_tiber->thread_pool, tiber_execute_wrapper, curr_tiber, NULL, NULL, BLOCKING))
+	{
+		printf("TIBER BUG: tiber yielded but could not be queued\n");
+		exit(-1);
+	}
 
 	// swap the context out
 	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
@@ -204,7 +212,13 @@ void tiber_cond_signal(tiber_cond* tc)
 
 	// do the actual queueing, pushing it into the thread pool
 	if(twup != NULL)
-		submit_job_executor(twup->thread_pool, tiber_execute_wrapper, twup, NULL, NULL, BLOCKING);
+	{
+		if(0 == submit_job_executor(twup->thread_pool, tiber_execute_wrapper, twup, NULL, NULL, BLOCKING))
+		{
+			printf("TIBER BUG: tiber was suppoed to be woken up by a signal but could not be queued\n");
+			exit(-1);
+		}
+	}
 }
 
 void tiber_cond_broadcast(tiber_cond* tc)
@@ -240,7 +254,11 @@ void tiber_cond_broadcast(tiber_cond* tc)
 		tiber* ttwup = (tiber*) get_head_of_linkedlist(&twup);
 		remove_from_linkedlist(&twup, ttwup);
 
-		submit_job_executor(ttwup->thread_pool, tiber_execute_wrapper, ttwup, NULL, NULL, BLOCKING);
+		if(0 == submit_job_executor(ttwup->thread_pool, tiber_execute_wrapper, ttwup, NULL, NULL, BLOCKING))
+		{
+			printf("TIBER BUG: tiber was suppoed to be woken up by a broadcast but could not be queued\n");
+			exit(-1);
+		}
 	}
 }
 
