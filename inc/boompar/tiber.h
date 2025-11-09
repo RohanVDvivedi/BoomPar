@@ -46,20 +46,8 @@ struct tiber
 };
 
 
-// initializes tiber in queued state
-int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
-
-/*
-	puts tiber as thread local variale of this thread
-	puts tiber in running state
-	takes it's context lock
-	swaps context running the tiber
-	releases it's context lock
-	returns
-
-	** only this function takes the context_lock of the tiber
-*/
-void enqueue_tiber(tiber* tb);
+// initializes tiber in queued state, and pushes it into the job queue for the thread_pool
+int initialize_and_run_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
 
 // must be called from within the tiber
 void yield_tiber();

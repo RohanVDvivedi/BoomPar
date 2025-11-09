@@ -6,31 +6,6 @@
 // the current tiber that this thread is executing get's stored here
 __thread tiber* curr_tiber = NULL;
 
-int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
-{
-	tb->thread_pool = thread_pool;
-
-	tb->stack = malloc(stack_size);
-	if(tb->stack == NULL)
-		return 0;
-
-	pthread_spin_init(&(tb->tiber_context_lock), PTHREAD_PROCESS_PRIVATE);
-
-	getcontext(&(tb->tiber_context));
-	tb->tiber_context.uc_stack.ss_sp = tb->stack;
-	tb->tiber_context.uc_stack.ss_size = stack_size;
-	tb->tiber_context.uc_stack.ss_flags = 0;
-	tb->tiber_context.uc_link = &(tb->tiber_caller);\
-	makecontext(&(tb->tiber_context), (void(*)(void))entry_func, 1, input_p);
-
-	pthread_spin_init(&(tb->tiber_state_lock), PTHREAD_PROCESS_PRIVATE);
-	tb->state = TIBER_WAITING;
-
-	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));
-
-	return 1;
-}
-
 /*
 	puts tiber as thread local variable of this thread
 	puts tiber in running state
@@ -41,7 +16,7 @@ int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* 
 
 	** only this function takes the context_lock of the tiber
 */
-void* tiber_execute_wrapper(void* tb_v)
+static void* tiber_execute_wrapper(void* tb_v)
 {
 	// set the thred local
 	curr_tiber = (tiber*)tb_v;
@@ -77,21 +52,32 @@ void* tiber_execute_wrapper(void* tb_v)
 	return NULL;
 }
 
-void enqueue_tiber(tiber* tb)
+int initialize_and_run_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
 {
-	// change tb's state to running
-	pthread_spin_lock(&(tb->tiber_state_lock));
-	if(tb->state == TIBER_WAITING)
-		tb->state = TIBER_QUEUED;
-	else
-	{
-		printf("TIBER BUG: tiber not in waiting state was requested to be enqueued\n");
-		exit(-1);
-	}
-	pthread_spin_unlock(&(tb->tiber_state_lock));
+	tb->thread_pool = thread_pool;
+
+	tb->stack = malloc(stack_size);
+	if(tb->stack == NULL)
+		return 0;
+
+	pthread_spin_init(&(tb->tiber_context_lock), PTHREAD_PROCESS_PRIVATE);
+
+	getcontext(&(tb->tiber_context));
+	tb->tiber_context.uc_stack.ss_sp = tb->stack;
+	tb->tiber_context.uc_stack.ss_size = stack_size;
+	tb->tiber_context.uc_stack.ss_flags = 0;
+	tb->tiber_context.uc_link = &(tb->tiber_caller);\
+	makecontext(&(tb->tiber_context), (void(*)(void))entry_func, 1, input_p);
+
+	pthread_spin_init(&(tb->tiber_state_lock), PTHREAD_PROCESS_PRIVATE);
+	tb->state = TIBER_QUEUED;
+
+	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));
 
 	// do the actual queueing, pushing it into the thread pool
 	submit_job_executor(tb->thread_pool, tiber_execute_wrapper, tb, NULL, NULL, BLOCKING);
+
+	return 1;
 }
 
 void yield_tiber()
