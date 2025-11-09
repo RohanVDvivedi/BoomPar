@@ -20,6 +20,9 @@ enum tiber_state
 typedef struct tiber tiber;
 struct tiber
 {
+	// this is the thread_pool it will run on
+	executor* thread_pool;
+
 	// free this stack memory on TIBER_KILLED state
 	void* stack;
 
@@ -42,7 +45,7 @@ struct tiber
 
 
 // initializes tiber in queued state
-int initialize_tiber(tiber* tb, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
+int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size);
 
 /*
 	puts tiber as thread local variale of this thread

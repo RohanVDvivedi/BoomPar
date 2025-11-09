@@ -5,8 +5,10 @@
 // the current tiber that this thread is executing get's stored here
 __thread tiber* curr_tiber = NULL;
 
-int initialize_tiber(tiber* tb, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
+int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* input_p), void* input_p, uint64_t stack_size)
 {
+	tb->thread_pool = thread_pool;
+
 	tb->stack = malloc(stack_size);
 	if(tb->stack == NULL)
 		return 0;
@@ -36,6 +38,7 @@ void kill_tiber();
 
 void deinitialize_tiber(tiber* tb)
 {
+	tb->thread_pool = NULL;
 	free(tb->stack);
 	tb->stack = NULL;
 	pthread_spin_destroy(&(tb->tiber_context_lock));
