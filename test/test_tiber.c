@@ -2,6 +2,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<unistd.h>
 
 #define EXECUTOR_THREADS_COUNT 	1
 #define MAX_JOB_QUEUE_CAPACITY  1
@@ -47,6 +48,9 @@ int main()
 
 	initialize_and_run_tiber(&tb1, executor_p, tb1_func, NULL, 4096);
 	initialize_and_run_tiber(&tb2, executor_p, tb2_func, NULL, 4096);
+
+	// wait for 5 seconds
+	sleep(5);
 
 	shutdown_executor(executor_p, 0);
 	wait_for_all_executor_workers_to_complete(executor_p);
