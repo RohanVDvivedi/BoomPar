@@ -15,7 +15,7 @@ enum tiber_state
 {
 	TIBER_QUEUED,
 	TIBER_RUNNING,
-	TIBER_WAITING,
+	TIBER_WAITING,	// this is the initial state
 	TIBER_KILLED,
 };
 

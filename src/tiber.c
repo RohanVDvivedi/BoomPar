@@ -24,7 +24,7 @@ int initialize_tiber(tiber* tb, executor* thread_pool, void (*entry_func)(void* 
 	makecontext(&(tb->tiber_context), (void(*)(void))entry_func, 1, input_p);
 
 	pthread_spin_init(&(tb->tiber_state_lock), PTHREAD_PROCESS_PRIVATE);
-	tb->state = TIBER_QUEUED;
+	tb->state = TIBER_WAITING;
 
 	initialize_llnode(&(tb->embed_node_for_tiber_cond_waiters));
 
@@ -77,11 +77,67 @@ void* tiber_execute_wrapper(void* tb_v)
 	return NULL;
 }
 
-void enqueue_tiber(tiber* tb);
+void enqueue_tiber(tiber* tb)
+{
+	// change tb's state to running
+	pthread_spin_lock(&(tb->tiber_state_lock));
+	if(tb->state == TIBER_WAITING)
+		tb->state = TIBER_QUEUED;
+	else
+	{
+		printf("TIBER BUG: tiber not in waiting state was requested to be enqueued\n");
+		exit(-1);
+	}
+	pthread_spin_unlock(&(tb->tiber_state_lock));
 
-void yield_tiber();
+	// do the actual queueing, pushing it into the thread pool
+	submit_job_executor(tb->thread_pool, tiber_execute_wrapper, tb, NULL, NULL, BLOCKING);
+}
 
-void kill_tiber();
+void yield_tiber()
+{
+	// change curr_tiber's state to QUEUED
+	pthread_spin_lock(&(curr_tiber->tiber_state_lock));
+	if(curr_tiber->state == TIBER_RUNNING)
+		curr_tiber->state = TIBER_QUEUED;
+	else
+	{
+		printf("TIBER BUG: tiber attempted to yield but not in running state\n");
+		exit(-1);
+	}
+	pthread_spin_unlock(&(curr_tiber->tiber_state_lock));
+
+	// do the actual queueing, pushing it into the thread pool
+	submit_job_executor(curr_tiber->thread_pool, tiber_execute_wrapper, curr_tiber, NULL, NULL, BLOCKING);
+
+	// swap the context out
+	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
+	{
+		printf("TIBER BUG: tiber could not context switch into itself\n");
+		exit(-1);
+	}
+}
+
+void kill_tiber()
+{
+	// change curr_tiber's state to KILLED
+	pthread_spin_lock(&(curr_tiber->tiber_state_lock));
+	if(curr_tiber->state == TIBER_RUNNING)
+		curr_tiber->state = TIBER_KILLED;
+	else
+	{
+		printf("TIBER BUG: tiber attempted suicide but not in running state\n");
+		exit(-1);
+	}
+	pthread_spin_unlock(&(curr_tiber->tiber_state_lock));
+
+	// swap the context out
+	if(-1 == swapcontext(&(curr_tiber->tiber_context), &(curr_tiber->tiber_caller)))
+	{
+		printf("TIBER BUG: tiber could not context switch into itself\n");
+		exit(-1);
+	}
+}
 
 void deinitialize_tiber(tiber* tb)
 {
