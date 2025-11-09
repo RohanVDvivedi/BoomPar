@@ -1,14 +1,6 @@
- * implement tiber
-   * uses ucontext or libucontext underneath
-   * uses spinlocked
-     * state (TIBER_QUEUED, TIBER_RUNNING, TIBER_WAITING and TIBER_KILLED)
-     * ucontext itself
-   * takes ucontext lock in parent thread while swapping context
-   * has yield_tiber() -> puts current tiber from running to queued state
-   * has kill_tiber() -> puts current tiber from running to killed state
-   * waits on only a custom condition variable called tiber_cond_t
-   * has tiber_cond_signal(tiber_cond_t* tc);
-   * and tiber_cond_broadcast(tiber_cond_t* tc);
-   * and finally tiber_cond_wait(tiber_cond_t* tc, pthread_mutex_t m);
-   * custom execute function that puts the current tiber as its thread local and puts it into running mode takes lock and swaps the context
-   * and also a get_new_tiber function that makes a context and gives it to you
+ * review tiber
+ * test yield and kill for 2 tibers on the 1 thread thread pool
+ * test tiber_cond waiting and waking up, for both signal and broadcast
+
+ * tiber future task
+   add timed wait for tiber_cond
