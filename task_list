@@ -1,5 +1,3 @@
- * test yield and kill for 2 tibers on the 1 thread thread pool
- * test tiber_cond waiting and waking up, for both signal and broadcast
 
  * tiber future task
    add timed wait for tiber_cond
