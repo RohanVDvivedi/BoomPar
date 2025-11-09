@@ -42,12 +42,76 @@ void tb2_func(void* p)
 	yield_tiber();
 }
 
+int MAX_COUNT = 10;
+int curr = 0;
+
+tiber tb3;
+tiber tb4;
+
+pthread_mutex_t lock;
+tiber_cond wait;
+
+void tb3_func(void* p)
+{
+	while(1)
+	{
+		pthread_mutex_lock(&lock);
+
+		while(((curr % 2) != 1) && curr < MAX_COUNT)
+			tiber_cond_wait(&wait, &lock);
+
+		if(curr >= MAX_COUNT)
+		{
+			tiber_cond_signal(&wait);
+			pthread_mutex_unlock(&lock);
+			break;
+		}
+
+		printf("Printing %d from %p\n", curr, tb3_func);
+		curr++;
+
+		tiber_cond_signal(&wait);
+
+		pthread_mutex_unlock(&lock);
+	}
+}
+
+void tb4_func(void* p)
+{
+	while(1)
+	{
+		pthread_mutex_lock(&lock);
+
+		while(((curr % 2) != 0) && curr < MAX_COUNT)
+			tiber_cond_wait(&wait, &lock);
+
+		if(curr >= MAX_COUNT)
+		{
+			tiber_cond_signal(&wait);
+			pthread_mutex_unlock(&lock);
+			break;
+		}
+
+		printf("Printing %d from %p\n", curr, tb4_func);
+		curr++;
+
+		tiber_cond_signal(&wait);
+
+		pthread_mutex_unlock(&lock);
+	}
+}
+
 int main()
 {
+	pthread_mutex_init(&lock, NULL);
+	tiber_cond_init(&wait);
+
 	executor* executor_p = new_executor(FIXED_THREAD_COUNT_EXECUTOR, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, 1000, NULL, NULL, NULL);
 
 	initialize_and_run_tiber(&tb1, executor_p, tb1_func, NULL, 4096);
 	initialize_and_run_tiber(&tb2, executor_p, tb2_func, NULL, 4096);
+	initialize_and_run_tiber(&tb3, executor_p, tb3_func, NULL, 4096);
+	initialize_and_run_tiber(&tb4, executor_p, tb4_func, NULL, 4096);
 
 	// wait for 5 seconds
 	sleep(5);
@@ -55,6 +119,14 @@ int main()
 	shutdown_executor(executor_p, 0);
 	wait_for_all_executor_workers_to_complete(executor_p);
 	delete_executor(executor_p);
+
+	deinitialize_tiber(&tb1);
+	deinitialize_tiber(&tb2);
+	deinitialize_tiber(&tb3);
+	deinitialize_tiber(&tb4);
+
+	pthread_mutex_destroy(&lock);
+	tiber_cond_destroy(&wait);
 
 	return 0;
 }
