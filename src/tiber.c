@@ -47,6 +47,13 @@ static void* tiber_execute_wrapper(void* tb_v)
 	}
 	pthread_spin_unlock(&(curr_tiber->tiber_context_lock));
 
+	// change curr_tiber's state if running to killed
+	// because it returned from the entry function
+	pthread_spin_lock(&(curr_tiber->tiber_state_lock));
+	if(curr_tiber->state == TIBER_RUNNING)
+		curr_tiber->state = TIBER_KILLED;
+	pthread_spin_unlock(&(curr_tiber->tiber_state_lock));
+
 	// reset the thread local
 	curr_tiber = NULL;
 
