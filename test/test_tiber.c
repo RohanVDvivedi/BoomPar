@@ -4,8 +4,8 @@
 #include<stdlib.h>
 #include<unistd.h>
 
-#define EXECUTOR_THREADS_COUNT 	1
-#define MAX_JOB_QUEUE_CAPACITY  1
+#define EXECUTOR_THREADS_COUNT 	2
+#define MAX_JOB_QUEUE_CAPACITY  2
 
 tiber tb1;
 tiber tb2;
