@@ -82,7 +82,7 @@ struct tiber_cond
 
 void tiber_cond_init(tiber_cond* tc);
 
-void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t m);
+void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t* m);
 
 void tiber_cond_signal(tiber_cond* tc);
 

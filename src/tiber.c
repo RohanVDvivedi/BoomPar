@@ -154,11 +154,72 @@ void tiber_cond_init(tiber_cond* tc)
 	initialize_linkedlist(&(tc->tiber_cond_waiters), offsetof(tiber, embed_node_for_tiber_cond_waiters));
 }
 
-void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t m);
+void tiber_cond_wait(tiber_cond* tc, pthread_mutex_t* m);
 
-void tiber_cond_signal(tiber_cond* tc);
+void tiber_cond_signal(tiber_cond* tc)
+{
+	tiber* twup = NULL;
 
-void tiber_cond_broadcast(tiber_cond* tc);
+	pthread_spin_lock(&(tc->lock));
+
+	if(!is_empty_linkedlist(&(tc->tiber_cond_waiters)))
+	{
+		twup = (tiber*) get_head_of_linkedlist(&(tc->tiber_cond_waiters));
+		remove_from_linkedlist(&(tc->tiber_cond_waiters), twup);
+
+		pthread_spin_lock(&(twup->tiber_state_lock));
+		if(twup->state == TIBER_WAITING)
+			twup->state = TIBER_QUEUED;
+		else
+		{
+			printf("TIBER BUG: tiber_cond has non waiting tiber in tiber_cond_waiters for signal\n");
+			exit(-1);
+		}
+		pthread_spin_unlock(&(twup->tiber_state_lock));
+	}
+
+	pthread_spin_unlock(&(tc->lock));
+
+	// do the actual queueing, pushing it into the thread pool
+	submit_job_executor(twup->thread_pool, tiber_execute_wrapper, twup, NULL, NULL, BLOCKING);
+}
+
+void tiber_cond_broadcast(tiber_cond* tc)
+{
+	linkedlist twup;
+	initialize_linkedlist(&twup, offsetof(tiber, embed_node_for_tiber_cond_waiters));
+
+	pthread_spin_lock(&(tc->lock));
+
+	while(!is_empty_linkedlist(&(tc->tiber_cond_waiters)))
+	{
+		tiber* ttwup = (tiber*) get_head_of_linkedlist(&(tc->tiber_cond_waiters));
+		remove_from_linkedlist(&(tc->tiber_cond_waiters), ttwup);
+
+		pthread_spin_lock(&(ttwup->tiber_state_lock));
+		if(ttwup->state == TIBER_WAITING)
+			ttwup->state = TIBER_QUEUED;
+		else
+		{
+			printf("TIBER BUG: tiber_cond has non waiting tiber in tiber_cond_waiters for broadcast\n");
+			exit(-1);
+		}
+		pthread_spin_unlock(&(ttwup->tiber_state_lock));
+
+		insert_tail_in_linkedlist(&twup, ttwup);
+	}
+
+	pthread_spin_unlock(&(tc->lock));
+
+	// do the actual queueing, pushing it all into the thread pool
+	while(!is_empty_linkedlist(&twup))
+	{
+		tiber* ttwup = (tiber*) get_head_of_linkedlist(&twup);
+		remove_from_linkedlist(&twup, ttwup);
+
+		submit_job_executor(ttwup->thread_pool, tiber_execute_wrapper, ttwup, NULL, NULL, BLOCKING);
+	}
+}
 
 void tiber_cond_destroy(tiber_cond* tc)
 {
