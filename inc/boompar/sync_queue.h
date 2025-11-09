@@ -37,7 +37,8 @@ struct sync_queue
 	int is_closed;
 };
 
-
+// set/pass this value to max_capacity, if you want an unbounded sync_queue
+#define UNBOUNDED_SYNC_QUEUE CY_UINT_MAX
 
 /*
 *	INITIALIZATION AND DEINITIALIZATION FUNCTIONS FOR SYNC QUEUE

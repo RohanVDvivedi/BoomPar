@@ -41,6 +41,15 @@ void delete_sync_queue(sync_queue* sq)
 	free(sq);
 }
 
+int has_sync_queue_capacity_crossed_max_capacity_limits_UNSAFE(sync_queue* sq)
+{
+	// UNBOUNDED_SYNC_QUEUE never reaches max_capacity
+	if(sq->max_capacity == UNBOUNDED_SYNC_QUEUE)
+		return 0;
+
+	return get_capacity_arraylist(&(sq->qp)) >= sq->max_capacity;
+}
+
 cy_uint get_max_capacity_sync_queue(sync_queue* sq)
 {
 	pthread_mutex_lock(&(sq->q_lock));
@@ -53,11 +62,13 @@ void update_max_capacity_sync_queue(sync_queue* sq, cy_uint new_max_capacity)
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// if the queue is full with threads waiting for a full sync_queue, and the max_capacity is being increased, then wake up all the threads wait on full queue
-		if(is_full_arraylist(&(sq->qp)) && sq->q_full_wait_thread_count > 0 && sq->max_capacity < new_max_capacity)
+		cy_uint old_max_capacity = sq->max_capacity;
+		sq->max_capacity = new_max_capacity;
+
+		// if the max_capacity increased, then we wake up all of the pushers waiting for the queue being full
+		if(is_full_arraylist(&(sq->qp)) && sq->q_full_wait_thread_count > 0 && new_max_capacity > old_max_capacity)
 			pthread_cond_broadcast(&(sq->q_full_wait));
 
-		sq->max_capacity = new_max_capacity;
 	pthread_mutex_unlock(&(sq->q_lock));
 }
 
@@ -88,7 +99,7 @@ int push_sync_queue(sync_queue* sq, const void* data_p, uint64_t timeout_in_micr
 			uint64_t timeout_in_microseconds_LEFT = timeout_in_microseconds;
 
 			// keep on looping while the bounded queue is not closed AND is full AND has reached its max_capacity AND there is no wait_error
-			while(!sq->is_closed && is_full_arraylist(&(sq->qp)) && get_capacity_arraylist(&(sq->qp)) >= sq->max_capacity && !wait_error)
+			while(!sq->is_closed && is_full_arraylist(&(sq->qp)) && has_sync_queue_capacity_crossed_max_capacity_limits_UNSAFE(sq) && !wait_error)
 			{
 				sq->q_full_wait_thread_count++;
 
@@ -109,7 +120,7 @@ int push_sync_queue(sync_queue* sq, const void* data_p, uint64_t timeout_in_micr
 		}
 
 		// if a queue is full and it hasn't yet reached its max_capacity, then attempt to expand it
-		if(is_full_arraylist(&(sq->qp)) && get_capacity_arraylist(&(sq->qp)) < sq->max_capacity)
+		if(is_full_arraylist(&(sq->qp)) && !has_sync_queue_capacity_crossed_max_capacity_limits_UNSAFE(sq))
 			expand_arraylist(&(sq->qp));
 
 		int is_pushed = push_back_to_arraylist(&(sq->qp), data_p);
