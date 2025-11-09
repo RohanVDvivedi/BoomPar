@@ -11,12 +11,34 @@ tiber tb2;
 
 void tb1_func(void* p)
 {
+	printf("Hello 1\n");
 
+	yield_tiber();
+
+	printf("Rohan 1\n");
+
+	yield_tiber();
+
+	printf("Dvivedi 1\n");
+
+	yield_tiber();
+
+	kill_tiber();
 }
 
 void tb2_func(void* p)
 {
+	printf("Hello 2\n");
 
+	yield_tiber();
+
+	printf("Rohan 2\n");
+
+	yield_tiber();
+
+	printf("Dvivedi 2\n");
+
+	yield_tiber();
 }
 
 int main()
