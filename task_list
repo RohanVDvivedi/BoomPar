@@ -11,3 +11,4 @@ FREELIST
 * TIBER look for keeping pheap as a structure for the timeouts and sleep of the tibers
  * need tiber_sleep()
  * need tiber_cond_timedwait()
+ * if posible use OS provided api to just sleep OR in worst case provide hooks to wake up a tiber safely without a tiber_cond
