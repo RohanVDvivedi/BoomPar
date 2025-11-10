@@ -43,8 +43,8 @@ int main()
 		job_params[i] = i;
 
 	printf("Initializing job queue\n\n");
-	sync_queue job_queue;
-	initialize_sync_queue(&job_queue, WORKER_QUEUE_SIZE);
+	job_queue job_q;
+	initialize_job_queue(&job_q, WORKER_QUEUE_SIZE);
 
 	printf("Initializing promise_completed queue\n\n");
 	sync_queue promise_completed_queue;
@@ -56,7 +56,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -65,7 +65,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -78,7 +78,7 @@ int main()
 
 	printf("Starting worker\n\n");
 	pthread_t thread_id;
-	start_worker(&thread_id, &job_queue, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
+	start_worker(&thread_id, &job_q, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
 
 	printf("Main thread id : %lu\n\n", thread_id);
 
@@ -90,7 +90,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -99,7 +99,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -117,7 +117,7 @@ int main()
 	{
 		if(total_jobs_submitted % 2)
 		{
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), NULL, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -126,7 +126,7 @@ int main()
 		{
 			promise* promised_result = new_promise();
 			set_promised_callback(promised_result, &promise_completion_queue_callback);
-			if(!submit_job_worker(&job_queue, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
+			if(!submit_job_worker(&job_q, simple_job_function, &(job_params[total_jobs_submitted]), promised_result, NULL, BLOCKING))
 			{
 				printf("Job submit error %d\n\n", total_jobs_submitted);
 			}
@@ -137,15 +137,13 @@ int main()
 	printf("Submitted %d jobs in total\n\n", total_jobs_submitted);
 
 	printf("Submitting stop worker\n\n");
-	submit_stop_worker(&job_queue, BLOCKING);
-	// you also call close_sync_queue instead, which will just stop all the workers listening on this job_queue
-	//close_sync_queue(&job_queue);
+	close_job_queue(&job_q);
 
 	printf("Main thread will sleep for 0.5 second\n\n");
 	usleep(500 * 1000);
 
 	printf("Discarding all unfinished jobs\n\n");
-	discard_leftover_jobs(&job_queue);
+	discard_leftover_jobs(&job_q);
 
 	printf("Printing result\n");
 	for(int i = 0; i < JOBs_COUNT / 2; i++)
@@ -157,7 +155,7 @@ int main()
 	}
 	printf("\n");
 
-	deinitialize_sync_queue(&job_queue);
+	deinitialize_job_queue(&job_q);
 	deinitialize_sync_queue(&promise_completed_queue);
 
 	printf("Test completed\n\n");
