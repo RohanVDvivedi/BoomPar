@@ -189,7 +189,6 @@ void close_sync_queue(sync_queue* sq)
 
 		// mark the queue as closed, no push calls will succeed after this point
 		sq->is_closed = 1;
-
 	pthread_mutex_unlock(&(sq->q_lock));
 }
 
