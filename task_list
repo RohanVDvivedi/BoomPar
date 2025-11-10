@@ -1,3 +1,16 @@
+FREELIST
+ * implement a freelist implementaton that fallbacks to malloc, and shrinks when necessary, freeing pushes it back to singlylist, maintains counts and can be a global variable, make sure that size of object >= sizeof(slnode) and alignemnt is same as thad of slnode
+ * use free list for job structures
+
+* STACK SIZE
+ * add parameter for making worker's stack space programmable, 0 takes a default stack space from the OS
+ * add parameter for executor's new function for taking in stack_size, keeping it 0, takes default stack_size
+ * add a note in tiber to keep stack size of atleast 2KB
+
+* SYNC_LL_QUEUE
+ * singlylinkedlist based synchronous queue similar to sync_queue but it would not be bounding, and takes in slnode offset
+ * push to it's tail and pop from head always
+ * use this as job queue for executor and worker
 
  * tiber future task
    add timed wait for tiber_cond
