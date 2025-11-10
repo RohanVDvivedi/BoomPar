@@ -7,17 +7,24 @@ sync_ll_queue* new_sync_ll_queue(cy_uint node_offset)
 	sync_ll_queue* sq = malloc(sizeof(sync_ll_queue));
 	if(sq == NULL)
 		return NULL;
-	if(!initialize_sync_ll_queue(sq, node_offset))
-	{
-		free(sq);
-		return NULL;
-	}
+	initialize_sync_ll_queue(sq, node_offset);
 	return sq;
 }
 
-int initialize_sync_ll_queue(sync_ll_queue* sq, cy_uint node_offset);
+void initialize_sync_ll_queue(sync_ll_queue* sq, cy_uint node_offset)
+{
+	pthread_mutex_init(&(sq->q_lock), NULL);
+	pthread_cond_init_with_monotonic_clock(&(sq->q_empty_wait));
+	sq->q_empty_wait_thread_count = 0;
+	sq->is_closed = 0;
+	initialize_singlylist(&(sq->qp), node_offset);
+}
 
-void deinitialize_sync_ll_queue(sync_ll_queue* sq);
+void deinitialize_sync_ll_queue(sync_ll_queue* sq)
+{
+	pthread_mutex_destroy(&(sq->q_lock));
+	pthread_cond_destroy(&(sq->q_empty_wait));
+}
 
 void delete_sync_ll_queue(sync_ll_queue* sq)
 {

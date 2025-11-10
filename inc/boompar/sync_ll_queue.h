@@ -34,7 +34,7 @@ struct sync_ll_queue
 
 sync_ll_queue* new_sync_ll_queue(cy_uint node_offset);
 
-int initialize_sync_ll_queue(sync_ll_queue* sq, cy_uint node_offset);
+void initialize_sync_ll_queue(sync_ll_queue* sq, cy_uint node_offset);
 
 void deinitialize_sync_ll_queue(sync_ll_queue* sq);
 
