@@ -44,6 +44,22 @@ int push_sync_ll_queue(sync_ll_queue* sq, const void* data_p);
 
 const void* pop_sync_ll_queue(sync_ll_queue* sq, uint64_t timeout_in_microseconds);
 
-void close_sync_ll_queue(sync_ll_queue* sq);
+void close_sync_ll_queue(sync_ll_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+
+		// only if the sync_ll_queue was not closed,
+		// then we wake up waiting threads to let them know about the closing of the sync_ll_queue
+		if(!sq->is_closed)
+		{
+			// mark the queue as closed, no push calls will succeed after this point
+			sq->is_closed = 1;
+
+			if(sq->q_empty_wait_thread_count > 0)
+				pthread_cond_broadcast(&(sq->q_empty_wait));
+		}
+
+	pthread_mutex_unlock(&(sq->q_lock));
+}
 
 uint64_t get_threads_waiting_on_empty_sync_ll_queue(sync_ll_queue* sq);
