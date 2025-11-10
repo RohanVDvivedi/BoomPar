@@ -37,7 +37,7 @@ Finally there is an alarm_job, very similar to the periodic_job except that it g
 
    * `#include<boompar/sync_pipe.h>` can be used to share data among different jobs running on separate threads.
 
-   * `#include<boompar/worker.h>` and `#include<boompar/sync_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
+   * `#include<boompar/worker.h>` and `#include<boompar/job_queue.h>` api header are ony required if you want to build your own custom executor, *which may not be necessary*.
 
 ## Instructions for uninstalling library
 
