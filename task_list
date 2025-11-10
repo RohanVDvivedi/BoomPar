@@ -12,5 +12,6 @@ FREELIST
  * push to it's tail and pop from head always
  * use this as job queue for executor and worker
 
- * tiber future task
-   add timed wait for tiber_cond
+* TIBER look for keeping pheap as a structure for the timeouts and sleep of the tibers
+ * need tiber_sleep()
+ * need tiber_cond_timedwait()
