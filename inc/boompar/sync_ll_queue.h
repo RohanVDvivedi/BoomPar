@@ -52,7 +52,7 @@ int is_empty_sync_ll_queue(sync_ll_queue* sq);
 */
 
 // returns 1, if the element was pushed, else returns 0
-int push_sync_queue(sync_ll_queue* sq, const void* data_p);
+int push_sync_ll_queue(sync_ll_queue* sq, const void* data_p);
 
 /*
 *	POSSIBLY BLOCKING ACCESS FUNCTIONS FOR SYNC QUEUE,
@@ -60,7 +60,7 @@ int push_sync_queue(sync_ll_queue* sq, const void* data_p);
 */
 
 // return NULL, only if NULL was pushed OR we timedout
-const void* pop_sync_queue(sync_ll_queue* sq, uint64_t timeout_in_microseconds);
+const void* pop_sync_ll_queue(sync_ll_queue* sq, uint64_t timeout_in_microseconds);
 
 
 
