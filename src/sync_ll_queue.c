@@ -32,7 +32,13 @@ void delete_sync_ll_queue(sync_ll_queue* sq)
 	free(sq);
 }
 
-int is_empty_sync_ll_queue(sync_ll_queue* sq);
+int is_empty_sync_ll_queue(sync_ll_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		int is_empty = is_empty_singlylist(&(sq->qp));
+	pthread_mutex_unlock(&(sq->q_lock));
+	return is_empty;
+}
 
 int push_sync_ll_queue(sync_ll_queue* sq, const void* data_p);
 
