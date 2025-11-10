@@ -62,4 +62,10 @@ void close_sync_ll_queue(sync_ll_queue* sq)
 	pthread_mutex_unlock(&(sq->q_lock));
 }
 
-uint64_t get_threads_waiting_on_empty_sync_ll_queue(sync_ll_queue* sq);
+uint64_t get_threads_waiting_on_empty_sync_ll_queue(sync_ll_queue* sq)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+		uint64_t return_val = sq->q_empty_wait_thread_count;
+	pthread_mutex_unlock(&(sq->q_lock));
+	return return_val;
+}
