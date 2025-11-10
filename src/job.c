@@ -19,6 +19,7 @@ void initialize_job(job* job_p, void* (*job_function)(void* input_p), void* inpu
 	job_p->job_function = job_function;
 	job_p->promise_for_output = promise_for_output;
 	job_p->cancellation_callback = cancellation_callback;
+	initialize_slnode(&(job_p->embed_node_to_link_jobs_in_sync_ll_queue));
 }
 
 static void* execute_wrapper(void* job_v_p)
