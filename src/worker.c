@@ -10,7 +10,7 @@ struct worker_thread_params
 	void (*start_up)(void* additional_params);
 
 	// the job_queue that the worker will dequeue jobs from
-	sync_queue* job_queue;
+	job_queue* job_q;
 
 	// the maximum timeout the thread blocks until while there are no jobs in the job_queue to work on
 	uint64_t job_queue_empty_timeout_in_microseconds;
@@ -22,14 +22,14 @@ struct worker_thread_params
 	void* additional_params;
 };
 
-worker_thread_params* get_worker_thread_params(sync_queue* job_queue, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+worker_thread_params* get_worker_thread_params(job_queue* job_q, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	worker_thread_params* wtp = malloc(sizeof(worker_thread_params));
 	if(wtp == NULL)
 		return NULL;
 
 	wtp->start_up = start_up;
-	wtp->job_queue = job_queue;
+	wtp->job_q = job_q;
 	wtp->job_queue_empty_timeout_in_microseconds = job_queue_empty_timeout_in_microseconds;
 	wtp->clean_up = clean_up;
 	wtp->additional_params = additional_params;
@@ -38,7 +38,7 @@ worker_thread_params* get_worker_thread_params(sync_queue* job_queue, uint64_t j
 
 static void* worker_function(void* args);
 
-int start_worker(pthread_t* thread_id, sync_queue* job_queue, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
 {
 	// default return value is the insufficient resources to create a thread
 	int return_val = EAGAIN;
@@ -46,7 +46,7 @@ int start_worker(pthread_t* thread_id, sync_queue* job_queue, uint64_t job_queue
 	if(job_queue_empty_timeout_in_microseconds == NON_BLOCKING)
 		return return_val;
 
-	worker_thread_params* wtp = get_worker_thread_params(job_queue, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
+	worker_thread_params* wtp = get_worker_thread_params(job_q, job_queue_empty_timeout_in_microseconds, start_up, clean_up, additional_params);
 	if(wtp == NULL)
 		return return_val;
 
@@ -61,7 +61,7 @@ int start_worker(pthread_t* thread_id, sync_queue* job_queue, uint64_t job_queue
 	return return_val;
 }
 
-int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), uint64_t submission_timeout_in_microseconds)
+int submit_job_worker(job_queue* job_q, void* (*function_p)(void* input_p), void* input_p, promise* promise_for_output, void (*cancellation_callback)(void* input_p), uint64_t submission_timeout_in_microseconds)
 {
 	int was_job_queued = 0;
 
@@ -73,7 +73,7 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 		return 0;
 
 	// forward and queue the job
-	was_job_queued = push_sync_queue(job_queue, job_p, submission_timeout_in_microseconds);
+	was_job_queued = push_job_queue(job_q, job_p, submission_timeout_in_microseconds);
 
 	// if the job was not queued, then we just delete the job
 	// the job here is in CREATED state, but since the job was not queued,
@@ -86,16 +86,11 @@ int submit_job_worker(sync_queue* job_queue, void* (*function_p)(void* input_p),
 	return was_job_queued;
 }
 
-int submit_stop_worker(sync_queue* job_queue, uint64_t submission_timeout_in_microseconds)
+void discard_leftover_jobs(job_queue* job_q)
 {
-	return push_sync_queue(job_queue, NULL, submission_timeout_in_microseconds);
-}
-
-void discard_leftover_jobs(sync_queue* job_queue)
-{
-	while(!is_empty_sync_queue(job_queue))
+	while(!is_empty_job_queue(job_q))
 	{
-		job* job_p = (job*) pop_sync_queue(job_queue, NON_BLOCKING);
+		job* job_p = (job*) pop_job_queue(job_q, NON_BLOCKING);
 		if(job_p != NULL)
 		{
 			cancel_job(job_p);
@@ -116,7 +111,7 @@ static void* worker_function(void* args)
 	if(wtp.start_up != NULL)
 		wtp.start_up(wtp.additional_params);
 
-	if(wtp.job_queue != NULL)
+	if(wtp.job_q != NULL)
 	{
 		while(1)
 		{
@@ -124,7 +119,7 @@ static void* worker_function(void* args)
 			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
 			// pop a job from the queue blockingly with predertmined timeout
-			job* job_p = (job*) pop_sync_queue(wtp.job_queue, wtp.job_queue_empty_timeout_in_microseconds);
+			job* job_p = (job*) pop_job_queue(wtp.job_q, wtp.job_queue_empty_timeout_in_microseconds);
 
 			// a NULL job implies a stop worker was submitted
 			if(job_p == NULL)
