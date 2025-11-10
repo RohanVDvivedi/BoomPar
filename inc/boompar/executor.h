@@ -4,7 +4,7 @@
 #include<stdint.h>
 #include<pthread.h>
 
-#include<boompar/sync_queue.h>
+#include<boompar/job_queue.h>
 #include<boompar/promise.h>
 
 typedef enum executor_type executor_type;
@@ -37,7 +37,7 @@ struct executor
 	// Main job_queue managed by the executor
 
 	// this is queue for the jobs, that gets submitted by the client
-	sync_queue job_queue;
+	job_queue job_q;
 
 	// --------------------------------------------
 

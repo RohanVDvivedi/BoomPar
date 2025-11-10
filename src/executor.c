@@ -51,7 +51,7 @@ static int create_worker(executor* executor_p)
 		pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
 		pthread_t thread_id;
-		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_queue), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
+		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_q), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
 
 		pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
@@ -100,7 +100,7 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 		}
 	}
 
-	if(!initialize_sync_queue(&(executor_p->job_queue), max_job_queue_capacity))
+	if(!initialize_job_queue(&(executor_p->job_q), max_job_queue_capacity))
 	{
 		free(executor_p);
 		return NULL;
@@ -144,10 +144,10 @@ int submit_job_executor(executor* executor_p, void* (*function_p)(void* input_p)
 		executor_p->submitters_count++;
 	pthread_mutex_unlock(&(executor_p->shutdown_mutex));
 
-	int was_job_queued = submit_job_worker(&(executor_p->job_queue), function_p, input_p, promise_for_output, cancellation_callback, submission_timeout_in_microseconds);
+	int was_job_queued = submit_job_worker(&(executor_p->job_q), function_p, input_p, promise_for_output, cancellation_callback, submission_timeout_in_microseconds);
 
 	// attempt to create new worker only for a CACHED_THREAD_POOL_EXECUTOR
-	if(was_job_queued && executor_p->type == CACHED_THREAD_POOL_EXECUTOR && get_threads_waiting_on_empty_sync_queue(&(executor_p->job_queue)) == 0 && !is_empty_sync_queue(&(executor_p->job_queue)))
+	if(was_job_queued && executor_p->type == CACHED_THREAD_POOL_EXECUTOR && get_threads_waiting_on_empty_job_queue(&(executor_p->job_q)) == 0 && !is_empty_job_queue(&(executor_p->job_q)))
 		create_worker(executor_p);
 
 	// we again take the lock to decrement the submitter's count,
@@ -179,7 +179,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 
 		// close the job_queue so no more jobs can be pushed
 		// we can do this while shutdown_mutex unlocked, but we don't gain much doing that
-		close_sync_queue(&(executor_p->job_queue));
+		close_job_queue(&(executor_p->job_q));
 
 		// wait for all the submitters to quit
 		while(executor_p->submitters_count > 0)
@@ -189,7 +189,7 @@ void shutdown_executor(executor* executor_p, int shutdown_immediately)
 
 	// if the executor was to shutdown immediately, then discard all the jobs
 	if(shutdown_immediately)
-		discard_leftover_jobs(&(executor_p->job_queue));
+		discard_leftover_jobs(&(executor_p->job_q));
 }
 
 // returns 1, if all the threads completed
@@ -226,9 +226,9 @@ int delete_executor(executor* executor_p)
 
 	// this is precautionery, it is effectively a NOP,
 	// since a correct calling convention for executor will always have made the job_queue empty by this point
-	discard_leftover_jobs(&(executor_p->job_queue));
+	discard_leftover_jobs(&(executor_p->job_q));
 
-	deinitialize_sync_queue(&(executor_p->job_queue));
+	deinitialize_job_queue(&(executor_p->job_q));
 
 	pthread_cond_destroy(&(executor_p->active_worker_count_until_zero_wait));
 	pthread_mutex_destroy(&(executor_p->active_worker_count_mutex));
