@@ -124,17 +124,17 @@ int is_empty_job_queue(job_queue* jq)
 	}
 }
 
-int push_job_queue(job_queue* jq, const void* data_p, uint64_t timeout_in_microseconds)
+int push_job_queue(job_queue* jq, const job* job_p, uint64_t timeout_in_microseconds)
 {
 	switch(jq->type)
 	{
 		case LINKEDLIST_TYPE_JOB_QUEUE :
 		{
-			return push_sync_ll_queue(&(jq->lsq), data_p);
+			return push_sync_ll_queue(&(jq->lsq), job_p);
 		}
 		case ARRAYLIST_TYPE_JOB_QUEUE :
 		{
-			return push_sync_queue(&(jq->sq), data_p, timeout_in_microseconds);
+			return push_sync_queue(&(jq->sq), job_p, timeout_in_microseconds);
 		}
 		default :
 		{
@@ -143,7 +143,7 @@ int push_job_queue(job_queue* jq, const void* data_p, uint64_t timeout_in_micros
 	}
 }
 
-const void* pop_job_queue(job_queue* jq, uint64_t timeout_in_microseconds)
+const job* pop_job_queue(job_queue* jq, uint64_t timeout_in_microseconds)
 {
 	switch(jq->type)
 	{

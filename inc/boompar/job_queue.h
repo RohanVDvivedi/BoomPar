@@ -45,9 +45,9 @@ int is_full_job_queue(job_queue* jq);
 
 int is_empty_job_queue(job_queue* jq);
 
-int push_job_queue(job_queue* jq, const void* data_p, uint64_t timeout_in_microseconds);
+int push_job_queue(job_queue* jq, const job* job_p, uint64_t timeout_in_microseconds);
 
-const void* pop_job_queue(job_queue* jq, uint64_t timeout_in_microseconds);
+const job* pop_job_queue(job_queue* jq, uint64_t timeout_in_microseconds);
 
 void close_job_queue(job_queue* jq);
 
