@@ -1,11 +1,4 @@
 
-WORKERS_QUEUE
- * implement worker's queue
- * a wrapper over sync_queue and sync_ll_queue for storing just jobs
- * has functionality for max_capacity is 0, it becomes a sync_ll_queue or else it becomes a sync_queue
- * supports push/pop/close/queue_empty_waiting_thread_count/new/delete/init and deinit functions
- * add a slnode in job as the first attribute to link jobs together
-
 FREELIST
  * implement a freelist implementaton that fallbacks to malloc, and shrinks when necessary, freeing pushes it back to singlylist, maintains counts and can be a global variable, make sure that size of object >= sizeof(slnode) and alignemnt is same as thad of slnode
  * use free list for job structures
