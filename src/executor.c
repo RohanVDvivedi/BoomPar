@@ -75,7 +75,7 @@ static int create_worker(executor* executor_p)
 
 executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
 {
-	if(worker_count_limit == 0 || max_job_queue_capacity == 0)
+	if(worker_count_limit == 0)
 		return NULL;
 
 	executor* executor_p = malloc(sizeof(executor));
