@@ -52,12 +52,12 @@ void close_sync_ll_queue(sync_ll_queue* sq)
 		// then we wake up waiting threads to let them know about the closing of the sync_ll_queue
 		if(!sq->is_closed)
 		{
-			// mark the queue as closed, no push calls will succeed after this point
-			sq->is_closed = 1;
-
 			if(sq->q_empty_wait_thread_count > 0)
 				pthread_cond_broadcast(&(sq->q_empty_wait));
 		}
+
+		// mark the queue as closed, no push calls will succeed after this point
+		sq->is_closed = 1;
 
 	pthread_mutex_unlock(&(sq->q_lock));
 }
