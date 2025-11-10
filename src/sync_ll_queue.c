@@ -40,9 +40,58 @@ int is_empty_sync_ll_queue(sync_ll_queue* sq)
 	return is_empty;
 }
 
-int push_sync_ll_queue(sync_ll_queue* sq, const void* data_p);
+int push_sync_ll_queue(sync_ll_queue* sq, const void* data_p)
+{
+	pthread_mutex_lock(&(sq->q_lock));
 
-const void* pop_sync_ll_queue(sync_ll_queue* sq, uint64_t timeout_in_microseconds);
+		// if the sync ll queue is closed, we fail to push
+		if(sq->is_closed)
+		{
+			pthread_mutex_unlock(&(sq->q_lock));
+			return 0;
+		}
+
+		int is_pushed = insert_tail_in_singlylist(&(sq->qp), data_p);
+
+		// signal other threads if an element was pushed
+		if(is_pushed && sq->q_empty_wait_thread_count > 0)
+			pthread_cond_signal(&(sq->q_empty_wait));
+
+	pthread_mutex_unlock(&(sq->q_lock));
+	return is_pushed;
+}
+
+const void* pop_sync_ll_queue(sync_ll_queue* sq, uint64_t timeout_in_microseconds)
+{
+	pthread_mutex_lock(&(sq->q_lock));
+
+		// attempt to block only if you are allowed to
+		if(timeout_in_microseconds != NON_BLOCKING)
+		{
+			int wait_error = 0;
+			uint64_t timeout_in_microseconds_LEFT = timeout_in_microseconds;
+
+			// keep on looping while the sync_ll_queue is not closed AND queue is empty AND there is no wait_error
+			while(!sq->is_closed && is_empty_singlylist(&(sq->qp)) && !wait_error)
+			{
+				sq->q_empty_wait_thread_count++;
+
+				if(timeout_in_microseconds == BLOCKING)
+					wait_error = pthread_cond_wait(&(sq->q_empty_wait), &(sq->q_lock));
+				else
+					wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &timeout_in_microseconds_LEFT);
+
+				sq->q_empty_wait_thread_count--;
+			}
+		}
+
+		// pop the top element
+		const void* data_p = get_head_of_singlylist(&(sq->qp));
+		int is_popped = remove_head_from_singlylist(&(sq->qp));
+
+	pthread_mutex_unlock(&(sq->q_lock));
+	return is_popped ? data_p : NULL;
+}
 
 void close_sync_ll_queue(sync_ll_queue* sq)
 {
