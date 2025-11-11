@@ -62,6 +62,8 @@ int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empt
 		free(wtp);
 		return return_val;
 	}
+
+	pthread_attr_destroy(&thread_attributes);
 	
 	return return_val;
 }

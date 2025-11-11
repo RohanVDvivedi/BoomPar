@@ -12,6 +12,7 @@ void start_up(void* additional_params)
 	pthread_attr_t attr;
 	pthread_getattr_np(pthread_self(), &attr);
 	pthread_attr_getstacksize(&attr, &stack_size);
+	pthread_attr_destroy(&attr);
 
 	printf("Worker thread started : %s with stack size of %zu\n", ((char*)additional_params), stack_size);
 }

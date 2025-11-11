@@ -6,7 +6,7 @@
 
 #define EXECUTOR_THREADS_COUNT 	2
 #define MAX_JOB_QUEUE_CAPACITY  UNBOUNDED_SYNC_QUEUE // JOB_QUEUE_AS_LINKEDLIST
-#define STACK_SIZE 0
+#define STACK_SIZE 4096
 
 tiber tb1;
 tiber tb2;
@@ -110,6 +110,7 @@ void start_up(void* additional_params)
 	pthread_attr_t attr;
 	pthread_getattr_np(pthread_self(), &attr);
 	pthread_attr_getstacksize(&attr, &stack_size);
+	pthread_attr_destroy(&attr);
 
 	printf("Worker thread started : with stack size of %zu\n", stack_size);
 }
