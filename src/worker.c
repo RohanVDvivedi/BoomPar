@@ -56,7 +56,7 @@ int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empt
 		pthread_attr_setstacksize(&thread_attributes, stack_size);
 	pthread_attr_setdetachstate(&thread_attributes, PTHREAD_CREATE_DETACHED);
 
-	return_val = pthread_create(thread_id, NULL, worker_function, wtp);
+	return_val = pthread_create(thread_id, &thread_attributes, worker_function, wtp);
 	if(return_val)
 	{
 		free(wtp);
