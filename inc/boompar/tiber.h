@@ -12,7 +12,7 @@
 
 /*
 	This is simple coroutine/fiber library built using the support of ucontext underneath
-	I would humbly request you to use a UNBOUNDED_SYNC_QUEUE / JOB_QUEUE_AS_LINKEDLIST with a FIXED_THREAD_COUNT_EXECUTOR (thread pool size equal to number of hardware threads) with this runtime
+	I would humbly request you to use a UNBOUNDED_SYNC_QUEUE / JOB_QUEUE_AS_LINKEDLIST with a FIXED_THREAD_COUNT_EXECUTOR (thread pool size equal to number of hardware threads and stack size of 24KB) with this runtime
 	you can use mutex from pthread, but substitute pthread_cond_t with tiber_cond for condition variables while using this runtime
 */
 
