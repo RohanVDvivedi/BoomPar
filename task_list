@@ -1,9 +1,4 @@
 
-* STACK SIZE
- * add parameter for making worker's stack space programmable, 0 takes a default stack space from the OS
- * add parameter for executor's new function for taking in stack_size, keeping it 0, takes default stack_size
- * add a note in tiber to keep stack size of atleast 2KB
-
 * TIBER look for keeping pheap as a structure for the timeouts and sleep of the tibers
  * add tiber_cond* protected with the state_lock +  wake_up_at timespec* and a phpnode protected by the global pheap's lock to the system
  * add global pheap and it's pheap lock to store tiber's with youngest timestamp at the top
