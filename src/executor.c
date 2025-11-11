@@ -51,7 +51,7 @@ static int create_worker(executor* executor_p)
 		pthread_mutex_unlock(&(executor_p->active_worker_count_mutex));
 
 		pthread_t thread_id;
-		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_q), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p);
+		int error_worker_creation = start_worker(&thread_id, &(executor_p->job_q), executor_p->empty_job_queue_wait_time_out_in_micro_seconds, start_up, clean_up, executor_p, executor_p->worker_stack_size);
 
 		pthread_mutex_lock(&(executor_p->active_worker_count_mutex));
 
@@ -73,7 +73,7 @@ static int create_worker(executor* executor_p)
 	return is_thread_added;
 }
 
-executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params)
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params, size_t worker_stack_size)
 {
 	if(worker_count_limit == 0)
 		return NULL;
@@ -99,6 +99,8 @@ executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint 
 			break;
 		}
 	}
+
+	executor_p->worker_stack_size = worker_stack_size;
 
 	if(!initialize_job_queue(&(executor_p->job_q), max_job_queue_capacity))
 	{

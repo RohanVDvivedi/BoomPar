@@ -30,6 +30,9 @@ struct executor
 	// a worker never gets killed in a FIXED_THREAD_COUNT_EXECUTOR
 	uint64_t empty_job_queue_wait_time_out_in_micro_seconds;
 
+	// every worker get's this as it's stack_size
+	size_t worker_stack_size;
+
 	// maximum numbers of workers that this executor is allowed to spawn
 	uint64_t worker_count_limit;
 
@@ -80,7 +83,7 @@ struct executor
 };
 
 // here empty_job_queue_wait_time_out_in_micro_seconds can be any positive value except NON_BLOCKING, it can also be BLOCKING
-executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params);
+executor* new_executor(executor_type type, uint64_t worker_count_limit, cy_uint max_job_queue_capacity, uint64_t empty_job_queue_wait_time_out_in_micro_seconds, void (*worker_startup)(void* call_back_params), void (*worker_finish)(void* call_back_params), void* call_back_params, size_t worker_stack_size);
 
 // returns 0, if the job was not submitted, and 1 if the job submission succeeded
 // submission_timeout_in_microseconds is the timeout, that the executor will wait to get the job_queue to have a slot for this job
