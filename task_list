@@ -5,6 +5,12 @@
  * add a note in tiber to keep stack size of atleast 2KB
 
 * TIBER look for keeping pheap as a structure for the timeouts and sleep of the tibers
- * need tiber_sleep()
- * need tiber_cond_timedwait()
- * if posible use OS provided api to just sleep OR in worst case provide hooks to wake up a tiber safely without a tiber_cond
+ * add tiber_cond* protected with the state_lock +  wake_up_at timespec* and a phpnode protected by the global pheap's lock to the system
+ * add global pheap and it's pheap lock to store tiber's with youngest timestamp at the top
+ * need tiber_sleep(timespec* to_sleep_for) // running to waiting
+ * need tiber_wakeup(tiber* tb) // waiting to queued
+ * need tiber_cond_timedwait(tiber* tb, timespec* abs_time);
+ * uint64_t alarm_based_waker() wakes up any tibers that need to woken up
+ * this very same function will also be called right before any of the other functions it may work with
+ * keep the locking rules
+   * pheap_lock, state_lock and then tiber_cond->lock
