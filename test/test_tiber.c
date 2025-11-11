@@ -6,7 +6,7 @@
 
 #define EXECUTOR_THREADS_COUNT 	2
 #define MAX_JOB_QUEUE_CAPACITY  UNBOUNDED_SYNC_QUEUE // JOB_QUEUE_AS_LINKEDLIST
-#define STACK_SIZE 4096
+#define STACK_SIZE              24*1024
 
 tiber tb1;
 tiber tb2;
