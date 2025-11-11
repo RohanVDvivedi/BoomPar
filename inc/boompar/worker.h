@@ -20,7 +20,8 @@ int start_worker(
 					uint64_t job_queue_empty_timeout_in_microseconds, // ** timeout for the job_queue while we blockingly wait on it, BLOCKING is also an acceptable value, but fails on NON_BLOCKING
 					void(*start_up)(void* additional_params), 		// * start_up function is called by the thread on start up 
 					void(*clean_up)(void* additional_params), 		// * clean_up function is called by the thread before returning
-					void* additional_params							// * this parameters will be passed to the start_up and clean_up functions
+					void* additional_params,						// * this parameters will be passed to the start_up and clean_up functions
+					size_t stack_size								// * this is the stack size this worker will start with
 				);
 // note
 // ** mandatory parameters to the function

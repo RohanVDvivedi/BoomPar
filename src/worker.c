@@ -38,7 +38,7 @@ worker_thread_params* get_worker_thread_params(job_queue* job_q, uint64_t job_qu
 
 static void* worker_function(void* args);
 
-int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params)
+int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empty_timeout_in_microseconds, void(*start_up)(void* additional_params), void(*clean_up)(void* additional_params), void* additional_params, size_t stack_size)
 {
 	// default return value is the insufficient resources to create a thread
 	int return_val = EAGAIN;
@@ -50,6 +50,12 @@ int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empt
 	if(wtp == NULL)
 		return return_val;
 
+	pthread_attr_t thread_attributes;
+	pthread_attr_init(&thread_attributes);
+	if(stack_size != 0)
+		pthread_attr_setstacksize(&thread_attributes, stack_size);
+	pthread_attr_setdetachstate(&thread_attributes, PTHREAD_CREATE_DETACHED);
+
 	return_val = pthread_create(thread_id, NULL, worker_function, wtp);
 	if(return_val)
 	{
@@ -57,7 +63,6 @@ int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empt
 		return return_val;
 	}
 	
-	pthread_detach(*thread_id);
 	return return_val;
 }
 
