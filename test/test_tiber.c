@@ -116,7 +116,7 @@ void start_up(void* additional_params)
 
 void clean_up(void* additional_params)
 {
-	printf("Worker thread completed : %s\n", ((char*)additional_params));
+	printf("Worker thread completed\n");
 }
 
 int main()
