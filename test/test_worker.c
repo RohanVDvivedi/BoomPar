@@ -1,12 +1,19 @@
-#include<stdio.h>
 #include<boompar/worker.h>
-#include<unistd.h>
 
 #include<boompar/promise_completion_default_callbacks.h>
 
+#include<stdio.h>
+#include<unistd.h>
+#include<pthread.h>
+
 void start_up(void* additional_params)
 {
-	printf("Worker thread started : %s\n", ((char*)additional_params));
+	size_t stack_size;
+	pthread_attr_t attr;
+	pthread_getattr_np(pthread_self(), &attr);
+	pthread_attr_getstacksize(&attr, &stack_size);
+
+	printf("Worker thread started : %s with stack size of %zu\n", ((char*)additional_params), stack_size);
 }
 
 void* simple_job_function(void* input)
@@ -78,7 +85,7 @@ int main()
 
 	printf("Starting worker\n\n");
 	pthread_t thread_id;
-	start_worker(&thread_id, &job_q, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan");
+	start_worker(&thread_id, &job_q, WORKER_QUEUE_TIMEOUT, start_up, clean_up, "From Rohan", 0);
 
 	printf("Main thread id : %lu\n\n", thread_id);
 

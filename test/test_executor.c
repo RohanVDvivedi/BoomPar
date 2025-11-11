@@ -1,12 +1,19 @@
-#include<stdio.h>
 #include<boompar/executor.h>
-#include<unistd.h>
 
 #include<boompar/promise_completion_default_callbacks.h>
 
+#include<stdio.h>
+#include<unistd.h>
+#include<pthread.h>
+
 void worker_startup(void* args)
 {
-	printf("Worker at thread_id = %d STARTED\n", (int)pthread_self());
+	size_t stack_size;
+	pthread_attr_t attr;
+	pthread_getattr_np(pthread_self(), &attr);
+	pthread_attr_getstacksize(&attr, &stack_size);
+
+	printf("Worker thread started : with stack size of %zu\n", stack_size);
 }
 
 void* my_job_function(void* my_int)
@@ -49,7 +56,7 @@ int main()
 {
 	printf("Main thread : %d\n", (int)pthread_self());
 
-	executor* executor_p = new_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL);
+	executor* executor_p = new_executor(EXECUTOR_TYPE, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, THREAD_TIME_OUT_in_microseconds, worker_startup, worker_finish, NULL, 0);
 
 	// to store the references to all the input integers that we create, for each and every job
 	int jobs_input_param[TEST_JOBs_COUNT];

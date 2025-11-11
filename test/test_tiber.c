@@ -6,6 +6,7 @@
 
 #define EXECUTOR_THREADS_COUNT 	2
 #define MAX_JOB_QUEUE_CAPACITY  UNBOUNDED_SYNC_QUEUE // JOB_QUEUE_AS_LINKEDLIST
+#define STACK_SIZE 0
 
 tiber tb1;
 tiber tb2;
@@ -103,12 +104,27 @@ void tb4_func(void* p)
 	}
 }
 
+void start_up(void* additional_params)
+{
+	size_t stack_size;
+	pthread_attr_t attr;
+	pthread_getattr_np(pthread_self(), &attr);
+	pthread_attr_getstacksize(&attr, &stack_size);
+
+	printf("Worker thread started : with stack size of %zu\n", stack_size);
+}
+
+void clean_up(void* additional_params)
+{
+	printf("Worker thread completed : %s\n", ((char*)additional_params));
+}
+
 int main()
 {
 	pthread_mutex_init(&lock, NULL);
 	tiber_cond_init(&wait);
 
-	executor* executor_p = new_executor(FIXED_THREAD_COUNT_EXECUTOR, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, 1000, NULL, NULL, NULL);
+	executor* executor_p = new_executor(FIXED_THREAD_COUNT_EXECUTOR, EXECUTOR_THREADS_COUNT, MAX_JOB_QUEUE_CAPACITY, 1000, start_up, clean_up, NULL, STACK_SIZE);
 
 	initialize_and_run_tiber(&tb1, executor_p, tb1_func, NULL, 4096);
 	initialize_and_run_tiber(&tb2, executor_p, tb2_func, NULL, 4096);
