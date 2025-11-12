@@ -1,11 +1,15 @@
 
-* TIBER look for keeping pheap as a structure for the timeouts and sleep of the tibers
- * add tiber_cond* protected with the state_lock +  wake_up_at timespec* and a phpnode protected by the global pheap's lock to the system
- * add global pheap and it's pheap lock to store tiber's with youngest timestamp at the top
- * need tiber_sleep(timespec* to_sleep_for) // running to waiting
- * need tiber_wakeup(tiber* tb) // waiting to queued
- * need tiber_cond_timedwait(tiber* tb, timespec* abs_time);
- * uint64_t alarm_based_waker() wakes up any tibers that need to woken up
- * this very same function will also be called right before any of the other functions it may work with
- * keep the locking rules
-   * pheap_lock, state_lock and then tiber_cond->lock
+* TIBER
+  * tiber* tiber_self();
+  * tiber_kill(tiber * tb, int kill_signal); if self is not the same tiber then send a kill signal, else do suicide, add mutex and tiber_cond for kill signal
+  * tiber_sleep(const struct timespec *abstime); // sleep atleast until abstime has passed
+  * tiber_cond_timedwait(tiber_cond* tc, pthread_mutex_t* m, const struct timespec *abstime)
+  * add pheap to the system and a phpnode and a comparator to compare tibers by the times of their wakeup
+  * store tiber_cond* waiting_on and timespec* waiting_for in tiber
+  * add a global lock to protect state, the new waiting_on/for variables and the embedded nodes and the system gloabl pheap of timers
+  * add a function called tiber_service_self, that prematurely kills itself if a kill signal was sent
+  * add a fiunction called tiber_service_all, checks heap and wakes up all whose timers have passed, no tiber with waiting_for == NULL can be in heap
+  * make tiber_runtime out of this
+  * possibly in a new project
+  * added also an IO running epoll loop, alarm thread and an executor for executing the tibers
+  * find ways to make atleast thread and cond shims out of this library, and make it replacable using -include tiber_runtime_instead_of_pthread.h to make all libraries tiber compatible instantly
