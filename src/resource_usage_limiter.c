@@ -82,8 +82,6 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 
 	pthread_mutex_lock(&(rul_p->resource_limiter_lock));
 
-		// attempt to block only if you are allowed to
-		if(timeout_in_microseconds != NON_BLOCKING)
 		{
 			int wait_error = 0;
 
@@ -92,10 +90,7 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 				(get_resources_left(rul_p) < min_resource_count) && // and as long as there are lesser resources than out minimum requirement
 				!wait_error) // and there is no wait error
 			{
-				if(timeout_in_microseconds == BLOCKING)
-					wait_error = pthread_cond_wait(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock));
-				else
-					wait_error = pthread_cond_timedwait_for_microseconds(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock), &timeout_in_microseconds);
+				wait_error = pthread_cond_timedwait_for_microseconds(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock), &timeout_in_microseconds);
 			}
 		}
 

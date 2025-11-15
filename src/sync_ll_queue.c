@@ -65,21 +65,15 @@ const void* pop_sync_ll_queue(sync_ll_queue* sq, uint64_t timeout_in_microsecond
 {
 	pthread_mutex_lock(&(sq->q_lock));
 
-		// attempt to block only if you are allowed to
-		if(timeout_in_microseconds != NON_BLOCKING)
 		{
 			int wait_error = 0;
-			uint64_t timeout_in_microseconds_LEFT = timeout_in_microseconds;
 
 			// keep on looping while the sync_ll_queue is not closed AND queue is empty AND there is no wait_error
 			while(!sq->is_closed && is_empty_singlylist(&(sq->qp)) && !wait_error)
 			{
 				sq->q_empty_wait_thread_count++;
 
-				if(timeout_in_microseconds == BLOCKING)
-					wait_error = pthread_cond_wait(&(sq->q_empty_wait), &(sq->q_lock));
-				else
-					wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &timeout_in_microseconds_LEFT);
+				wait_error = pthread_cond_timedwait_for_microseconds(&(sq->q_empty_wait), &(sq->q_lock), &timeout_in_microseconds);
 
 				sq->q_empty_wait_thread_count--;
 			}
