@@ -12,4 +12,4 @@
   * make tiber_runtime out of this
   * possibly in a new project
   * added also an IO running epoll loop, alarm thread and an executor for executing the tibers
-  * find ways to make atleast thread and cond shims out of this library, and make it replacable using -include tiber_runtime_instead_of_pthread.h to make all libraries tiber compatible instantly
+  * now this runtime actually takes in function pointers just like executor and executes them instead, this helps in future replacing these calles using just a -include
