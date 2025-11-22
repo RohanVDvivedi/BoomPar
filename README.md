@@ -33,7 +33,6 @@ Finally there is an alarm_job, very similar to the periodic_job except that it g
    * `#include<boompar/periodic_job.h>`
    * `#include<boompar/alarm_job.h>`
    * `#include<boompar/resource_usage_limiter.h>`
-   * `#include<boompar/tiber.h>` a very thin fiber library over ucontext, resembling fibers/coroutines as in other programming languages 
 
    * `#include<boompar/sync_pipe.h>` can be used to share data among different jobs running on separate threads.
 
