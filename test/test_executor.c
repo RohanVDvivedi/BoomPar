@@ -8,13 +8,7 @@
 
 void worker_startup(void* args)
 {
-	size_t stack_size;
-	pthread_attr_t attr;
-	pthread_getattr_np(pthread_self(), &attr);
-	pthread_attr_getstacksize(&attr, &stack_size);
-	pthread_attr_destroy(&attr);
-
-	printf("Worker thread started : with stack size of %zu\n", stack_size);
+	printf("Worker thread started\n");
 }
 
 void* my_job_function(void* my_int)
