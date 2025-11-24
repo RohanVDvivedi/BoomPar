@@ -71,7 +71,8 @@ static void* alarm_job_runner(void* aj)
 
 			// in order to not miss updates we grab the next alarming microseconds, the microseconds after which we need to run the alarm_job_function again
 			// we can just hope that this function is as short and non blocking as possible, otherwise it can halt the whole system
-			ajob->period_in_microseconds = ajob->alarm_set_function(ajob->input_p);
+			if(ajob->state == AJ_RUNNING)
+				ajob->period_in_microseconds = ajob->alarm_set_function(ajob->input_p);
 
 			uint64_t total_time_waited_for = 0;
 			while(1)
@@ -92,7 +93,7 @@ static void* alarm_job_runner(void* aj)
 				}
 				else if(ajob->state == AJ_WAITING)
 				{
-					const uint64_t time_to_wait_for = ajob->period_in_microseconds - total_time_waited_for; // this surely is positive, consume_events_and_update_state() ensures that
+					const uint64_t time_to_wait_for = ajob->period_in_microseconds - total_time_waited_for; // this surely is non-negative, consume_events_and_update_state() ensures that
 					uint64_t time_to_wait_for_FINAL = time_to_wait_for;
 
 					pthread_cond_timedwait_for_microseconds(&(ajob->job_wait), &(ajob->job_lock), &time_to_wait_for_FINAL);
