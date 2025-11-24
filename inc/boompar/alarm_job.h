@@ -34,16 +34,20 @@ struct alarm_job
 	// current state of the job
 	alarm_job_state state;
 
-	// pointer to the input pramameter, 
-	void* input_p;
-
 	// period_in_microseconds as per the suggestion of the prior alarm_job_function
 	uint64_t period_in_microseconds;
 
-	// the function pointer that will be executed with input parameter
-	// must return period_in_microseconds, to wait for the next run
-	// if BLOCKING is returned then the job is put into AJ_PAUSED state and needs a subsequent wake_up_alarm_job call to start functioning
-	uint64_t (*alarm_job_function)(void* input_p);
+	// pointer to the input pramameter, 
+	void* input_p;
+
+	// the function pointer that will be called to set the next number of microseconds after which alarm must sound i.e. to get the number of microseconds after which the alarm_job_function must be called
+	// this function is called with the job_lock held, in-order to avoid missed wake_ups
+	// so this function must be as short and simple as possible and must not block
+	uint64_t (*alarm_set_function)(void* input_p);
+
+	// the function pointer that will be executed with input parameter, when the alarm was set
+	// this fucntion is called with the job_lock not held and can be doing any thing you desire to do
+	void (*alarm_job_function)(void* input_p);
 
 	// event_vector used to pass an event to the state machine, to change the state of the alarm_job
 	// 1 bit each for SHUTDOWN_CALLED, PAUSE_CALLED and WAKE_UP_CALLED, (in decreasing order of their priority)
@@ -53,7 +57,7 @@ struct alarm_job
 };
 
 // remember the alarm_job starts in AJ_PAUSED state, you need to wake_up_alarm_job() it after initialization
-alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* input_p);
+alarm_job* new_alarm_job(uint64_t (*alarm_set_function)(void* input_p), void (*alarm_job_function)(void* input_p), void* input_p);
 
 // below 3 are the events that you send to the alarm job to make it transition into different states
 // their return value only suggests if the event was sent, not that the requested transition will succeed

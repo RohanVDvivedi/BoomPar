@@ -116,7 +116,7 @@ static void* alarm_job_runner(void* aj)
 	return NULL;
 }
 
-alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* input_p)
+alarm_job* new_alarm_job(uint64_t (*alarm_set_function)(void* input_p), void (*alarm_job_function)(void* input_p), void* input_p);
 {
 	// check the input parameters
 	if(alarm_job_function == NULL)
@@ -133,6 +133,7 @@ alarm_job* new_alarm_job(uint64_t (*alarm_job_function)(void* input_p), void* in
 	ajob->state = AJ_PAUSED;
 	ajob->period_in_microseconds = BLOCKING;
 	ajob->input_p = input_p;
+	ajob->alarm_set_function = alarm_set_function;
 	ajob->alarm_job_function = alarm_job_function;
 	ajob->event_vector = 0;
 	pthread_cond_init_with_monotonic_clock(&(ajob->stop_wait));
