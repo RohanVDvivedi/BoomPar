@@ -72,6 +72,10 @@ static void* alarm_job_runner(void* aj)
 			uint64_t total_time_waited_for = 0;
 			while(1)
 			{
+				// in order to not miss updates we grab the next alarming microseconds, the microseconds after which we need to run the alarm_job_function again
+				// we can just hope that this function is as short and non blocking as possible, otherwise it can halt the whole system
+				ajob->period_in_microseconds = ajob->alarm_set_function(ajob->input_p);;
+
 				consume_events_and_update_state(ajob, total_time_waited_for);
 
 				if(ajob->state == AJ_SHUTDOWN) // exit as quickly as possible
@@ -103,20 +107,13 @@ static void* alarm_job_runner(void* aj)
 
 		pthread_mutex_unlock(&(ajob->job_lock));
 
-		uint64_t new_period_in_microseconds = ajob->alarm_job_function(ajob->input_p);
-
-		// grab the lock again and set the new_period_in_microseconds
-		pthread_mutex_lock(&(ajob->job_lock));
-
-		ajob->period_in_microseconds = new_period_in_microseconds;
-
-		pthread_mutex_unlock(&(ajob->job_lock));
+		ajob->alarm_job_function(ajob->input_p);
 	}
 
 	return NULL;
 }
 
-alarm_job* new_alarm_job(uint64_t (*alarm_set_function)(void* input_p), void (*alarm_job_function)(void* input_p), void* input_p);
+alarm_job* new_alarm_job(uint64_t (*alarm_set_function)(void* input_p), void (*alarm_job_function)(void* input_p), void* input_p)
 {
 	// check the input parameters
 	if(alarm_job_function == NULL)
