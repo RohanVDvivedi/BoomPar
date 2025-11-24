@@ -37,7 +37,7 @@ uint64_t alarm_set_function(void* t)
 
 void alarm_job_function(void* t)
 {
-	printf("Hello from alarm function at %"PRIu64" -> %"PRIu64"\n", millis_now(), next_run_period);
+	printf("Hello from alarm function at %"PRIu64"\n", millis_now());
 }
 
 int main()
