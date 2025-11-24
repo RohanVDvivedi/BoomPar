@@ -21,9 +21,10 @@ uint64_t millis_now()
 	return millis() - millis_begin;
 }
 
-uint64_t alarm_function(void* t)
+uint64_t next_run_period = 0;
+
+uint64_t alarm_set_function(void* t)
 {
-	static uint64_t next_run_period = 0;
 	if(next_run_period != BLOCKING)
 	{
 		next_run_period += 50000ULL;
@@ -31,16 +32,19 @@ uint64_t alarm_function(void* t)
 			next_run_period = BLOCKING;
 	}
 
-	printf("Hello from alarm function at %"PRIu64" -> %"PRIu64"\n", millis_now(), next_run_period);
-
 	return next_run_period;
+}
+
+void alarm_job_function(void* t)
+{
+	printf("Hello from alarm function at %"PRIu64" -> %"PRIu64"\n", millis_now(), next_run_period);
 }
 
 int main()
 {
 	millis_begin = millis();
 	printf("Test begins at %"PRIu64"\n", millis_begin);
-	alarm_job* ajob = new_alarm_job(alarm_function, NULL);
+	alarm_job* ajob = new_alarm_job(alarm_set_function, alarm_job_function, NULL);
 
 	sleep(2);
 
