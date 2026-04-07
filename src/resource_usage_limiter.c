@@ -44,12 +44,17 @@ int set_resource_count(resource_usage_limiter* rul_p, uint64_t new_resource_coun
 	int res = 0;
 	if(!(rul_p->shutdown_requested)) // fail update if the shutdown was called
 	{
-		// if we end up incrementing the resource_count, then wake up potential requesters
-		if(rul_p->resource_count < new_resource_count)
+		res = 1;
+
+		if(rul_p->resource_count != new_resource_count)
+		{
+			// if resource_count decrements, some resources will never be fulfilled
+			// and if it increments, some can be fulfilled immediately
+			// so wake them both up
 			pthread_cond_broadcast(&(rul_p->resource_limiter_wait));
 
-		rul_p->resource_count = new_resource_count;
-		res = 1;
+			rul_p->resource_count = new_resource_count;
+		}
 	}
 
 	pthread_mutex_unlock(&(rul_p->resource_limiter_lock));
@@ -88,6 +93,7 @@ uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* r
 			// keep on looping while
 			while((!rul_p->shutdown_requested) && (!(*break_out)) &&  // there is no shutdown and no breakout requested
 				(get_resources_left(rul_p) < min_resource_count) && // and as long as there are lesser resources than out minimum requirement
+				(min_resource_count <= rul_p->resource_count) && // the min_resource_count requested must alays be lesser than the total resources being managed
 				!wait_error) // and there is no wait error
 			{
 				wait_error = pthread_cond_timedwait_for_microseconds(&(rul_p->resource_limiter_wait), &(rul_p->resource_limiter_lock), &timeout_in_microseconds);

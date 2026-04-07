@@ -46,6 +46,7 @@ typedef int break_resource_waiting;
 // request a fixed number of resources from the resource_usage_limiter, with the timeout, that can also be BLOCKING or NON_BLOCKING
 // invalid min-max ranges will result in a NOOP operation
 // return value is the number of resources granted
+// fails immediately with 0, if the min_reource_count > rul_p->resource_count
 uint64_t request_resources_from_resource_usage_limiter(resource_usage_limiter* rul_p, uint64_t min_resource_count, uint64_t max_resource_count, uint64_t timeout_in_microseconds, break_resource_waiting* break_out);
 
 // give up resources back to the resource_usage_limiter, and wake up all the waiters (only if resource_count > resource_granted_count)
