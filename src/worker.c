@@ -64,7 +64,7 @@ int start_worker(pthread_t* thread_id, job_queue* job_q, uint64_t job_queue_empt
 		return return_val;
 	}
 
-	pthread_detach(*thread_id);
+	//pthread_detach(*thread_id); //This line is now redundant
 	return return_val;
 }
 
