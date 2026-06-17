@@ -177,7 +177,7 @@ void delete_periodic_job(periodic_job* pjob)
 	shutdown_periodic_job(pjob);
 
 	// wait for it to shutdown
-	wait_for_pause_or_shutdown_of_periodic_job(pjob);
+	wait_for_shutdown_of_periodic_job(pjob);
 
 	pthread_mutex_destroy(&(pjob->job_lock));
 	pthread_cond_destroy(&(pjob->job_wait));
@@ -294,6 +294,16 @@ void wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob)
 	pthread_mutex_lock(&(pjob->job_lock));
 
 		while(pjob->state != PJ_SHUTDOWN && pjob->state != PJ_PAUSED) // keep on waiting while the state is not (PJ_SHUTDOWN or PJ_PAUSED)
+			pthread_cond_wait(&(pjob->stop_wait), &(pjob->job_lock));
+
+	pthread_mutex_unlock(&(pjob->job_lock));
+}
+
+void wait_for_shutdown_of_periodic_job(periodic_job* pjob)
+{
+	pthread_mutex_lock(&(pjob->job_lock));
+
+		while(pjob->state != PJ_SHUTDOWN) // keep on waiting while the state is not (PJ_SHUTDOWN)
 			pthread_cond_wait(&(pjob->stop_wait), &(pjob->job_lock));
 
 	pthread_mutex_unlock(&(pjob->job_lock));

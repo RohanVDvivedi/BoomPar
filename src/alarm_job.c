@@ -159,7 +159,7 @@ void delete_alarm_job(alarm_job* ajob)
 	shutdown_alarm_job(ajob);
 
 	// wait for it to shutdown
-	wait_for_pause_or_shutdown_of_alarm_job(ajob);
+	wait_for_shutdown_of_alarm_job(ajob);
 
 	pthread_mutex_destroy(&(ajob->job_lock));
 	pthread_cond_destroy(&(ajob->job_wait));
@@ -226,6 +226,16 @@ void wait_for_pause_or_shutdown_of_alarm_job(alarm_job* ajob)
 	pthread_mutex_lock(&(ajob->job_lock));
 
 		while(ajob->state != AJ_SHUTDOWN && ajob->state != AJ_PAUSED) // keep on waiting while the state is not (AJ_SHUTDOWN or AJ_PAUSED)
+			pthread_cond_wait(&(ajob->stop_wait), &(ajob->job_lock));
+
+	pthread_mutex_unlock(&(ajob->job_lock));
+}
+
+void wait_for_shutdown_of_alarm_job(alarm_job* ajob)
+{
+	pthread_mutex_lock(&(ajob->job_lock));
+
+		while(ajob->state != AJ_SHUTDOWN) // keep on waiting while the state is not (AJ_SHUTDOWN)
 			pthread_cond_wait(&(ajob->stop_wait), &(ajob->job_lock));
 
 	pthread_mutex_unlock(&(ajob->job_lock));

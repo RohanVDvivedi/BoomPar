@@ -90,6 +90,7 @@ int shutdown_alarm_job(alarm_job* ajob);
 // OR
 // 2. after calling pause_alarm_job(), but do be sure that no one calls wake_up_alarm_job() after your call to pause_alarm_job()
 void wait_for_pause_or_shutdown_of_alarm_job(alarm_job* ajob);
+void wait_for_shutdown_of_alarm_job(alarm_job* ajob);
 
 // delete explicitly calls shutdown_alarm_job and wait_for_pause_or_shutdown_of_alarm_job, before destroying and freeing the object
 void delete_alarm_job(alarm_job* ajob);

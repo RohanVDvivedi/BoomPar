@@ -95,6 +95,7 @@ int shutdown_periodic_job(periodic_job* pjob);
 // OR
 // 2. after calling pause_periodic_job(), but do be sure that no one calls resume_periodic_job() after your call to pause_periodic_job()
 void wait_for_pause_or_shutdown_of_periodic_job(periodic_job* pjob);
+void wait_for_shutdown_of_periodic_job(periodic_job* pjob);
 
 // delete explicitly calls shutdown_periodic_job and wait_for_pause_or_shutdown_of_periodic_job, before destroying and freeing the object
 void delete_periodic_job(periodic_job* pjob);
